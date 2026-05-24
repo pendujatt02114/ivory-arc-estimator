@@ -2783,32 +2783,7 @@ function iaTrack(eventName, params) {
         body: JSON.stringify(payload)
       });
 
-      // Also fire direct WhatsApp via Meta API as a backup
-      var waToken  = 'EAAVbe3LwjOoBRvs62OMrVR17p2RoOW1tswLKY2czZCLZB1xP7rJgBFaOXdyp21f1V22z6ktqtWoE9uRqe5xLQfFazTtQ1INHH4b52LcsVZC7sZB6JTZCXn927HQ8NXhAuCOOltoBxnsOiunGVesrPQpVU6I0t8iKUugnUlG6aaMoAfkbGFkGcidrRHLGJxAZDZD';
-      var waPhoneId = '1089496754253153';
-      var waTarget  = '917455037397';
-      var waBody = 'New Ivory Arc Lead ' + payload.estimateRef +
-        '\nName: '        + (payload.name         || '-') +
-        '\nPhone: '       + (payload.phone         || '-') +
-        '\nEmail: '       + (payload.email         || '-') +
-        '\nDestination: ' + (payload.destination   || '-') +
-        '\nDates: '       + (payload.tourStartDate || '-') + ' to ' + (payload.tourEndDate || '-') +
-        '\nGroup: '       + (payload.groupSize     || '-') +
-        '\nTotal: '       + (payload.estimateTotal || '-');
-
-      fetch('https://graph.facebook.com/v20.0/' + waPhoneId + '/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + waToken
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: waTarget,
-          type: 'text',
-          text: { body: waBody }
-        })
-      }).catch(function() {});
+      // WhatsApp notification handled server-side via Apps Script
     }
   }
 
