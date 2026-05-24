@@ -11,6 +11,16 @@
 <script async defer
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=__ivoryMapsReady">
 </script>
+<!-- Global error handler — shows real errors instead of "Script error." -->
+<script>
+window.addEventListener('error', function(e) {
+  if (e.message === 'Script error.' || !e.message) return; // cross-origin noise
+  console.error('App error:', e.message, 'at', e.filename, e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('Unhandled promise rejection:', e.reason);
+});
+</script>
 <!-- Firebase loads on demand when OTP is needed -->
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-9V72L72QVN"></script>
@@ -2196,45 +2206,26 @@ function iaTrack(eventName, params) {
     fxLoading = true;
     fxError   = false;
 
-    // Try multiple CORS-safe APIs in sequence
-    var today = new Date().toISOString().slice(0, 10);
-    var attempts = [
-      // 1. fawazahmed0 CDN — updated daily, no key, CORS-safe
-      { url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json',
-        parse: function(d) { return d && d.usd && d.usd.inr ? { inr: d.usd.inr, eur: d.usd.eur } : null; } },
-      // 2. Same API, fallback URL
-      { url: 'https://latest.currency-api.pages.dev/v1/currencies/usd.json',
-        parse: function(d) { return d && d.usd && d.usd.inr ? { inr: d.usd.inr, eur: d.usd.eur } : null; } },
-      // 3. Frankfurter (ECB) — CORS-safe, USD base
-      { url: 'https://api.frankfurter.app/latest?from=USD&to=INR,EUR',
-        parse: function(d) { return d && d.rates && d.rates.INR ? { inr: d.rates.INR, eur: d.rates.EUR } : null; } },
-    ];
-
-    function tryNext(idx) {
-      if (idx >= attempts.length) {
-        // All APIs failed — use hardcoded rates so app still works
+    // Route through Apps Script proxy — bypasses all CORS issues
+    var proxyUrl = WEBHOOK_URL + '?action=fx';
+    fetch(proxyUrl)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !data.inr || !data.eur) throw new Error('bad data');
+        fxRates.USD = parseFloat((1 / data.inr).toFixed(8));
+        fxRates.EUR = parseFloat((data.eur  / data.inr).toFixed(8));
+        fxFetchedAt = new Date(); fxLoading = false; fxError = false;
+        renderPricingSummary();
+        if (onDone) onDone(true);
+      })
+      .catch(function() {
+        // Hard fallback — always works even if proxy fails
         fxRates.USD = 0.01183;
         fxRates.EUR = 0.01087;
         fxFetchedAt = new Date(); fxLoading = false; fxError = false;
         renderPricingSummary();
         if (onDone) onDone(true);
-        return;
-      }
-      var attempt = attempts[idx];
-      fetch(attempt.url)
-        .then(function(r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-        .then(function(data) {
-          var rates = attempt.parse(data);
-          if (!rates) throw new Error('bad data');
-          fxRates.USD = parseFloat((1 / rates.inr).toFixed(8));
-          fxRates.EUR = parseFloat((rates.eur / rates.inr).toFixed(8));
-          fxFetchedAt = new Date(); fxLoading = false; fxError = false;
-          renderPricingSummary();
-          if (onDone) onDone(true);
-        })
-        .catch(function() { tryNext(idx + 1); });
-    }
-    tryNext(0);
+      });
   }
 
   function convertFromINR(amountINR) {
@@ -2779,18 +2770,52 @@ function iaTrack(eventName, params) {
       }
     }
 
-    // ── Fire lead capture immediately on OTP verification ──
-    // Do not wait for form submission — capture the lead the moment phone is verified
+    // ── Fire lead immediately on OTP verification — no form needed ──
     if (otpState.name && otpState.email && otpState.verifiedPhone) {
       var payload = buildLeadPayload(otpState.name, otpState.email, otpState.verifiedPhone);
-      // Store ref so download button and success screen can use it
       window._autoLeadRef = payload.estimateRef;
+
+      // POST to Apps Script — sends email + WhatsApp + saves to sheet
       fetch(WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
-      }).catch(function() {}); // silent fail — lead is a bonus, not blocking UX
+      });
+
+      // Also fire direct WhatsApp via Meta API as a backup
+      var waToken  = 'EAAVbe3LwjOoBRvs62OMrVR17p2RoOW1tswLKY2czZCLZB1xP7rJgBFaOXdyp21f1V22z6ktqtWoE9uRqe5xLQfFazTtQ1INHH4b52LcsVZC7sZB6JTZCXn927HQ8NXhAuCOOltoBxnsOiunGVesrPQpVU6I0t8iKUugnUlG6aaMoAfkbGFkGcidrRHLGJxAZDZD';
+      var waPhoneId = '1089496754253153';
+      var waTarget  = '917455037397';
+      var waBody = 'New Ivory Arc Lead ' + payload.estimateRef +
+        '
+Name: '        + (payload.name         || '-') +
+        '
+Phone: '       + (payload.phone         || '-') +
+        '
+Email: '       + (payload.email         || '-') +
+        '
+Destination: ' + (payload.destination   || '-') +
+        '
+Dates: '       + (payload.tourStartDate || '-') + ' to ' + (payload.tourEndDate || '-') +
+        '
+Group: '       + (payload.groupSize     || '-') +
+        '
+Total: '       + (payload.estimateTotal || '-');
+
+      fetch('https://graph.facebook.com/v20.0/' + waPhoneId + '/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + waToken
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: waTarget,
+          type: 'text',
+          text: { body: waBody }
+        })
+      }).catch(function() {});
     }
   }
 
