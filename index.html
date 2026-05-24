@@ -709,7 +709,7 @@ function iaTrack(eventName, params) {
   let dayTourDays    = 1;      // number of days for a day tour
 
   // ── Accommodation state ───────────────────────────────────────────────────
-  const SERPAPI_KEY  = 'YOUR_SERPAPI_KEY'; // ← replace with your SerpAPI key
+  const SERPAPI_KEY  = 'c6e15d2020d512f7b10086aabff9cc8a8b25bc99b7d0c45b3b428b50ca1063d7';
   let hotelTier      = null;   // '3star' | '4star' | '5star'
   let hotelResults   = null;   // null | 'loading' | 'error' | array
   let selectedHotel  = null;   // hotel object for single-city tours
@@ -1823,7 +1823,7 @@ function iaTrack(eventName, params) {
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
       hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
         <div class="hotel-serpapi-note">
-          ${SERPAPI_KEY !== 'YOUR_SERPAPI_KEY' ? 'Live rates via Google Hotels · ' : 'Curated reference rates · '}
+          Live rates via Google Hotels · 
           Prices are indicative and subject to availability at time of booking.
         </div>`;
     } else {
