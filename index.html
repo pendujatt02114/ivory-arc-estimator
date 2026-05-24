@@ -2196,39 +2196,45 @@ function iaTrack(eventName, params) {
     fxLoading = true;
     fxError   = false;
 
-    // Uses @fawazahmed0/currency-api — fully CORS-friendly, no key needed, updated daily
-    // Returns USD base: usd.inr and usd.eur
+    // Try multiple CORS-safe APIs in sequence
     var today = new Date().toISOString().slice(0, 10);
-    var urls = [
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json',
-      'https://latest.currency-api.pages.dev/v1/currencies/usd.json'
+    var attempts = [
+      // 1. fawazahmed0 CDN — updated daily, no key, CORS-safe
+      { url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json',
+        parse: function(d) { return d && d.usd && d.usd.inr ? { inr: d.usd.inr, eur: d.usd.eur } : null; } },
+      // 2. Same API, fallback URL
+      { url: 'https://latest.currency-api.pages.dev/v1/currencies/usd.json',
+        parse: function(d) { return d && d.usd && d.usd.inr ? { inr: d.usd.inr, eur: d.usd.eur } : null; } },
+      // 3. Frankfurter (ECB) — CORS-safe, USD base
+      { url: 'https://api.frankfurter.app/latest?from=USD&to=INR,EUR',
+        parse: function(d) { return d && d.rates && d.rates.INR ? { inr: d.rates.INR, eur: d.rates.EUR } : null; } },
     ];
 
-    function tryUrl(idx) {
-      if (idx >= urls.length) {
-        // All failed — use hardcoded fallback rates
-        fxRates.USD = 0.01183; // ~₹84.5 = $1
-        fxRates.EUR = 0.01087; // ~₹92 = €1
+    function tryNext(idx) {
+      if (idx >= attempts.length) {
+        // All APIs failed — use hardcoded rates so app still works
+        fxRates.USD = 0.01183;
+        fxRates.EUR = 0.01087;
         fxFetchedAt = new Date(); fxLoading = false; fxError = false;
         renderPricingSummary();
         if (onDone) onDone(true);
         return;
       }
-      fetch(urls[idx])
-        .then(function(r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      var attempt = attempts[idx];
+      fetch(attempt.url)
+        .then(function(r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
         .then(function(data) {
-          if (!data || !data.usd || !data.usd.inr || !data.usd.eur) throw new Error('bad data');
-          // data.usd.inr = how many INR per 1 USD, e.g. 84.5
-          // So 1 INR = 1/84.5 USD
-          fxRates.USD = parseFloat((1 / data.usd.inr).toFixed(8));
-          fxRates.EUR = parseFloat((data.usd.eur / data.usd.inr).toFixed(8));
+          var rates = attempt.parse(data);
+          if (!rates) throw new Error('bad data');
+          fxRates.USD = parseFloat((1 / rates.inr).toFixed(8));
+          fxRates.EUR = parseFloat((rates.eur / rates.inr).toFixed(8));
           fxFetchedAt = new Date(); fxLoading = false; fxError = false;
           renderPricingSummary();
           if (onDone) onDone(true);
         })
-        .catch(function() { tryUrl(idx + 1); });
+        .catch(function() { tryNext(idx + 1); });
     }
-    tryUrl(0);
+    tryNext(0);
   }
 
   function convertFromINR(amountINR) {
@@ -2614,6 +2620,11 @@ function iaTrack(eventName, params) {
           fxCaveat +
         '</div>' +
 
+        // Download button — always visible after unlock
+        '<div style="padding:0 24px 20px;text-align:center;">' +
+          '<button onclick="downloadEstimate()" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;">&#11015; Download / Print Estimate</button>' +
+        '</div>' +
+
       '</div>';
   }
 
@@ -2750,18 +2761,36 @@ function iaTrack(eventName, params) {
   }
 
   function unlockEstimate() {
-    var lock = document.getElementById('ivory-estimate-lock'); var unlock = document.getElementById('ivory-estimate-unlocked');
+    var lock = document.getElementById('ivory-estimate-lock');
+    var unlock = document.getElementById('ivory-estimate-unlocked');
     if (lock) lock.style.display = 'none';
     if (unlock) {
-      unlock.style.display = 'block'; renderPricingSummary();
+      unlock.style.display = 'block';
+      renderPricingSummary();
       var leadContainer = document.getElementById('ivory-lead-form-container');
       if (leadContainer) {
         leadContainer.innerHTML = renderLeadForm();
-        var nameEl = document.getElementById('lead-name'); var emailEl = document.getElementById('lead-email'); var phoneEl = document.getElementById('lead-phone');
-        if (nameEl && otpState.name) nameEl.value = otpState.name;
-        if (emailEl && otpState.email) emailEl.value = otpState.email;
+        var nameEl  = document.getElementById('lead-name');
+        var emailEl = document.getElementById('lead-email');
+        var phoneEl = document.getElementById('lead-phone');
+        if (nameEl  && otpState.name)          nameEl.value  = otpState.name;
+        if (emailEl && otpState.email)         emailEl.value = otpState.email;
         if (phoneEl && otpState.verifiedPhone) phoneEl.value = otpState.verifiedPhone;
       }
+    }
+
+    // ── Fire lead capture immediately on OTP verification ──
+    // Do not wait for form submission — capture the lead the moment phone is verified
+    if (otpState.name && otpState.email && otpState.verifiedPhone) {
+      var payload = buildLeadPayload(otpState.name, otpState.email, otpState.verifiedPhone);
+      // Store ref so download button and success screen can use it
+      window._autoLeadRef = payload.estimateRef;
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      }).catch(function() {}); // silent fail — lead is a bonus, not blocking UX
     }
   }
 
