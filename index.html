@@ -1969,7 +1969,15 @@ function iaTrack(eventName, params) {
     } else if (hotelResults === 'loading') {
       hotelsHTML = '<div class="hotel-loading">Searching for stays in ' + cityLabel + '&hellip;</div>';
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
-      hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') +
+      var tierNote = '';
+      if (hotelResults._requestedTier && hotelResults._actualTier && hotelResults._requestedTier !== hotelResults._actualTier) {
+        var tierLabels = { '5star':'5-Star Luxury', '4star':'4-Star Premium', '3star':'3-Star Comfort' };
+        tierNote = '<div style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:rgba(245,240,232,0.8);">' +
+          '<span style="color:var(--gold);font-weight:600;">&#9432; Note:</span> No ' + tierLabels[hotelResults._requestedTier] + ' properties found in this area. ' +
+          'Showing available <strong style="color:var(--gold);">' + tierLabels[hotelResults._actualTier] + '</strong> options within 30km. ' +
+          'You can still select a different tier above.</div>';
+      }
+      hotelsHTML = tierNote + hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') +
         '<div class="hotel-serpapi-note">Live rates via Google Hotels &middot; Subject to availability at time of booking.</div>';
     } else {
       hotelsHTML = '<div class="hotel-no-dest">No hotel data available. Please contact us directly.</div>';
@@ -2000,7 +2008,15 @@ function iaTrack(eventName, params) {
     } else if (hotelResults === 'loading') {
       hotelsHTML = `<div class="hotel-loading">Searching for the finest stays in ${tour.name}&hellip;</div>`;
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
-      hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
+      var regTierNote = '';
+      if (hotelResults._requestedTier && hotelResults._actualTier && hotelResults._requestedTier !== hotelResults._actualTier) {
+        var rLabels = { '5star':'5-Star Luxury', '4star':'4-Star Premium', '3star':'3-Star Comfort' };
+        regTierNote = '<div style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:rgba(245,240,232,0.8);">' +
+          '<span style="color:var(--gold);font-weight:600;">&#9432; Note:</span> No ' + rLabels[hotelResults._requestedTier] + ' properties found. ' +
+          'Showing available <strong style="color:var(--gold);">' + rLabels[hotelResults._actualTier] + '</strong> options. ' +
+          'You can still select a different tier above.</div>';
+      }
+      hotelsHTML = regTierNote + hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
 <div class="hotel-serpapi-note">Live rates via Google Hotels &middot; Subject to availability at time of booking.</div>`;
     } else {
       hotelsHTML = `<div class="hotel-no-dest">No hotel data available. Please contact us directly.</div>`;
@@ -2271,7 +2287,8 @@ function iaTrack(eventName, params) {
       fetchHotels(fetchDestId, tier, function(results) {
         if (results === 'no_results') {
           hotelResults = null;
-          hotelTier = null;
+          // Don't reset hotelTier — keep the tier card highlighted so customer knows what they selected
+          // They can still click any tier to retry
           updateAccommodationSection();
           var cityName = actualCity || (ciDrop ? ciDrop.split(',')[0] : 'this location');
           if (typeof showNoHotelPopup === 'function') showNoHotelPopup(cityName);
@@ -2283,7 +2300,7 @@ function iaTrack(eventName, params) {
             renderPricingSummary();
           }
         }
-      }, actualCity);
+      }, actualCity, ciDropLatLng);
       return;
     }
 
@@ -2291,7 +2308,9 @@ function iaTrack(eventName, params) {
     render();
     var fetchDestId = activeTour() ? activeTour().id : 'delhi';
     fetchHotels(fetchDestId, tier, function(results) {
-      hotelResults = results;
+      // Regular destinations always have curated fallback — no_results should never happen
+      // but if it does, use fallback silently
+      hotelResults = (results === 'no_results') ? getFallback(fetchDestId, tier) : results;
       render();
     });
   }
@@ -2356,90 +2375,93 @@ function iaTrack(eventName, params) {
   // fetchHotels(destId, tier, callback, actualCityName)
   // destId     = hub id for fallback hotels (e.g. 'amritsar')
   // actualCityName = real city to search in SerpAPI (e.g. 'Chambal') — uses destId hub if omitted
-  function fetchHotels(destId, tier, callback, actualCityName) {
-    if (SERPAPI_KEY) {
-      const hubNames = {
-        delhi:'New Delhi', agra:'Agra', jaipur:'Jaipur', varanasi:'Varanasi',
-        amritsar:'Amritsar', shimla:'Shimla', manali:'Manali', haridwar:'Haridwar',
-        rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan',
-        corbett:'Jim Corbett', chandigarh:'Chandigarh'
-      };
-      // For custom mode: search the actual city; if it returns nothing, retry with hub city
-      const baseCity  = actualCityName || hubNames[destId] || destId;
-      const hubCity   = hubNames[destId] || null;
-      const stars     = tier.replace('star','');
-      const ci        = tdStart ? tdStart.toISOString().slice(0,10) : '';
-      const co        = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
+  // ── fetchHotels — 3-stage search with tier fallback ─────────────────────
+  function fetchHotels(destId, tier, callback, actualCityName, dropLatLng) {
+    var hubNames = {
+      delhi:'New Delhi', agra:'Agra', jaipur:'Jaipur', varanasi:'Varanasi',
+      amritsar:'Amritsar', shimla:'Shimla', manali:'Manali', haridwar:'Haridwar',
+      rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan',
+      corbett:'Jim Corbett', chandigarh:'Chandigarh'
+    };
+    var hubCoords = {
+      delhi:[28.6139,77.2090], agra:[27.1767,78.0081], jaipur:[26.9124,75.7873],
+      varanasi:[25.3176,82.9739], amritsar:[31.6340,74.8723], shimla:[31.1048,77.1734],
+      manali:[32.2432,77.1892], haridwar:[29.9457,78.1642], rishikesh:[30.0869,78.2676],
+      mathura:[27.4924,77.6737], vrindavan:[27.5794,77.6964],
+      corbett:[29.5300,78.7747], chandigarh:[30.7333,76.7794]
+    };
+    var tierFallbacks = { '5star':['5star','4star','3star'], '4star':['4star','3star'], '3star':['3star'] };
+    var tiersToTry = tierFallbacks[tier] || [tier];
+    var baseCity = actualCityName || hubNames[destId] || destId;
+    var ci = tdStart ? tdStart.toISOString().slice(0,10) : '';
+    var co = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
+    var lat = null, lng = null;
+    if (dropLatLng && typeof dropLatLng.lat === 'function') {
+      lat = dropLatLng.lat(); lng = dropLatLng.lng();
+    } else if (dropLatLng && dropLatLng.lat) {
+      lat = dropLatLng.lat; lng = dropLatLng.lng;
+    } else if (hubCoords[destId]) {
+      lat = hubCoords[destId][0]; lng = hubCoords[destId][1];
+    }
 
-      function buildProxyUrl(city) {
-        return SERPAPI_PROXY
-          + '?action=hotels'
-          + '&city=' + encodeURIComponent(stars + ' star hotels near ' + city + ' India')
-          + '&stars=' + stars
-          + '&ci=' + ci
-          + '&co=' + co
-          + '&key=' + SERPAPI_KEY;
+    function parseProps(data) {
+      return (data.properties || []).slice(0,6).map(function(p) {
+        var rawPrice = p.rate_per_night ? parseInt((p.rate_per_night.lowest||'0').replace(/[^0-9]/g,'')) : 0;
+        return { name:p.name, rating:p.overall_rating||4.0, price:rawPrice?Math.round(rawPrice*1.10):0, rawPrice:rawPrice, link:p.link||'' };
+      }).filter(function(p) { return p.price > 0; });
+    }
+
+    function buildCityUrl(t, city) {
+      var s = t.replace('star','');
+      return SERPAPI_PROXY + '?action=hotels' + '&city=' + encodeURIComponent(s+' star hotels near '+city+' India') + '&stars='+s+'&ci='+ci+'&co='+co+'&key='+SERPAPI_KEY;
+    }
+
+    function buildLatLngUrl(t) {
+      var s = t.replace('star','');
+      return SERPAPI_PROXY + '?action=hotels' + '&city=' + encodeURIComponent(s+' star hotels') + '&ll='+encodeURIComponent('@'+lat+','+lng+',12z')+'&stars='+s+'&ci='+ci+'&co='+co+'&key='+SERPAPI_KEY;
+    }
+
+    function tagResult(hotels, actualTier) {
+      hotels._requestedTier = tier;
+      hotels._actualTier    = actualTier;
+      return hotels;
+    }
+
+    if (!SERPAPI_KEY) {
+      var fb = getFallback(destId, tier);
+      setTimeout(function() { callback(fb.length ? tagResult(fb,tier) : 'no_results'); }, 300);
+      return;
+    }
+
+    function tryTier(idx) {
+      if (idx >= tiersToTry.length) {
+        var fallback = getFallback(destId, tier);
+        callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
+        return;
       }
-
-      function parseProps(data) {
-        return (data.properties || []).slice(0, 6).map(function(p) {
-          var rawPrice = p.rate_per_night
-            ? parseInt((p.rate_per_night.lowest || '0').replace(/[^0-9]/g,''))
-            : 0;
-          return {
-            name:    p.name,
-            rating:  p.overall_rating || 4.0,
-            price:   rawPrice ? Math.round(rawPrice * 1.10) : 0,
-            rawPrice: rawPrice,
-            link:    p.link || ''
-          };
-        }).filter(function(p) { return p.price > 0; });
-      }
-
-      // First try: search the actual drop city
-      fetch(buildProxyUrl(baseCity))
+      var t = tiersToTry[idx];
+      fetch(buildCityUrl(t, baseCity))
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var props = parseProps(data);
-          if (props.length) {
-            callback(props);
-            return;
-          }
-          // Zero results — if custom mode with a different hub city, retry with hub
-          if (actualCityName && hubCity && hubCity !== baseCity) {
-            return fetch(buildProxyUrl(hubCity))
+          if (props.length) { callback(tagResult(props, t)); return; }
+          if (lat && lng) {
+            return fetch(buildLatLngUrl(t))
               .then(function(r2) { return r2.json(); })
               .then(function(data2) {
                 var props2 = parseProps(data2);
-                if (props2.length) {
-                  callback(props2);
-                } else if (actualCityName) {
-                  callback('no_results');
-                } else {
-                  callback(getFallback(destId, tier));
-                }
-              });
-          }
-          if (actualCityName) {
-            callback('no_results');
+                if (props2.length) { callback(tagResult(props2, t)); return; }
+                tryTier(idx + 1);
+              })
+              .catch(function() { tryTier(idx + 1); });
           } else {
-            callback(getFallback(destId, tier));
+            tryTier(idx + 1);
           }
         })
-        .catch(function() {
-          if (actualCityName) {
-            callback('no_results');
-          } else {
-            callback(getFallback(destId, tier));
-          }
-        });
-      return;
+        .catch(function() { callback(getFallback(destId, tier)); });
     }
-    if (actualCityName) {
-      callback('no_results');
-    } else {
-      setTimeout(function() { callback(getFallback(destId, tier)); }, 500);
-    }
+
+    tryTier(0);
   }
 
   function getFallback(destId, tier) {
