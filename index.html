@@ -3048,9 +3048,10 @@ function iaTrack(eventName, params) {
     if (btn) { btn.disabled=true; btn.textContent="Sending..."; }
     var payload = buildLeadPayload(name, email, phone);
     if (typeof iaTrack === "function") iaTrack("lead_submitted");
-    fetch(WEBHOOK_URL, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
-      .then(function(r){return r.json();})
+    // Google Apps Script blocks preflight — use no-cors with text/plain to avoid 405
+    fetch(WEBHOOK_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)})
       .then(function(){
+        // no-cors gives opaque response — any resolve is a success
         leadSubmitting=false; leadSubmitted=true;
         var fw=document.getElementById("lead-form-wrap");
         var sw=document.getElementById("lead-success-wrap");
