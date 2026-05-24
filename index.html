@@ -1874,14 +1874,14 @@ function iaTrack(eventName, params) {
     const tour   = activeTour();
     const isMulti = tour && MULTI_CITY_DESTS[tour.id];
 
-    if (wantHotel === false) {
-      return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.15);color:rgba(245,240,232,0.35);background:rgba(0,0,0,0.2);">&#127968; Hotel recommendation not required — you have your own arrangement. Update in Travel Details above if you change your mind.</div>';
-    }
-
-    // Custom itinerary — show hotels based on drop location
+    // Custom itinerary — show hotels based on drop location (bypasses wantHotel gate)
     if (customMode) {
       if (!ciDrop) {
-        return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.2);color:rgba(245,240,232,0.5);">Enter a drop location in the Custom Itinerary section above to see hotel options.</div>';
+        return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.2);color:rgba(245,240,232,0.5);">' +
+          (wantHotel === false
+            ? '&#127968; You selected no hotel arrangement. Toggle above if you change your mind.'
+            : 'Enter a drop location in the Custom Itinerary section above to see hotel options.') +
+          '</div>';
       }
       var dropLower = ciDrop.toLowerCase();
       var cityMap = {
@@ -1889,14 +1889,31 @@ function iaTrack(eventName, params) {
         rishikesh:'rishikesh', varanasi:'varanasi', amritsar:'amritsar',
         shimla:'shimla', manali:'manali', mathura:'mathura', vrindavan:'vrindavan',
         corbett:'corbett', lucknow:'delhi', chandigarh:'shimla', dehradun:'rishikesh',
-        agra:'agra', gurdaspur:'amritsar', jammu:'amritsar', srinagar:'shimla'
+        gurdaspur:'amritsar', jammu:'amritsar', srinagar:'shimla',
+        ambala:'delhi', ludhiana:'amritsar', jalandhar:'amritsar', patiala:'delhi',
+        meerut:'delhi', aligarh:'agra', gwalior:'agra', faridabad:'delhi',
+        gurgaon:'delhi', noida:'delhi', gurugram:'delhi', greater:'delhi',
+        pathankot:'amritsar', dharamshala:'shimla', kasol:'shimla',
+        nainital:'corbett', mussoorie:'rishikesh', lansdowne:'corbett',
+        pushkar:'jaipur', ajmer:'jaipur', udaipur:'jaipur', jodhpur:'jaipur',
+        allahabad:'varanasi', prayagraj:'varanasi', ayodhya:'varanasi',
+        kanpur:'delhi', bareilly:'delhi', saharanpur:'rishikesh'
       };
       var destId = 'delhi';
       for (var key in cityMap) {
         if (dropLower.indexOf(key) !== -1) { destId = cityMap[key]; break; }
       }
       var dropCityName = ciDrop.split(',')[0];
-      return singleCityAccommodationForCity(destId, dropCityName);
+      var hotelSection = singleCityAccommodationForCity(destId, dropCityName);
+      if (wantHotel === false) {
+        return '<div style="background:rgba(201,169,110,0.05);border:1px solid rgba(201,169,110,0.2);border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:rgba(245,240,232,0.5);">You selected 'no hotel arrangement' in Travel Details — showing options anyway for reference. <a href="#" onclick="wantHotel=true;render();return false;" style="color:var(--gold);">Add hotel to estimate</a></div>' + hotelSection;
+      }
+      return hotelSection;
+    }
+
+    // Non-custom mode — check wantHotel
+    if (wantHotel === false) {
+      return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.15);color:rgba(245,240,232,0.35);background:rgba(0,0,0,0.2);">&#127968; Hotel recommendation not required — you have your own arrangement. Update in Travel Details above if you change your mind.</div>';
     }
 
     if (!tour) {
