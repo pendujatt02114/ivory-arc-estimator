@@ -2177,7 +2177,7 @@ function iaTrack(eventName, params) {
     'amritsar':'amritsar','golden temple':'amritsar','ludhiana':'amritsar',
     'jalandhar':'amritsar','phagwara':'amritsar','nakodar':'amritsar',
     'kapurthala':'amritsar','gurdaspur':'amritsar','batala':'amritsar',
-    'pathankot':'amritsar','dalhousie':'amritsar','chamba':'amritsar',
+    'pathankot':'amritsar','dalhousie':'amritsar','chamba hp':'amritsar','chamba himachal':'amritsar','himachal':'shimla',
     'hoshiarpur':'amritsar','nawanshahr':'amritsar','anandpur sahib':'amritsar',
     'bathinda':'amritsar','mansa':'amritsar','faridkot':'amritsar',
     'ferozepur':'amritsar','moga':'amritsar','barnala':'amritsar',
@@ -2224,7 +2224,28 @@ function iaTrack(eventName, params) {
     'kanpur':'varanasi','raebareli':'varanasi','jaunpur':'varanasi',
     'ghazipur':'varanasi','mirzapur':'varanasi','vindhyachal':'varanasi',
     'mughalsarai':'varanasi','chandauli':'varanasi','sitapur':'varanasi',
-    'hardoi':'varanasi','unnao':'varanasi'
+    'hardoi':'varanasi','unnao':'varanasi',
+    // Madhya Pradesh (central) — map to nearest hub
+    'chambal':'agra','morena':'agra','bhind':'agra','sheopur':'agra',
+    'gwalior':'agra','shivpuri':'agra','datia':'agra','tikamgarh':'agra',
+    'orchha':'agra','jhansi':'agra','lalitpur':'agra','sagar':'agra',
+    'damoh':'agra','chhatarpur':'agra','panna':'varanasi','satna':'varanasi',
+    'rewa':'varanasi','sidhi':'varanasi','singrauli':'varanasi',
+    'bhopal':'agra','vidisha':'agra','raisen':'agra','sehore':'agra',
+    'rajgarh':'jaipur','guna':'agra','ashoknagar':'agra',
+    'indore':'jaipur','ujjain':'jaipur','dewas':'jaipur',
+    'ratlam':'jaipur','mandsaur':'jaipur','neemuch':'jaipur',
+    'nimach':'jaipur',
+    // Additional Rajasthan
+    'kumbhalgarh':'jaipur','mount abu':'jaipur','sirohi':'jaipur',
+    'jalore':'jaipur','pali':'jaipur','barmer':'jaipur',
+    'jaisalmer':'jaipur','pokaran':'jaipur','sujangarh':'jaipur',
+    'jhalawar':'jaipur','baran':'jaipur','dholpur':'agra',
+    // Uttarakhand east
+    'pithoragarh':'corbett','champawat':'corbett','lohaghat':'corbett',
+    'tanakpur':'corbett','uttarkashi':'rishikesh','gaurikund':'rishikesh',
+    'kedarnath':'rishikesh','badrinath':'rishikesh','joshimath':'rishikesh',
+    'auli':'rishikesh','chopta':'rishikesh','uttarakhand':'rishikesh','himachal pradesh':'shimla'
   };
 
   function getHotelDestId(cityString) {
@@ -2246,15 +2267,23 @@ function iaTrack(eventName, params) {
     if (customMode) {
       updateAccommodationSection();
       var fetchDestId = getHotelDestId(ciDrop);
+      var actualCity = ciDrop ? ciDrop.split(',')[0].trim() : null;
       fetchHotels(fetchDestId, tier, function(results) {
-        hotelResults = results;
-        updateAccommodationSection();
-        // Also refresh the pricing summary if route is calculated
-        if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
-          ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
-          renderPricingSummary();
+        if (results === 'no_results') {
+          hotelResults = null;
+          hotelTier = null;
+          updateAccommodationSection();
+          var cityName = actualCity || (ciDrop ? ciDrop.split(',')[0] : 'this location');
+          if (typeof showNoHotelPopup === 'function') showNoHotelPopup(cityName);
+        } else {
+          hotelResults = results;
+          updateAccommodationSection();
+          if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+            ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
+            renderPricingSummary();
+          }
         }
-      });
+      }, actualCity);
       return;
     }
 
@@ -2324,13 +2353,19 @@ function iaTrack(eventName, params) {
   // SerpAPI proxy URL — your Apps Script acts as a CORS-safe middleman
   var SERPAPI_PROXY = 'https://script.google.com/macros/s/AKfycbzsJqOKQltBR0tuZ19-ZRkFYtxP7oAPifIdFIfI__eZucf9TEelye-_9pgkJy3zYR41/exec';
 
-  function fetchHotels(destId, tier, callback) {
+  // fetchHotels(destId, tier, callback, actualCityName)
+  // destId     = hub id for fallback hotels (e.g. 'amritsar')
+  // actualCityName = real city to search in SerpAPI (e.g. 'Chambal') — uses destId hub if omitted
+  function fetchHotels(destId, tier, callback, actualCityName) {
     if (SERPAPI_KEY) {
-      const cityName = {
+      const hubNames = {
         delhi:'New Delhi', agra:'Agra', jaipur:'Jaipur', varanasi:'Varanasi',
         amritsar:'Amritsar', shimla:'Shimla', manali:'Manali', haridwar:'Haridwar',
-        rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan', corbett:'Jim Corbett'
-      }[destId] || destId;
+        rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan',
+        corbett:'Jim Corbett', chandigarh:'Chandigarh'
+      };
+      // Use actual city name if provided (custom mode), otherwise use hub name
+      const cityName = actualCityName || hubNames[destId] || destId;
       const stars = tier.replace('star','');
       const ci = tdStart ? tdStart.toISOString().slice(0,10) : '';
       const co = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
@@ -2351,7 +2386,6 @@ function iaTrack(eventName, params) {
             var rawPrice = p.rate_per_night
               ? parseInt((p.rate_per_night.lowest || '0').replace(/[^0-9]/g,''))
               : 0;
-            // Add 10% convenience charge
             var priceWithConvenience = rawPrice ? Math.round(rawPrice * 1.10) : 0;
             return {
               name:    p.name,
@@ -2361,12 +2395,33 @@ function iaTrack(eventName, params) {
               link:    p.link || ''
             };
           }).filter(function(p) { return p.price > 0; });
-          callback(props.length ? props : getFallback(destId, tier));
+
+          if (props.length) {
+            callback(props);
+          } else if (actualCityName) {
+            // Custom mode: SerpAPI returned nothing for this city — show popup, no fallback
+            callback('no_results');
+          } else {
+            // Regular destination mode: use curated fallback hotels
+            callback(getFallback(destId, tier));
+          }
         })
-        .catch(function() { callback(getFallback(destId, tier)); });
+        .catch(function() {
+          if (actualCityName) {
+            // Custom mode: API error — show popup, no fallback
+            callback('no_results');
+          } else {
+            callback(getFallback(destId, tier));
+          }
+        });
       return;
     }
-    setTimeout(function() { callback(getFallback(destId, tier)); }, 500);
+    // No SerpAPI key — use fallback for regular destinations only
+    if (actualCityName) {
+      callback('no_results');
+    } else {
+      setTimeout(function() { callback(getFallback(destId, tier)); }, 500);
+    }
   }
 
   function getFallback(destId, tier) {
@@ -3464,6 +3519,16 @@ function iaTrack(eventName, params) {
   setTimeout(function() { render(); }, 0);
 
 </script>
+  <!-- No hotel popup -->
+  <div id="no-hotel-popup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#1A1612;border:1px solid rgba(201,169,110,0.4);border-radius:12px;padding:32px 28px;max-width:400px;width:90%;text-align:center;position:relative;">
+      <div style="font-size:38px;margin-bottom:12px;">🏨</div>
+      <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:20px;color:#fff;margin-bottom:10px;">No Hotels Found</div>
+      <div id="no-hotel-popup-msg" style="font-size:13px;color:rgba(245,240,232,0.75);line-height:1.7;margin-bottom:20px;"></div>
+      <button onclick="document.getElementById('no-hotel-popup').style.display='none';" style="padding:11px 32px;background:#C9A96E;color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">Got it</button>
+    </div>
+  </div>
+
   <!-- OOS popup overlay -->
   <div id="oos-popup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#1A1612;border:1px solid rgba(248,113,113,0.5);border-radius:12px;padding:32px 28px;max-width:420px;width:90%;text-align:center;position:relative;">
@@ -3475,6 +3540,14 @@ function iaTrack(eventName, params) {
     </div>
   </div>
   <script>
+    function showNoHotelPopup(cityName) {
+      var msg = document.getElementById('no-hotel-popup-msg');
+      if (msg) msg.innerHTML = 'No hotel recommendations are currently available for <strong style="color:#fff;">' + cityName + '</strong>.<br><br>Please contact us directly and we will curate options for you.<br><br><a href="mailto:hello@ivoryarctravels.com" style="color:#C9A96E;">hello@ivoryarctravels.com</a> &nbsp;|&nbsp; <a href="https://wa.me/917455037397" style="color:#25D366;">WhatsApp Us</a>';
+      var popup = document.getElementById('no-hotel-popup');
+      if (popup) popup.style.display = 'flex';
+    }
+    window.showNoHotelPopup = showNoHotelPopup;
+
     function showOOSPopup(locationName) {
       var msg = document.getElementById('oos-popup-msg');
       if (msg) msg.innerHTML = 'Sorry, we currently do not serve <strong style="color:#fff;">' + locationName + '</strong>.<br><br>Ivory Arc Travels operates within a <strong style="color:#C9A96E;">1,000 km radius of Delhi</strong>, covering North & Central India — including Agra, Jaipur, Varanasi, Amritsar, Shimla, Manali, Haridwar, Corbett and more.';
