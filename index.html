@@ -1138,8 +1138,10 @@ function iaTrack(eventName, params) {
     } else {
       if (teaser) teaser.style.display = 'block';
     }
-    // Also trigger pricing summary refresh so estimate appears below
-    renderPricingSummary();
+    // If OTP already verified, refresh the estimate immediately
+    if (typeof otpState !== 'undefined' && otpState.step === 'verified') {
+      renderPricingSummary();
+    }
     var panel = document.getElementById('ci-result-panel');
     if (!panel) return;
     panel.innerHTML = '';
@@ -2757,11 +2759,18 @@ function iaTrack(eventName, params) {
 
     // Custom itinerary mode — show combined estimate (transport + hotel + GST)
     if (customMode) {
-      if (!ciResult || ciResult === 'loading' || ciResult === 'error' || !ciPickupPlaceId) {
-        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.4);letter-spacing:1px;">Enter your route above and calculate to see your full estimate here.</div>';
+      // If we have a valid result, show it — don't require ciPickupPlaceId
+      if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+        // Recalculate to pick up any hotel changes since last calculate
+        ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+        renderCustomEstimate(el);
         return;
       }
-      renderCustomEstimate(el);
+      // No result yet — show contextual prompt
+      var promptMsg = ciPickup && ciDrop
+        ? 'Route entered. Press <strong style="color:var(--gold);">Calculate</strong> in the Custom Itinerary section above to generate your estimate.'
+        : 'Enter your pickup and drop locations in the Custom Itinerary section above, then press Calculate.';
+      el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.7;">' + promptMsg + '</div>';
       return;
     }
 
@@ -3025,7 +3034,15 @@ function iaTrack(eventName, params) {
     var unlock = document.getElementById('ivory-estimate-unlocked');
     if (unlock) {
       unlock.style.display = 'block';
+      // In custom mode: recalculate to include any hotel selection before showing
+      if (customMode && ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+        ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+      }
       renderPricingSummary();
+      // Scroll to the estimate
+      setTimeout(function() {
+        if (unlock) unlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     }
 
 
