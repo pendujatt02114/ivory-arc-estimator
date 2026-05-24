@@ -1420,6 +1420,17 @@ function iaTrack(eventName, params) {
   // ── Distance calculation ──────────────────────────────────────────────────
   function calculateCustomRoute() {
     if (!ciPickupPlaceId || !ciDropPlaceId) return;
+
+    // Pre-check: reject known out-of-service destinations by name
+    var dropCheckName = ciDrop.toLowerCase();
+    var oosNames = ['mumbai','pune','nagpur','nashik','bangalore','bengaluru','mysore','mangalore','chennai','coimbatore','madurai','hyderabad','secunderabad','visakhapatnam','vizag','kolkata','calcutta','guwahati','bhubaneswar','raipur','indore','bhopal','goa','panaji','kochi','thiruvananthapuram','kozhikode','surat','ahmedabad','vadodara','rajkot','patna','gaya'];
+    if (oosNames.some(function(k) { return dropCheckName.indexOf(k) !== -1; })) {
+      var dropNameShort = ciDrop.split(',')[0];
+      ciResult = 'error';
+      ciErrorMsg = 'Sorry, we do not provide services to ' + dropNameShort + '. Ivory Arc Travels operates within North & Central India (within 1,000 km of Delhi). Please contact hello@ivoryarctravels.com for queries beyond our service area.';
+      updateResultPanel(); return;
+    }
+
     ciResult = 'loading'; updateResultPanel();
 
     const isDemo = !mapsApiLoaded ||
@@ -1439,7 +1450,13 @@ function iaTrack(eventName, params) {
               || (table[ciDropPlaceId]||{})[ciPickupPlaceId]
               || Math.round(100 + Math.random() * 300);
       setTimeout(() => {
-        ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
+        if (km > 1000) {
+          var dropShort = ciDrop.split(',')[0];
+          ciResult = 'error';
+          ciErrorMsg = 'Sorry, we do not provide services to ' + dropShort + '. Ivory Arc Travels operates within a 1,000 km radius of Delhi. Please contact us at hello@ivoryarctravels.com for custom outstation queries.';
+        } else {
+          ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
+        }
         updateResultPanel();
       }, 800);
       return;
@@ -1465,6 +1482,15 @@ function iaTrack(eventName, params) {
         updateResultPanel(); return;
       }
       const km = Math.round(el.distance.value / 1000);
+
+      // Service area check — one-way distance must be within 1000km from origin
+      if (km > 1000) {
+        var dropShort = ciDrop.split(',')[0];
+        ciResult = 'error';
+        ciErrorMsg = 'Sorry, we do not provide services to ' + dropShort + '. Ivory Arc Travels operates within a 1,000 km radius of Delhi. Please contact us at hello@ivoryarctravels.com for custom outstation queries.';
+        updateResultPanel(); return;
+      }
+
       ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
       updateResultPanel();
     });
@@ -1877,10 +1903,19 @@ function iaTrack(eventName, params) {
     // Custom itinerary — show hotels based on drop location (bypasses wantHotel gate)
     if (customMode) {
       if (!ciDrop) {
-        return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.2);color:rgba(245,240,232,0.5);">' +
-          (wantHotel === false
-            ? '&#127968; You selected no hotel arrangement. Toggle above if you change your mind.'
-            : 'Enter a drop location in the Custom Itinerary section above to see hotel options.') +
+        return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.2);color:rgba(245,240,232,0.5);">Enter a drop location in the Custom Itinerary section above to see hotel options.</div>';
+      }
+
+      // Out-of-service area check
+      var dropCheck = ciDrop.toLowerCase();
+      var oosKeywords = ['mumbai','pune','nagpur','nashik','bangalore','bengaluru','mysore','mysuru','mangalore','chennai','coimbatore','madurai','hyderabad','secunderabad','warangal','visakhapatnam','vizag','kolkata','calcutta','howrah','siliguri','darjeeling','guwahati','bhubaneswar','cuttack','puri','raipur','indore','bhopal','goa','panaji','kochi','thiruvananthapuram','kozhikode','surat','ahmedabad','vadodara','rajkot','patna','gaya'];
+      var isOOS = oosKeywords.some(function(k) { return dropCheck.indexOf(k) !== -1; });
+      if (isOOS) {
+        var dropName = ciDrop.split(',')[0];
+        return '<div class="hotel-no-dest" style="border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.05);">' +
+          '<div style="font-size:14px;color:var(--red);font-weight:600;margin-bottom:8px;">&#9888; Outside Service Area</div>' +
+          '<div style="font-size:13px;color:rgba(245,240,232,0.7);">We currently do not provide services to <strong>' + dropName + '</strong>. Ivory Arc Travels operates within a 1,000 km radius of Delhi covering North &amp; Central India.</div>' +
+          '<div style="font-size:12px;color:rgba(245,240,232,0.45);margin-top:8px;">For queries beyond our service area, please write to us at <a href="mailto:hello@ivoryarctravels.com" style="color:var(--gold);">hello@ivoryarctravels.com</a></div>' +
           '</div>';
       }
       var dropLower = ciDrop.toLowerCase();
@@ -1932,7 +1967,7 @@ function iaTrack(eventName, params) {
     var nights = nightsBetween(tdStart, tdEnd) || 1;
     var tierCards = HOTEL_TIERS.map(function(t) {
       var ac = hotelTier === t.id ? ' active' : '';
-      return '<div class="hotel-tier-card' + ac + '" onclick="selectHotelTier(\"' + t.id + '\")">' +
+      return '<div class="hotel-tier-card' + ac + '" onclick="selectHotelTier(\'' + t.id + '\')">' +
         '<div class="hotel-tier-stars">' + t.stars + '</div>' +
         '<div class="hotel-tier-label">' + t.label + '</div>' +
         '<div class="hotel-tier-range">' + t.range + '</div></div>';
@@ -2129,7 +2164,7 @@ function iaTrack(eventName, params) {
     var fetchDestId = 'delhi';
     if (customMode && ciDrop) {
       var dl = ciDrop.toLowerCase();
-      var cm = {agra:'agra',jaipur:'jaipur',delhi:'delhi',haridwar:'haridwar',rishikesh:'rishikesh',varanasi:'varanasi',amritsar:'amritsar',shimla:'shimla',manali:'manali',mathura:'mathura',vrindavan:'vrindavan',corbett:'corbett',lucknow:'delhi',chandigarh:'shimla',dehradun:'rishikesh'};
+      var cm = {agra:'agra',jaipur:'jaipur',delhi:'delhi',haridwar:'haridwar',rishikesh:'rishikesh',varanasi:'varanasi',amritsar:'amritsar',shimla:'shimla',manali:'manali',mathura:'mathura',vrindavan:'vrindavan',corbett:'corbett',lucknow:'delhi',chandigarh:'shimla',dehradun:'rishikesh',jammu:'amritsar',ambala:'delhi',ludhiana:'amritsar',jalandhar:'amritsar',patiala:'delhi',gurdaspur:'amritsar',pathankot:'amritsar',dharamshala:'shimla',kasol:'shimla',meerut:'delhi',noida:'delhi',gurgaon:'delhi',gurugram:'delhi',faridabad:'delhi',aligarh:'agra',gwalior:'agra',mussoorie:'rishikesh',nainital:'corbett',pushkar:'jaipur',ajmer:'jaipur',udaipur:'jaipur',jodhpur:'jaipur',prayagraj:'varanasi',ayodhya:'varanasi',kanpur:'delhi'};
       for (var k in cm) { if (dl.indexOf(k) !== -1) { fetchDestId = cm[k]; break; } }
     } else if (activeTour()) {
       fetchDestId = activeTour().id;
