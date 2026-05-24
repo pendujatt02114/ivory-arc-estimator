@@ -6,13 +6,11 @@
 <title>Ivory Arc Travels | Premium Estimator</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script>
-(function() {
-  var MAPS_KEY = 'AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso';
-  var s = document.createElement('script');
-  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + MAPS_KEY + '&libraries=places&callback=__ivoryMapsReady';
-  document.head.appendChild(s);
-})();
-
+  // Define callback stub immediately so Maps API never fires into void
+  window.__ivoryMapsReady = function() {};
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=__ivoryMapsReady">
 </script>
 <!-- Firebase loads on demand when OTP is needed -->
 <!-- Google Analytics 4 -->
@@ -2581,7 +2579,7 @@ function iaTrack(eventName, params) {
     authDomain: 'ivory-arc-estimator-70e40.firebaseapp.com',
     projectId:  'ivory-arc-estimator-70e40'
   };
-  var RECAPTCHA_SITE_KEY = '6Lc1qvksAAAAOwvFoecOMLtrJqEfk38hZ7s9dBG';
+  var RECAPTCHA_SITE_KEY = '6LemQfksAAAAAIfKFjpx3o-gSHY7AiWcC1Eetm1w';
 
   // ── OTP State ─────────────────────────────────────────────────
   var otpState = {
@@ -2591,6 +2589,8 @@ function iaTrack(eventName, params) {
     recaptchaVerifier:  null,
     recaptchaReady:     false,
     phone:            '',
+    name:             '',
+    email:            '',
     error:            '',
     resendCooldown:   0,
     resendTimer:      null,
@@ -2695,19 +2695,35 @@ function iaTrack(eventName, params) {
 
   // ── Send OTP ──────────────────────────────────────────────────
   function sendOtp() {
+    var nameInput  = document.getElementById('otp-name-input');
+    var emailInput = document.getElementById('otp-email-input');
     var phoneInput = document.getElementById('otp-phone-input');
     if (!phoneInput) return;
 
-    var raw    = phoneInput.value.trim();
-    var digits = raw.replace(/\D/g, '');
+    var nameVal  = nameInput  ? nameInput.value.trim()  : (otpState.name  || '');
+    var emailVal = emailInput ? emailInput.value.trim() : (otpState.email || '');
+    var raw      = phoneInput.value.trim();
+    var digits   = raw.replace(/\D/g, '');
 
-    // Validate: must have + prefix and 10-15 digits
+    // Validate all three fields
+    if (nameVal.length < 2) {
+      otpState.error = 'Please enter your full name.';
+      renderOtpSection();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) {
+      otpState.error = 'Please enter a valid email address.';
+      renderOtpSection();
+      return;
+    }
     if (!raw.startsWith('+') || digits.length < 10 || digits.length > 15) {
       otpState.error = 'Please enter a valid number with country code e.g. +91 98765 43210';
       renderOtpSection();
       return;
     }
 
+    otpState.name  = nameVal;
+    otpState.email = emailVal;
     otpState.phone = raw;
     otpState.step  = 'sending';
     otpState.error = '';
@@ -2864,11 +2880,18 @@ function iaTrack(eventName, params) {
     if (lock)   lock.style.display   = 'none';
     if (unlock) {
       unlock.style.display = 'block';
-      // Render pricing summary
       renderPricingSummary();
-      // Inject lead form
       var leadContainer = document.getElementById('ivory-lead-form-container');
-      if (leadContainer) leadContainer.innerHTML = renderLeadForm();
+      if (leadContainer) {
+        leadContainer.innerHTML = renderLeadForm();
+        // Pre-fill with details already collected during OTP
+        var nameEl  = document.getElementById('lead-name');
+        var emailEl = document.getElementById('lead-email');
+        var phoneEl = document.getElementById('lead-phone');
+        if (nameEl  && otpState.name)          nameEl.value  = otpState.name;
+        if (emailEl && otpState.email)         emailEl.value = otpState.email;
+        if (phoneEl && otpState.verifiedPhone) phoneEl.value = otpState.verifiedPhone;
+      }
     }
   }
 
@@ -2915,24 +2938,40 @@ function iaTrack(eventName, params) {
       ? '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--red);">' + error + '</div>'
       : '';
 
-    // ── Idle / Enter phone ──
+    // ── Idle / Enter details ──
     if (step === 'idle' || step === 'sending') {
       var btnDisabled = step === 'sending' ? 'disabled' : '';
       var btnText     = step === 'sending' ? 'Sending code...' : 'Send Verification Code';
+      var iSt = 'background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;';
+      var lSt = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px;';
       el.innerHTML =
         '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;">' +
-          '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Verify Your Phone Number</div>' +
-          '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">We will send a one-time code to confirm your number before releasing your personalised estimate. Your number is never shared or used for marketing.</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Unlock Your Personalised Estimate</div>' +
+          '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">Enter your details below. A one-time code will be sent to your mobile to verify your number and release your full cost breakdown.</div>' +
           errorHTML +
-          '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">' +
-            '<label style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">Mobile Number</label>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
+            '<div><label style="' + lSt + '">Full Name</label>' +
+            '<input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name"' +
+            ' value="' + (otpState.name || '') + '" style="' + iSt + '"></div>' +
+            '<div><label style="' + lSt + '">Email Address</label>' +
+            '<input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email"' +
+            ' value="' + (otpState.email || '') + '" style="' + iSt + '"></div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
+            '<label style="' + lSt + '">Mobile Number</label>' +
             '<input id="otp-phone-input" type="tel"' +
             ' placeholder="+91 98765 43210"' +
             ' autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false"' +
             ' data-lpignore="true"' +
             ' value="' + (otpState.phone || '') + '"' +
-            ' style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;"' +
+            ' style="' + iSt + '"' +
             ' onkeydown="if(event.key===\'Enter\')sendOtp()">' +
+          '</div>' +
+          '<div style="display:flex;align-items:flex-start;gap:10px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.3);border-radius:6px;padding:12px 14px;margin-bottom:18px;">' +
+            '<div style="font-size:16px;flex-shrink:0;">&#128274;</div>' +
+            '<div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">' +
+              'Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.' +
+            '</div>' +
           '</div>' +
           '<button onclick="sendOtp()" ' + btnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;' + (step === 'sending' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' +
             btnText +
