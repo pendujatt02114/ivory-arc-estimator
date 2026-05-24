@@ -2694,8 +2694,35 @@ function iaTrack(eventName, params) {
   function clearResendCooldown() { if (otpState.resendTimer) { clearInterval(otpState.resendTimer); otpState.resendTimer = null; } }
 
   function resendOtp() {
-    otpState.step = 'idle'; otpState.confirmationResult = null; otpState.recaptchaVerifier = null; otpState.error = ''; clearResendCooldown(); renderOtpSection();
-    setTimeout(function() { var inp = document.getElementById('otp-phone-input'); if (inp) inp.value = otpState.phone; sendOtp(); }, 200);
+    // Clear previous state but keep name/email/phone already collected
+    otpState.step = 'sending';
+    otpState.confirmationResult = null;
+    otpState.recaptchaVerifier = null;
+    otpState.error = '';
+    clearResendCooldown();
+    renderOtpSection();
+
+    // Skip validation — we already have all details, go straight to Firebase
+    var phone = otpState.phone;
+    loadFirebase(function() {
+      setupRecaptcha(function() {
+        window.firebase.auth().signInWithPhoneNumber(phone, otpState.recaptchaVerifier)
+          .then(function(result) {
+            otpState.confirmationResult = result;
+            otpState.step = 'code_sent';
+            otpState.error = '';
+            startResendCooldown();
+            renderOtpSection();
+            setTimeout(function() { var i = document.getElementById('otp-code-input'); if (i) i.focus(); }, 100);
+          })
+          .catch(function(err) {
+            otpState.step = 'idle';
+            otpState.error = friendlyFirebaseError(err.code);
+            otpState.recaptchaVerifier = null;
+            renderOtpSection();
+          });
+      });
+    });
   }
 
   function unlockEstimate() {
