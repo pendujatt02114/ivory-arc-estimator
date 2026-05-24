@@ -813,19 +813,38 @@ function iaTrack(eventName, params) {
         ${accommodationSection()}
 
         <div class="section-head">Your Total Estimate</div>
-        <div id="ivory-pricing-summary"></div>
-        <div id="ivory-lead-form-container"></div>
+
+        <!-- OTP gate: locked state (visible until phone verified) -->
+        <div id="ivory-estimate-lock">
+          <div id="ivory-otp-section"></div>
+        </div>
+
+        <!-- Unlocked state: hidden until OTP verified -->
+        <div id="ivory-estimate-unlocked" style="display:none;">
+          <div id="ivory-pricing-summary"></div>
+          <div id="ivory-lead-form-container"></div>
+        </div>
 
 
     `;
 
     if (customMode) initAC();
-    // Always show pricing summary and lead form
-    renderPricingSummary();
-    // Inject lead form if container exists
-    var lfc = document.getElementById('ivory-lead-form-container');
-    if (lfc && typeof renderLeadForm === 'function' && !lfc.innerHTML) {
-      lfc.innerHTML = renderLeadForm();
+    // Only render OTP section — pricing and lead form are behind the gate
+    if (typeof renderOtpSection === 'function') {
+      // If already verified in this session, show unlocked directly
+      if (otpState && otpState.step === 'verified') {
+        var lock = document.getElementById('ivory-estimate-lock');
+        var unlock = document.getElementById('ivory-estimate-unlocked');
+        if (lock) lock.style.display = 'none';
+        if (unlock) unlock.style.display = 'block';
+        renderPricingSummary();
+        var lfc = document.getElementById('ivory-lead-form-container');
+        if (lfc && typeof renderLeadForm === 'function' && !lfc.innerHTML) {
+          lfc.innerHTML = renderLeadForm();
+        }
+      } else {
+        renderOtpSection();
+      }
     }
   }
 
