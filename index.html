@@ -2206,26 +2206,28 @@ function iaTrack(eventName, params) {
     fxLoading = true;
     fxError   = false;
 
-    // Route through Apps Script proxy — bypasses all CORS issues
-    var proxyUrl = WEBHOOK_URL + '?action=fx';
-    fetch(proxyUrl)
+    // Set working rates immediately so UI never gets stuck on "Fetching..."
+    // These are real rates updated manually — USD/INR ~84.5, EUR/INR ~92
+    fxRates.USD = 0.01183;
+    fxRates.EUR = 0.01087;
+    fxFetchedAt = new Date();
+    fxLoading   = false;
+    fxError     = false;
+    renderPricingSummary();
+    if (onDone) onDone(true);
+
+    // Also attempt live rate fetch in background — updates display if successful
+    var today = new Date().toISOString().slice(0, 10);
+    fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (!data || !data.inr || !data.eur) throw new Error('bad data');
-        fxRates.USD = parseFloat((1 / data.inr).toFixed(8));
-        fxRates.EUR = parseFloat((data.eur  / data.inr).toFixed(8));
-        fxFetchedAt = new Date(); fxLoading = false; fxError = false;
-        renderPricingSummary();
-        if (onDone) onDone(true);
+        if (!data || !data.usd || !data.usd.inr) return;
+        fxRates.USD = parseFloat((1 / data.usd.inr).toFixed(8));
+        fxRates.EUR = parseFloat((data.usd.eur / data.usd.inr).toFixed(8));
+        fxFetchedAt = new Date();
+        renderPricingSummary(); // re-render with live rate
       })
-      .catch(function() {
-        // Hard fallback — always works even if proxy fails
-        fxRates.USD = 0.01183;
-        fxRates.EUR = 0.01087;
-        fxFetchedAt = new Date(); fxLoading = false; fxError = false;
-        renderPricingSummary();
-        if (onDone) onDone(true);
-      });
+      .catch(function() {}); // silent — hardcoded rates already showing
   }
 
   function convertFromINR(amountINR) {
