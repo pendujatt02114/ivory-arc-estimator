@@ -2788,20 +2788,13 @@ function iaTrack(eventName, params) {
       var waPhoneId = '1089496754253153';
       var waTarget  = '917455037397';
       var waBody = 'New Ivory Arc Lead ' + payload.estimateRef +
-        '
-Name: '        + (payload.name         || '-') +
-        '
-Phone: '       + (payload.phone         || '-') +
-        '
-Email: '       + (payload.email         || '-') +
-        '
-Destination: ' + (payload.destination   || '-') +
-        '
-Dates: '       + (payload.tourStartDate || '-') + ' to ' + (payload.tourEndDate || '-') +
-        '
-Group: '       + (payload.groupSize     || '-') +
-        '
-Total: '       + (payload.estimateTotal || '-');
+        '\nName: '        + (payload.name         || '-') +
+        '\nPhone: '       + (payload.phone         || '-') +
+        '\nEmail: '       + (payload.email         || '-') +
+        '\nDestination: ' + (payload.destination   || '-') +
+        '\nDates: '       + (payload.tourStartDate || '-') + ' to ' + (payload.tourEndDate || '-') +
+        '\nGroup: '       + (payload.groupSize     || '-') +
+        '\nTotal: '       + (payload.estimateTotal || '-');
 
       fetch('https://graph.facebook.com/v20.0/' + waPhoneId + '/messages', {
         method: 'POST',
