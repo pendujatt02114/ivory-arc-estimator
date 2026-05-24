@@ -6,7 +6,6 @@
 <title>Ivory Arc Travels | Premium Estimator</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script>
-  // Define callback stub immediately so Maps API never fires into void
   window.__ivoryMapsReady = function() {};
 </script>
 <script async defer
@@ -690,6 +689,9 @@ function iaTrack(eventName, params) {
   let airportSvcs    = new Set();
 
   // ── Travel Details state ──────────────────────────────────────────────────
+  let wantHotel    = null;   // true | false | null (mandatory)
+  let tripType     = null;   // 'twoway' | 'droponly'
+  let showAncilPrompt = false;
   let tdStart      = null;   // Date object
   let tdEnd     = null;   // Date object
   let tdHoverDate    = null;   // for range preview
@@ -789,16 +791,16 @@ function iaTrack(eventName, params) {
 
 
 
-        <div class="section-head">Private Day Tours</div>
+        <div class="section-head">Choice of Destination ✱</div>
         <div class="${locked}"><div class="grid">${DESTINATIONS.dayTours.map(t => destCard(t, false)).join('')}</div></div>
 
-        <div class="section-head">Multi-Day Tours</div>
+        <div class="section-head">Multi-Day Destinations ✱</div>
         <div class="${locked}"><div class="grid">${DESTINATIONS.multiDay.map(t => destCard(t, true)).join('')}</div></div>
 
         <div class="section-head">Custom Itinerary</div>
         ${customItinerarySection()}
 
-        <div class="section-head" style="${customMode?'opacity:0.3':''}">Group Size &amp; Pricing Tier</div>
+        <div class="section-head" style="${customMode?'opacity:0.3':''}">Group Size &amp; Pricing Tier ✱</div>
         <div class="${locked}">${groupSizeSection()}</div>
 
         <div class="section-head" style="${customMode?'opacity:0.3':''}">Guide Preference</div>
@@ -812,7 +814,7 @@ function iaTrack(eventName, params) {
 
         <div class="section-head">Your Total Estimate</div>
 
-        <!-- OTP gate: locked state (visible until phone verified) -->
+        <!-- OTP gate: locked state -->
         <div id="ivory-estimate-lock">
           <div id="ivory-otp-section"></div>
         </div>
@@ -827,9 +829,7 @@ function iaTrack(eventName, params) {
     `;
 
     if (customMode) initAC();
-    // Only render OTP section — pricing and lead form are behind the gate
     if (typeof renderOtpSection === 'function') {
-      // If already verified in this session, show unlocked directly
       if (otpState && otpState.step === 'verified') {
         var lock = document.getElementById('ivory-estimate-lock');
         var unlock = document.getElementById('ivory-estimate-unlocked');
@@ -837,9 +837,7 @@ function iaTrack(eventName, params) {
         if (unlock) unlock.style.display = 'block';
         renderPricingSummary();
         var lfc = document.getElementById('ivory-lead-form-container');
-        if (lfc && typeof renderLeadForm === 'function' && !lfc.innerHTML) {
-          lfc.innerHTML = renderLeadForm();
-        }
+        if (lfc && typeof renderLeadForm === 'function' && !lfc.innerHTML) lfc.innerHTML = renderLeadForm();
       } else {
         renderOtpSection();
       }
@@ -967,6 +965,7 @@ function iaTrack(eventName, params) {
               <span>${a.name} <span style="color:var(--gold);font-size:11px;">(${a.type})</span></span>
               <span class="anc-price">${a.price > 0 ? fmt(a.price) : 'Incl.'}</span>
             </div>`).join('')}
+            ${(showAncilPrompt && activeAncils.length === 0) ? `<div style="margin-top:14px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.4);border-radius:8px;padding:14px 16px;" onclick="event.stopPropagation()"><div style="font-size:13px;color:#fff;font-weight:500;margin-bottom:6px;">&#10024; Would you like to add activities?</div><div style="font-size:12px;color:rgba(245,240,232,0.6);line-height:1.6;margin-bottom:10px;">You haven't selected any activities. Tap any above to add, or continue without.</div><div style="display:flex;gap:8px;"><button onclick="dismissAncilPrompt()" style="padding:7px 16px;background:var(--gold);color:var(--black);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">Continue without</button><button onclick="dismissAncilPrompt()" style="padding:7px 16px;background:none;border:1px solid rgba(201,169,110,0.4);color:var(--gold);border-radius:20px;font-size:12px;cursor:pointer;">Add activities above</button></div></div>` : ''}
           </div>` : ''}
       </div>`;
   }
@@ -1089,6 +1088,14 @@ function iaTrack(eventName, params) {
           <div class="ci-field" style="justify-content:flex-end;">
             <label style="margin-bottom:10px;">Options</label>
             <div class="ci-options-row" style="flex-direction:column;gap:10px;margin-bottom:0;">
+              <div style="margin-bottom:6px;">
+                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Trip Type <span style="color:#F87171;">&#10033;</span></div>
+                <div style="display:flex;gap:8px;">
+                  <button id="btn-droponly" onclick="tripType='droponly';updateCalcBtn();" style="flex:1;padding:9px 8px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(0,0,0,0.3);color:rgba(245,240,232,0.6);">&#10145; Drop Only</button>
+                  <button id="btn-twoway" onclick="tripType='twoway';updateCalcBtn();" style="flex:1;padding:9px 8px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(0,0,0,0.3);color:rgba(245,240,232,0.6);">&#8644; Two Way</button>
+                </div>
+                <div id="twoway-note" style="font-size:11px;color:var(--gold);margin-top:6px;display:none;">Two-way selected: distance and costs will be doubled.</div>
+              </div>
               <div id="ci-nighthalt-chip" class="ci-chip" onclick="toggleNightHalt()">
                 <span class="chip-dot"></span>Night Halt Required (driver overnight — +₹800)
               </div>
@@ -1108,7 +1115,7 @@ function iaTrack(eventName, params) {
     if (chip) chip.className = 'ci-chip' + (ciNightHalt ? ' active' : '');
     // If we already have a result, recalculate with new night halt value
     if (ciResult && ciResult !== 'loading' && ciResult !== 'error' && ciPickupPlaceId && ciDropPlaceId) {
-      ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt);
+      ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
       updateResultPanel();
     }
   }
@@ -1164,15 +1171,16 @@ function iaTrack(eventName, params) {
   }
 
   // ── Pricing Engine ────────────────────────────────────────────────────────
-  function applyPricingLogic(googleKm, pickupName, dropName, nightHalt) {
+  function applyPricingLogic(googleKm, pickupName, dropName, nightHalt, isTwoWay) {
+    var effectiveKm = isTwoWay ? googleKm * 2 : googleKm;
     // 1. Commercial buffer
     // Covers real-world deviations: hotel detours, rerouting, traffic jams,
     // wrong turns, customer stops, internal parking loops, route changes.
     let buffer;
-    if (googleKm < 100)       buffer = 13;   // 10–15 km band
-    else if (googleKm < 300)  buffer = 33;   // 25–40 km band
-    else                      buffer = 55;   // 50–60 km band
-    const billableKm = googleKm + buffer;
+    if (effectiveKm < 100)       buffer = 13;
+    else if (effectiveKm < 300)  buffer = 33;
+    else                         buffer = 55;
+    const billableKm = effectiveKm + buffer;
 
     // 2. Distance charge @ ₹18/km on buffered distance
     // ₹18/km is an all-in rate covering fuel, driver wages, and vehicle cost.
@@ -1189,7 +1197,7 @@ function iaTrack(eventName, params) {
     const parking = 0; // collected against receipt only
 
     // 5. Night halt
-    const nightCost = nightHalt ? 800 : 0;
+    const nightCost = nightHalt ? (isTwoWay ? 1600 : 800) : 0;
 
     // 6. Subtotal
     const subtotal = distCharge + toll + nightCost;
@@ -1200,8 +1208,8 @@ function iaTrack(eventName, params) {
     // 8. Final total (parking excluded — actuals only)
     const total = subtotal + gst;
 
-    return { pickup: pickupName, drop: dropName, googleKm, buffer, billableKm,
-             distCharge, toll, nightHalt, subtotal, gst, total };
+    return { pickup: pickupName, drop: dropName, googleKm, effectiveKm: effectiveKm, buffer, billableKm,
+             distCharge, toll, nightHalt, nightCost, isTwoWay: !!isTwoWay, subtotal, gst, total };
   }
 
   // ── Google Maps — full working implementation ────────────────────────────
@@ -1384,7 +1392,7 @@ function iaTrack(eventName, params) {
               || (table[ciDropPlaceId]||{})[ciPickupPlaceId]
               || Math.round(100 + Math.random() * 300);
       setTimeout(() => {
-        ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt);
+        ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
         updateResultPanel();
       }, 800);
       return;
@@ -1587,6 +1595,32 @@ function iaTrack(eventName, params) {
         </div>` : ''}
 
         
+        <!-- Number of Days (Mandatory) -->
+        <div style="background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.35);border-radius:8px;padding:16px 18px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div style="font-size:14px;color:#fff;font-weight:500;margin-bottom:3px;">Number of Days <span style="color:var(--gold);">&#10033;</span></div>
+              <div style="font-size:12px;color:rgba(245,240,232,0.55);line-height:1.5;">How many days is this tour? Sets the default for your chosen destination.</div>
+            </div>
+            <div style="display:flex;align-items:center;border:1px solid var(--gold);border-radius:20px;overflow:hidden;">
+              <button onclick="if(dayTourDays>1){dayTourDays--;render();}" style="background:rgba(201,169,110,0.1);border:none;color:var(--gold);width:34px;height:34px;font-size:18px;cursor:pointer;line-height:1;">&#8722;</button>
+              <div style="min-width:64px;text-align:center;font-size:14px;font-weight:500;color:var(--ivory);background:rgba(0,0,0,0.3);padding:6px 4px;" id="days-display">${dayTourDays} Day${dayTourDays!==1?'s':''}</div>
+              <button onclick="dayTourDays++;render();" style="background:rgba(201,169,110,0.1);border:none;color:var(--gold);width:34px;height:34px;font-size:18px;cursor:pointer;line-height:1;">&#43;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hotel Recommendation (Mandatory) -->
+        <div id="hotel-rec-block" style="background:rgba(201,169,110,0.06);border:1px solid ${wantHotel===null ? 'rgba(248,113,113,0.5)' : 'rgba(201,169,110,0.35)'};border-radius:8px;padding:16px 18px;margin-bottom:14px;">
+          <div style="font-size:14px;color:#fff;font-weight:500;margin-bottom:4px;">Would you like a hotel recommendation? <span style="color:var(--gold);">&#10033;</span></div>
+          <div style="font-size:12px;color:rgba(245,240,232,0.55);margin-bottom:14px;line-height:1.5;">Tell us whether you need hotel suggestions — this helps us build an accurate estimate for you.</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button id="btn-hotel-yes" onclick="wantHotel=true;render();" style="flex:1;min-width:120px;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:1px;cursor:pointer;border:1px solid ${wantHotel===true?'var(--gold)':'rgba(201,169,110,0.3)'};background:${wantHotel===true?'rgba(201,169,110,0.2)':'rgba(0,0,0,0.3)'};color:${wantHotel===true?'var(--gold)':'rgba(245,240,232,0.7)'};">&#10003; Yes, recommend a hotel</button>
+            <button id="btn-hotel-no" onclick="wantHotel=false;hotelTier=null;selectedHotel=null;render();" style="flex:1;min-width:120px;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:1px;cursor:pointer;border:1px solid ${wantHotel===false?'var(--gold)':'rgba(201,169,110,0.3)'};background:${wantHotel===false?'rgba(201,169,110,0.2)':'rgba(0,0,0,0.3)'};color:${wantHotel===false?'var(--gold)':'rgba(245,240,232,0.7)'};">&#10007; No, I have my own arrangement</button>
+          </div>
+          ${wantHotel===null ? '<div style="font-size:11px;color:#F87171;margin-top:8px;">&#9888; Please make a selection to continue</div>' : ''}
+        </div>
+
         <!-- Day Tour Toggle -->
         <div style="background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.35);border-radius:8px;padding:16px 18px;margin-bottom:16px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
@@ -1616,7 +1650,7 @@ function iaTrack(eventName, params) {
           ` : ''}
         </div>
 
-        <button class="td-confirm-btn" onclick="confirmTravelDetails()" ${isDayTour ? (!tdStart?'disabled':'') : (!datesSet?'disabled':'')}>
+        <button class="td-confirm-btn" onclick="confirmTravelDetails()" ${(isDayTour ? !tdStart : !datesSet) || wantHotel===null ? 'disabled' : ''}>
           ${isDayTour ? (tdStart ? 'Confirm Tour Date & Continue →' : 'Please Select Your Tour Date Above') : (datesSet ? 'Confirm Travel Dates & Continue →' : 'Please Select Your Travel Dates Above')}
         </button>
       </div>`;
@@ -1660,6 +1694,7 @@ function iaTrack(eventName, params) {
     var isDayTour = activeTourId !== null && DESTINATIONS.dayTours.some(function(t){ return t.id === activeTourId; });
     if (!tdStart) return;
     if (!isDayTour && !tdEnd) return;
+    if (wantHotel === null) return;
     // For day tours set tdEnd = tdStart
     if (isDayTour) { tdEnd = new Date(tdStart); }
     tdConfirmed = true;
@@ -1751,6 +1786,10 @@ function iaTrack(eventName, params) {
     const tour   = activeTour();
     const isMulti = tour && MULTI_CITY_DESTS[tour.id];
 
+    if (wantHotel === false) {
+      return '<div class="hotel-no-dest" style="border-color:rgba(201,169,110,0.15);color:rgba(245,240,232,0.35);background:rgba(0,0,0,0.2);">&#127968; Hotel recommendation not required — you have your own arrangement. Update in Travel Details above if you change your mind.</div>';
+    }
+
     if (!tour) {
       return `<div class="hotel-no-dest">← Select a destination above to explore accommodation options</div>`;
     }
@@ -1784,7 +1823,7 @@ function iaTrack(eventName, params) {
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
       hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
         <div class="hotel-serpapi-note">
-          ${'Curated reference rates · '}
+          ${SERPAPI_KEY !== 'YOUR_SERPAPI_KEY' ? 'Live rates via Google Hotels · ' : 'Curated reference rates · '}
           Prices are indicative and subject to availability at time of booking.
         </div>`;
     } else {
@@ -1975,7 +2014,7 @@ function iaTrack(eventName, params) {
 
   // ── Unified fetch function ────────────────────────────────────────────────
   function fetchHotels(destId, tier, callback) {
-    if (SERPAPI_KEY && SERPAPI_KEY !== '') {
+    if (SERPAPI_KEY && SERPAPI_KEY !== 'YOUR_SERPAPI_KEY') {
       const cityName = {
         delhi:'New Delhi',agra:'Agra',jaipur:'Jaipur',varanasi:'Varanasi',
         amritsar:'Amritsar',shimla:'Shimla',manali:'Manali',haridwar:'Haridwar',
@@ -2020,9 +2059,15 @@ function iaTrack(eventName, params) {
     hotelTier    = null;
     hotelResults = null;
     selectedHotel = null;
+    showAncilPrompt = false;
     multiCityTier = {}; multiCityResults = {}; multiCitySelected = {}; multiCityNote = {};
     render();
+    if (activeTourId) {
+      setTimeout(function() { showAncilPrompt = true; render(); }, 1800);
+    }
   }
+
+  function dismissAncilPrompt() { showAncilPrompt = false; render(); }
 
   function toggleAncil(name) {
     activeAncils.includes(name)
@@ -2074,6 +2119,20 @@ function iaTrack(eventName, params) {
     render();
   }
 
+  function updateCalcBtn() {
+    var btn = document.getElementById('ci-calc-btn');
+    if (!btn) return;
+    var ready = !!(ciPickupPlaceId && ciDropPlaceId && tripType);
+    btn.disabled = !ready;
+    btn.textContent = ready ? 'Calculate My ' + (tripType==='twoway' ? 'Two-Way' : 'One-Way') + ' Itinerary Estimate' : (!ciPickupPlaceId || !ciDropPlaceId) ? 'Calculate My Itinerary Estimate' : 'Please select Drop Only or Two Way above';
+    var drop = document.getElementById('btn-droponly');
+    var two  = document.getElementById('btn-twoway');
+    var note = document.getElementById('twoway-note');
+    if (drop) { drop.style.border = tripType==='droponly' ? '1px solid var(--gold)' : '1px solid rgba(201,169,110,0.3)'; drop.style.color = tripType==='droponly' ? 'var(--gold)' : 'rgba(245,240,232,0.6)'; drop.style.background = tripType==='droponly' ? 'rgba(201,169,110,0.2)' : 'rgba(0,0,0,0.3)'; }
+    if (two)  { two.style.border  = tripType==='twoway' ? '1px solid var(--gold)' : '1px solid rgba(201,169,110,0.3)'; two.style.color  = tripType==='twoway' ? 'var(--gold)' : 'rgba(245,240,232,0.6)'; two.style.background  = tripType==='twoway' ? 'rgba(201,169,110,0.2)' : 'rgba(0,0,0,0.3)'; }
+    if (note) { note.style.display = tripType==='twoway' ? 'block' : 'none'; }
+  }
+
   function toggleCustomMode(on) {
     if (on) iaTrack('custom_itinerary_started');
     customMode = on;
@@ -2118,61 +2177,36 @@ function iaTrack(eventName, params) {
   // Fallback pax if exact not selected
   var TIER_DEFAULT_PAX = { t1: 1, t2: 3, t3: 5, t4: 7 };
 
-  // ── FX Rate Fetcher ──────────────────────────────────────────
-  // Uses open.er-api.com (USD base) — free, no key, reliable
-  // Logic: 1 USD = X INR and 1 USD = Y EUR
-  //        so 1 INR = (1/X) USD  and  1 INR = (Y/X) EUR
+  // ── FX Rate Fetcher (Frankfurter API — no key needed) ─────────
   function fetchFxRates(onDone) {
     if (fxLoading) return;
     fxLoading = true;
     fxError   = false;
-
     fetch('https://open.er-api.com/v6/latest/USD')
-      .then(function(r) {
-        if (!r.ok) throw new Error('open-er-api status ' + r.status);
-        return r.json();
-      })
+      .then(function(r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
       .then(function(data) {
-        if (!data || !data.rates || !data.rates.INR || !data.rates.EUR) {
-          throw new Error('Unexpected response structure');
-        }
-        var inrPerUsd = data.rates.INR;  // e.g. 84.5
-        var eurPerUsd = data.rates.EUR;  // e.g. 0.92
-        // 1 INR = 1/inrPerUsd USD
-        // 1 INR = eurPerUsd/inrPerUsd EUR
-        fxRates.USD = parseFloat((1 / inrPerUsd).toFixed(8));
-        fxRates.EUR = parseFloat((eurPerUsd / inrPerUsd).toFixed(8));
-        fxFetchedAt = new Date();
-        fxLoading   = false;
-        fxError     = false;
+        if (!data || !data.rates || !data.rates.INR) throw new Error('bad data');
+        fxRates.USD = parseFloat((1 / data.rates.INR).toFixed(8));
+        fxRates.EUR = parseFloat((data.rates.EUR / data.rates.INR).toFixed(8));
+        fxFetchedAt = new Date(); fxLoading = false; fxError = false;
         renderPricingSummary();
         if (onDone) onDone(true);
       })
       .catch(function(err) {
-        console.warn('Ivory Arc FX fetch failed:', err.message);
-        // Fallback: try exchangerate-api
         fetch('https://api.exchangerate-api.com/v4/latest/USD')
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (!data || !data.rates || !data.rates.INR) throw new Error('bad fallback');
             fxRates.USD = parseFloat((1 / data.rates.INR).toFixed(8));
             fxRates.EUR = parseFloat((data.rates.EUR / data.rates.INR).toFixed(8));
-            fxFetchedAt = new Date();
-            fxLoading   = false;
-            fxError     = false;
+            fxFetchedAt = new Date(); fxLoading = false; fxError = false;
             renderPricingSummary();
             if (onDone) onDone(true);
           })
-          .catch(function() {
-            fxLoading = false;
-            fxError   = true;
-            renderPricingSummary();
-            if (onDone) onDone(false);
-          });
+          .catch(function() { fxLoading = false; fxError = true; renderPricingSummary(); if (onDone) onDone(false); });
       });
   }
 
-  // ── Currency conversion ───────────────────────────────────────
   function convertFromINR(amountINR) {
     if (activeCurrency === 'USD' && fxRates.USD) return amountINR * fxRates.USD;
     if (activeCurrency === 'EUR' && fxRates.EUR) return amountINR * fxRates.EUR;
@@ -2180,17 +2214,12 @@ function iaTrack(eventName, params) {
   }
 
   function formatCurrency(amountINR) {
-    // If a foreign currency is selected but rate hasn't loaded yet, show INR
-    if (activeCurrency === 'USD' && !fxRates.USD) return '\u20b9' + amountINR.toLocaleString('en-IN');
-    if (activeCurrency === 'EUR' && !fxRates.EUR) return '\u20b9' + amountINR.toLocaleString('en-IN');
+    if (activeCurrency === 'USD' && !fxRates.USD) return '₹' + amountINR.toLocaleString('en-IN');
+    if (activeCurrency === 'EUR' && !fxRates.EUR) return '₹' + amountINR.toLocaleString('en-IN');
     var converted = convertFromINR(amountINR);
-    if (activeCurrency === 'USD') {
-      return '$' + converted.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    }
-    if (activeCurrency === 'EUR') {
-      return '\u20ac' + converted.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    }
-    return '\u20b9' + amountINR.toLocaleString('en-IN');
+    if (activeCurrency === 'USD') return '$' + converted.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+    if (activeCurrency === 'EUR') return '€' + converted.toLocaleString('de-DE', {minimumFractionDigits:0, maximumFractionDigits:0});
+    return '₹' + amountINR.toLocaleString('en-IN');
   }
 
   function fxRateLabel() {
@@ -2568,7 +2597,6 @@ function iaTrack(eventName, params) {
 
   // ── Firebase OTP Module ──────────────────────────────────────────────────
 
-  // ── Config (new project, modular SDK v12) ─────────────────────
   var FIREBASE_CONFIG = {
     apiKey:            'AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM',
     authDomain:        'ivory-arc-estimator-8727e.firebaseapp.com',
@@ -2578,347 +2606,177 @@ function iaTrack(eventName, params) {
     appId:             '1:551942404838:web:4ca6260483724506271927'
   };
 
-  // ── OTP State ─────────────────────────────────────────────────
   var otpState = {
-    step:               'idle',
-    confirmationResult: null,
-    recaptchaVerifier:  null,
-    phone:              '',
-    name:               '',
-    email:              '',
-    error:              '',
-    resendCooldown:     0,
-    resendTimer:        null,
-    verifiedPhone:      null,
+    step:'idle', confirmationResult:null, recaptchaVerifier:null,
+    phone:'', name:'', email:'', error:'',
+    resendCooldown:0, resendTimer:null, verifiedPhone:null
   };
 
-  // ── Firebase loader (compat SDK — most stable for phone auth) ──
   var firebaseLoaded = false;
 
   function loadFirebase(onReady) {
-    if (firebaseLoaded && window.firebase && window.firebase.auth) {
-      onReady(); return;
-    }
+    if (firebaseLoaded && window.firebase && window.firebase.auth) { onReady(); return; }
     function loadScript(src, id, cb) {
       if (document.getElementById(id)) {
-        // already injected — wait for it
-        var t = setInterval(function() {
-          if (window.firebase && window.firebase.auth) {
-            clearInterval(t); cb();
-          }
-        }, 80);
+        var t = setInterval(function() { if (window.firebase && window.firebase.auth) { clearInterval(t); cb(); } }, 80);
         return;
       }
-      var s = document.createElement('script');
-      s.src = src; s.id = id;
-      s.onerror = function() {
-        otpState.error = 'Could not load verification service. Please check your connection.';
-        otpState.step  = 'error';
-        renderOtpSection();
-      };
+      var s = document.createElement('script'); s.src = src; s.id = id;
+      s.onerror = function() { otpState.error = 'Could not load verification service. Please check your connection.'; otpState.step = 'error'; renderOtpSection(); };
       s.onload = cb;
       document.head.appendChild(s);
     }
-    loadScript(
-      'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
-      'fb-app-compat',
-      function() {
-        loadScript(
-          'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
-          'fb-auth-compat',
-          function() {
-            try {
-              if (!window.firebase.apps || window.firebase.apps.length === 0) {
-                window.firebase.initializeApp(FIREBASE_CONFIG);
-              }
-              firebaseLoaded = true;
-              onReady();
-            } catch(e) {
-              otpState.error = 'Could not initialise verification. Please refresh and try again.';
-              otpState.step  = 'error';
-              renderOtpSection();
-            }
-          }
-        );
-      }
-    );
-  }
-
-  // ── reCAPTCHA setup ───────────────────────────────────────────
-  function setupRecaptcha(cb) {
-    // Clear any stale verifier
-    if (otpState.recaptchaVerifier) {
-      try { otpState.recaptchaVerifier.clear(); } catch(e) {}
-      otpState.recaptchaVerifier = null;
-    }
-    var container = document.getElementById('ivory-recaptcha-container');
-    if (!container) { if (cb) cb(new Error('No recaptcha container')); return; }
-
-    otpState.recaptchaVerifier = new window.firebase.auth.RecaptchaVerifier(
-      'ivory-recaptcha-container',
-      {
-        size: 'invisible',
-        callback: function() {},
-        'expired-callback': function() {
-          otpState.recaptchaVerifier = null;
-        }
-      }
-    );
-    otpState.recaptchaVerifier.render()
-      .then(function() { if (cb) cb(null); })
-      .catch(function(err) {
-        console.warn('reCAPTCHA render error:', err);
-        if (cb) cb(null); // proceed anyway — Firebase handles it internally
+    loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js', 'fb-app-compat', function() {
+      loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js', 'fb-auth-compat', function() {
+        try {
+          if (!window.firebase.apps || window.firebase.apps.length === 0) window.firebase.initializeApp(FIREBASE_CONFIG);
+          firebaseLoaded = true; onReady();
+        } catch(e) { otpState.error = 'Could not initialise verification. Please refresh and try again.'; otpState.step = 'error'; renderOtpSection(); }
       });
+    });
   }
 
-  // ── Send OTP ──────────────────────────────────────────────────
+  function setupRecaptcha(cb) {
+    if (otpState.recaptchaVerifier) { try { otpState.recaptchaVerifier.clear(); } catch(e) {} otpState.recaptchaVerifier = null; }
+    var container = document.getElementById('ivory-recaptcha-container');
+    if (!container) { if (cb) cb(new Error('No container')); return; }
+    otpState.recaptchaVerifier = new window.firebase.auth.RecaptchaVerifier('ivory-recaptcha-container', {
+      size: 'invisible', callback: function() {}, 'expired-callback': function() { otpState.recaptchaVerifier = null; }
+    });
+    otpState.recaptchaVerifier.render().then(function() { if (cb) cb(null); }).catch(function() { if (cb) cb(null); });
+  }
+
   function sendOtp() {
     var nameInput  = document.getElementById('otp-name-input');
     var emailInput = document.getElementById('otp-email-input');
     var phoneInput = document.getElementById('otp-phone-input');
     if (!phoneInput) return;
-
     var nameVal  = nameInput  ? nameInput.value.trim()  : (otpState.name  || '');
     var emailVal = emailInput ? emailInput.value.trim() : (otpState.email || '');
     var raw      = phoneInput.value.trim();
     var digits   = raw.replace(/\D/g, '');
-
-    if (nameVal.length < 2) {
-      otpState.error = 'Please enter your full name.';
-      renderOtpSection(); return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) {
-      otpState.error = 'Please enter a valid email address.';
-      renderOtpSection(); return;
-    }
-    if (!raw.startsWith('+') || digits.length < 10 || digits.length > 15) {
-      otpState.error = 'Please enter a valid number with country code e.g. +91 98765 43210';
-      renderOtpSection(); return;
-    }
-
-    otpState.name  = nameVal;
-    otpState.email = emailVal;
-    otpState.phone = raw;
-    otpState.step  = 'sending';
-    otpState.error = '';
-    renderOtpSection();
-
+    if (nameVal.length < 2) { otpState.error = 'Please enter your full name.'; renderOtpSection(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) { otpState.error = 'Please enter a valid email address.'; renderOtpSection(); return; }
+    if (!raw.startsWith('+') || digits.length < 10 || digits.length > 15) { otpState.error = 'Please enter a valid number with country code e.g. +91 98765 43210'; renderOtpSection(); return; }
+    otpState.name = nameVal; otpState.email = emailVal; otpState.phone = raw;
+    otpState.step = 'sending'; otpState.error = ''; renderOtpSection();
     loadFirebase(function() {
       setupRecaptcha(function() {
         window.firebase.auth().signInWithPhoneNumber(raw, otpState.recaptchaVerifier)
-          .then(function(confirmationResult) {
-            otpState.confirmationResult = confirmationResult;
-            otpState.step               = 'code_sent';
-            otpState.error              = '';
-            startResendCooldown();
-            renderOtpSection();
-            setTimeout(function() {
-              var inp = document.getElementById('otp-code-input');
-              if (inp) inp.focus();
-            }, 100);
-          })
-          .catch(function(err) {
-            console.error('signInWithPhoneNumber error:', err);
-            otpState.step               = 'idle';
-            otpState.error              = friendlyFirebaseError(err.code);
-            otpState.recaptchaVerifier  = null;
-            renderOtpSection();
-          });
+          .then(function(result) { otpState.confirmationResult = result; otpState.step = 'code_sent'; otpState.error = ''; startResendCooldown(); renderOtpSection(); setTimeout(function() { var i = document.getElementById('otp-code-input'); if (i) i.focus(); }, 100); })
+          .catch(function(err) { otpState.step = 'idle'; otpState.error = friendlyFirebaseError(err.code); otpState.recaptchaVerifier = null; renderOtpSection(); });
       });
     });
   }
 
-  // ── Verify OTP ────────────────────────────────────────────────
   function verifyOtp() {
     var codeInput = document.getElementById('otp-code-input');
     if (!codeInput) return;
     var code = codeInput.value.trim().replace(/\s/g, '');
-    if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
-      otpState.error = 'Please enter the 6-digit code sent to your phone.';
-      renderOtpSection(); return;
-    }
-    otpState.step  = 'verifying';
-    otpState.error = '';
-    renderOtpSection();
-
+    if (!code || code.length !== 6 || !/^\d+$/.test(code)) { otpState.error = 'Please enter the 6-digit code.'; renderOtpSection(); return; }
+    otpState.step = 'verifying'; otpState.error = ''; renderOtpSection();
     otpState.confirmationResult.confirm(code)
-      .then(function() {
-        if (typeof iaTrack === 'function') iaTrack('phone_verified');
-        otpState.step          = 'verified';
-        otpState.verifiedPhone = otpState.phone;
-        otpState.error         = '';
-        clearResendCooldown();
-        renderOtpSection();
-        unlockEstimate();
-      })
-      .catch(function(err) {
-        otpState.step  = 'code_sent';
-        otpState.error = friendlyFirebaseError(err.code);
-        renderOtpSection();
-      });
+      .then(function() { otpState.step = 'verified'; otpState.verifiedPhone = otpState.phone; otpState.error = ''; clearResendCooldown(); renderOtpSection(); unlockEstimate(); })
+      .catch(function(err) { otpState.step = 'code_sent'; otpState.error = friendlyFirebaseError(err.code); renderOtpSection(); });
   }
 
-  // ── Resend cooldown ───────────────────────────────────────────
   function startResendCooldown() {
-    otpState.resendCooldown = 30;
-    clearResendCooldown();
+    otpState.resendCooldown = 30; clearResendCooldown();
     otpState.resendTimer = setInterval(function() {
       otpState.resendCooldown--;
-      var el  = document.getElementById('otp-resend-timer');
-      var btn = document.getElementById('otp-resend-btn');
-      if (el)  el.textContent = otpState.resendCooldown > 0 ? 'Resend in ' + otpState.resendCooldown + 's' : '';
+      var el = document.getElementById('otp-resend-timer'); var btn = document.getElementById('otp-resend-btn');
+      if (el) el.textContent = otpState.resendCooldown > 0 ? 'Resend in ' + otpState.resendCooldown + 's' : '';
       if (btn) { btn.disabled = otpState.resendCooldown > 0; btn.style.opacity = otpState.resendCooldown > 0 ? '0.4' : '1'; }
       if (otpState.resendCooldown <= 0) clearResendCooldown();
     }, 1000);
   }
 
-  function clearResendCooldown() {
-    if (otpState.resendTimer) { clearInterval(otpState.resendTimer); otpState.resendTimer = null; }
-  }
+  function clearResendCooldown() { if (otpState.resendTimer) { clearInterval(otpState.resendTimer); otpState.resendTimer = null; } }
 
   function resendOtp() {
-    otpState.step               = 'idle';
-    otpState.confirmationResult = null;
-    otpState.recaptchaVerifier  = null;
-    otpState.error              = '';
-    clearResendCooldown();
-    renderOtpSection();
-    setTimeout(function() {
-      var inp = document.getElementById('otp-phone-input');
-      if (inp) inp.value = otpState.phone;
-      sendOtp();
-    }, 200);
+    otpState.step = 'idle'; otpState.confirmationResult = null; otpState.recaptchaVerifier = null; otpState.error = ''; clearResendCooldown(); renderOtpSection();
+    setTimeout(function() { var inp = document.getElementById('otp-phone-input'); if (inp) inp.value = otpState.phone; sendOtp(); }, 200);
   }
 
-  // ── Unlock estimate after verification ───────────────────────
   function unlockEstimate() {
-    var lock   = document.getElementById('ivory-estimate-lock');
-    var unlock = document.getElementById('ivory-estimate-unlocked');
-    if (lock)   lock.style.display = 'none';
+    var lock = document.getElementById('ivory-estimate-lock'); var unlock = document.getElementById('ivory-estimate-unlocked');
+    if (lock) lock.style.display = 'none';
     if (unlock) {
-      unlock.style.display = 'block';
-      renderPricingSummary();
+      unlock.style.display = 'block'; renderPricingSummary();
       var leadContainer = document.getElementById('ivory-lead-form-container');
       if (leadContainer) {
         leadContainer.innerHTML = renderLeadForm();
-        var nameEl  = document.getElementById('lead-name');
-        var emailEl = document.getElementById('lead-email');
-        var phoneEl = document.getElementById('lead-phone');
-        if (nameEl  && otpState.name)          nameEl.value  = otpState.name;
-        if (emailEl && otpState.email)         emailEl.value = otpState.email;
+        var nameEl = document.getElementById('lead-name'); var emailEl = document.getElementById('lead-email'); var phoneEl = document.getElementById('lead-phone');
+        if (nameEl && otpState.name) nameEl.value = otpState.name;
+        if (emailEl && otpState.email) emailEl.value = otpState.email;
         if (phoneEl && otpState.verifiedPhone) phoneEl.value = otpState.verifiedPhone;
       }
     }
   }
 
-  // ── Friendly error messages ───────────────────────────────────
   function friendlyFirebaseError(code) {
     var msgs = {
-      'auth/invalid-phone-number':      'Please enter a valid number with country code e.g. +91 98765 43210',
-      'auth/too-many-requests':         'Too many attempts. Please wait a few minutes and try again.',
-      'auth/code-expired':              'The code has expired. Please request a new one.',
-      'auth/invalid-verification-code': 'Incorrect code. Please check the SMS and try again.',
-      'auth/quota-exceeded':            'SMS quota exceeded. Please try again later.',
-      'auth/network-request-failed':    'Network error. Please check your connection and try again.',
-      'auth/captcha-check-failed':      'Security check failed. Please refresh the page and try again.',
-      'auth/internal-error':            'Verification failed. Please ensure your number includes country code (+91) and try again.',
-      'auth/app-not-authorized':        'This domain is not authorised. Please contact support.',
-      'auth/missing-phone-number':      'Please enter your phone number with country code e.g. +91 98765 43210.',
+      'auth/invalid-phone-number':'Please enter a valid number with country code e.g. +91 98765 43210',
+      'auth/too-many-requests':'Too many attempts. Please wait a few minutes and try again.',
+      'auth/code-expired':'The code has expired. Please request a new one.',
+      'auth/invalid-verification-code':'Incorrect code. Please check the SMS and try again.',
+      'auth/quota-exceeded':'SMS quota exceeded. Please try again later.',
+      'auth/network-request-failed':'Network error. Please check your connection and try again.',
+      'auth/captcha-check-failed':'Security check failed. Please refresh the page and try again.',
+      'auth/internal-error':'Verification failed. Please ensure your number includes country code (+91) and try again.',
+      'auth/app-not-authorized':'This domain is not authorised. Please contact support.',
+      'auth/missing-phone-number':'Please enter your phone number with country code e.g. +91 98765 43210.',
     };
-    return msgs[code] || 'Something went wrong (' + (code || 'unknown') + '). Please try again.';
+    return msgs[code] || 'Something went wrong (' + (code||'unknown') + '). Please try again.';
   }
 
-  // ── OTP Section Renderer ──────────────────────────────────────
   function renderOtpSection() {
-    var el = document.getElementById('ivory-otp-section');
-    if (!el) return;
-    var step  = otpState.step;
-    var error = otpState.error;
+    var el = document.getElementById('ivory-otp-section'); if (!el) return;
+    var step = otpState.step; var error = otpState.error;
+    var iSt = 'background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;';
+    var lSt = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px;';
+    var errHTML = error ? '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--red);">' + error + '</div>' : '';
 
-    // Verified
     if (step === 'verified') {
-      el.innerHTML =
-        '<div style="background:rgba(52,211,153,0.08);border:1px solid var(--green);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:16px;">' +
-          '<div style="width:44px;height:44px;border-radius:50%;background:rgba(52,211,153,0.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:var(--green);">&#10003;</div>' +
-          '<div>' +
-            '<div style="font-size:14px;font-weight:600;color:var(--green);">Phone Verified</div>' +
-            '<div style="font-size:12px;color:rgba(245,240,232,0.55);margin-top:2px;">' + otpState.verifiedPhone + ' confirmed. Your estimate is now unlocked.</div>' +
-          '</div>' +
-          '<div id="ivory-recaptcha-container"></div>' +
-        '</div>';
+      el.innerHTML = '<div style="background:rgba(52,211,153,0.08);border:1px solid var(--green);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:16px;"><div style="width:44px;height:44px;border-radius:50%;background:rgba(52,211,153,0.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:var(--green);">&#10003;</div><div><div style="font-size:14px;font-weight:600;color:var(--green);">Phone Verified</div><div style="font-size:12px;color:rgba(245,240,232,0.55);margin-top:2px;">' + otpState.verifiedPhone + ' confirmed. Your estimate is now unlocked.</div></div><div id="ivory-recaptcha-container"></div></div>';
       return;
     }
 
-    var errorHTML = error
-      ? '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--red);">' + error + '</div>'
-      : '';
-
-    // Idle / Sending — collect name, email, phone
     if (step === 'idle' || step === 'sending') {
-      var btnDisabled = step === 'sending' ? 'disabled' : '';
-      var btnText     = step === 'sending' ? 'Sending code...' : 'Send Verification Code';
-      var iSt = 'background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;';
-      var lSt = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px;';
-      el.innerHTML =
-        '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;">' +
-          '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Unlock Your Personalised Estimate</div>' +
-          '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">Enter your details below. A one-time code will be sent to your mobile to verify your number and release your full cost breakdown.</div>' +
-          errorHTML +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
-            '<div><label style="' + lSt + '">Full Name</label>' +
-            '<input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name" value="' + (otpState.name || '') + '" style="' + iSt + '"></div>' +
-            '<div><label style="' + lSt + '">Email Address</label>' +
-            '<input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email" value="' + (otpState.email || '') + '" style="' + iSt + '"></div>' +
-          '</div>' +
-          '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
-            '<label style="' + lSt + '">Mobile Number</label>' +
-            '<input id="otp-phone-input" type="tel" placeholder="+91 98765 43210" autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="' + (otpState.phone || '') + '" style="' + iSt + '" onkeydown="if(event.key===\'Enter\')sendOtp()">' +
-          '</div>' +
-          '<div style="display:flex;align-items:flex-start;gap:10px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.3);border-radius:6px;padding:12px 14px;margin-bottom:18px;">' +
-            '<div style="font-size:16px;flex-shrink:0;">&#128274;</div>' +
-            '<div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.</div>' +
-          '</div>' +
-          '<button onclick="sendOtp()" ' + btnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;' + (step === 'sending' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' + btnText + '</button>' +
-          '<div id="ivory-recaptcha-container" style="margin-top:8px;"></div>' +
-        '</div>';
-      if (step === 'idle') {
-        setTimeout(function() { loadFirebase(function() {}); }, 300);
-      }
+      var btnTxt = step === 'sending' ? 'Sending code...' : 'Send Verification Code';
+      var btnDis = step === 'sending' ? 'disabled' : '';
+      el.innerHTML = '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;">' +
+        '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Unlock Your Personalised Estimate</div>' +
+        '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">Enter your details below. A one-time code will be sent to your mobile to verify your number and release your full cost breakdown.</div>' +
+        errHTML +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
+          '<div><label style="' + lSt + '">Full Name</label><input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name" value="' + (otpState.name||'') + '" style="' + iSt + '"></div>' +
+          '<div><label style="' + lSt + '">Email Address</label><input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email" value="' + (otpState.email||'') + '" style="' + iSt + '"></div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"><label style="' + lSt + '">Mobile Number</label><input id="otp-phone-input" type="tel" placeholder="+91 98765 43210" autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="' + (otpState.phone||'') + '" style="' + iSt + '" onkeydown="if(event.key===\'Enter\')sendOtp()"></div>' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.3);border-radius:6px;padding:12px 14px;margin-bottom:18px;"><div style="font-size:16px;flex-shrink:0;">&#128274;</div><div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.</div></div>' +
+        '<button onclick="sendOtp()" ' + btnDis + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;">' + btnTxt + '</button>' +
+        '<div id="ivory-recaptcha-container" style="margin-top:8px;"></div></div>';
+      if (step === 'idle') setTimeout(function() { loadFirebase(function() {}); }, 300);
       return;
     }
 
-    // Code sent / verifying
     if (step === 'code_sent' || step === 'verifying') {
-      var vBtnDisabled = step === 'verifying' ? 'disabled' : '';
-      var vBtnText     = step === 'verifying' ? 'Verifying...' : 'Verify Code';
-      el.innerHTML =
-        '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;">' +
-          '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Enter Verification Code</div>' +
-          '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">A 6-digit code has been sent to <strong style="color:var(--gold);">' + otpState.phone + '</strong></div>' +
-          errorHTML +
-          '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">' +
-            '<label style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">6-Digit Code</label>' +
-            '<input id="otp-code-input" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" autocomplete="one-time-code" inputmode="numeric" style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:14px;font-size:28px;letter-spacing:12px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;text-align:center;" onkeydown="if(event.key===\'Enter\')verifyOtp()" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
-          '</div>' +
-          '<button onclick="verifyOtp()" ' + vBtnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:14px;' + (step === 'verifying' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' + vBtnText + '</button>' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-            '<button id="otp-resend-btn" onclick="resendOtp()" disabled style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;opacity:0.4;font-family:\'DM Sans\',sans-serif;padding:0;">Resend Code</button>' +
-            '<span id="otp-resend-timer" style="font-size:11px;color:rgba(245,240,232,0.4);"></span>' +
-          '</div>' +
-          '<div id="ivory-recaptcha-container"></div>' +
-        '</div>';
+      var vBtnTxt = step === 'verifying' ? 'Verifying...' : 'Verify Code';
+      var vBtnDis = step === 'verifying' ? 'disabled' : '';
+      el.innerHTML = '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;">' +
+        '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;margin-bottom:6px;">Enter Verification Code</div>' +
+        '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">A 6-digit code has been sent to <strong style="color:var(--gold);">' + otpState.phone + '</strong></div>' +
+        errHTML +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"><label style="' + lSt + '">6-Digit Code</label><input id="otp-code-input" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" autocomplete="one-time-code" inputmode="numeric" style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:14px;font-size:28px;letter-spacing:12px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;text-align:center;" onkeydown="if(event.key===\'Enter\')verifyOtp()" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>' +
+        '<button onclick="verifyOtp()" ' + vBtnDis + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:14px;">' + vBtnTxt + '</button>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;"><button id="otp-resend-btn" onclick="resendOtp()" disabled style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;opacity:0.4;font-family:\'DM Sans\',sans-serif;padding:0;">Resend Code</button><span id="otp-resend-timer" style="font-size:11px;color:rgba(245,240,232,0.4);"></span></div>' +
+        '<div id="ivory-recaptcha-container"></div></div>';
       return;
     }
 
-    // Error state
     if (step === 'error') {
-      el.innerHTML =
-        '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:20px 24px;">' +
-          '<div style="color:var(--red);font-size:14px;margin-bottom:12px;">' + error + '</div>' +
-          '<button onclick="otpState.step=\'idle\';otpState.recaptchaVerifier=null;renderOtpSection();" style="background:none;border:1px solid var(--gold);color:var(--gold);padding:8px 20px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:13px;">Try Again</button>' +
-          '<div id="ivory-recaptcha-container"></div>' +
-        '</div>';
+      el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:20px 24px;"><div style="color:var(--red);font-size:14px;margin-bottom:12px;">' + error + '</div><button onclick="otpState.step=\'idle\';otpState.recaptchaVerifier=null;renderOtpSection();" style="background:none;border:1px solid var(--gold);color:var(--gold);padding:8px 20px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:13px;">Try Again</button><div id="ivory-recaptcha-container"></div></div>';
     }
   }
 
@@ -2996,10 +2854,8 @@ function iaTrack(eventName, params) {
     if (btn) { btn.disabled=true; btn.textContent="Sending..."; }
     var payload = buildLeadPayload(name, email, phone);
     if (typeof iaTrack === "function") iaTrack("lead_submitted");
-    // Google Apps Script blocks preflight — use no-cors with text/plain to avoid 405
     fetch(WEBHOOK_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)})
       .then(function(){
-        // no-cors gives opaque response — any resolve is a success
         leadSubmitting=false; leadSubmitted=true;
         var fw=document.getElementById("lead-form-wrap");
         var sw=document.getElementById("lead-success-wrap");
@@ -3038,48 +2894,63 @@ function iaTrack(eventName, params) {
     h += "<div style='font-size:22px;color:#fff;margin-bottom:10px;'>Estimate Sent Successfully</div>";
     h += "<div style='font-size:13px;color:var(--ivory);margin-bottom:6px;'>Reference: <strong id='lead-ref-display' style='color:var(--gold);letter-spacing:2px;'></strong></div>";
     h += "<div style='font-size:12px;color:rgba(245,240,232,0.5);margin-bottom:20px;'>A copy has been emailed to you. Our team will be in touch within 2 hours.</div>";
-    h += "<button onclick='downloadEstimate()' style='display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;'>&#11015; Download Estimate PDF</button>";
+    h += "<button onclick='downloadEstimate()' style='display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:DM Sans,sans-serif;'>&#11015; Download Estimate PDF</button>";
     h += "</div></div>";
     return h;
   }
 
-  // ── Download Estimate as PDF ─────────────────────────────────────────────────
+  // ── Download / Print Estimate ─────────────────────────────────────────────
   function downloadEstimate() {
-    var pricingEl = document.getElementById('ivory-pricing-summary');
-    if (!pricingEl) return;
-
+    var calc = (typeof calculateTotalEstimate === 'function') ? calculateTotalEstimate() : null;
+    if (!calc) { alert('Please complete your tour selection first.'); return; }
     var ref = document.getElementById('lead-ref-display');
-    var refText = ref ? ref.textContent : 'Ivory-Arc-Estimate';
-
-    var printWin = window.open('', '_blank', 'width=800,height=900');
-    printWin.document.write(
-      '<!DOCTYPE html><html><head>' +
-      '<meta charset="UTF-8">' +
-      '<title>Ivory Arc Estimate — ' + refText + '</title>' +
-      '<style>' +
-        'body{font-family:Georgia,serif;background:#0D0B08;color:#F5F0E8;padding:40px;margin:0;}' +
-        'h1{font-style:italic;color:#C9A96E;font-size:26px;margin-bottom:4px;}' +
-        '.ref{font-size:12px;letter-spacing:2px;color:#C9A96E;margin-bottom:30px;}' +
-        '.breakdown{background:#1A1612;border:1px solid #C9A96E;border-radius:8px;padding:24px;}' +
-        '.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(201,169,110,0.1);font-size:13px;}' +
-        '.row:last-child{border-bottom:none;}' +
-        '.label{color:rgba(245,240,232,0.6);}' +
-        '.val{color:#C9A96E;font-weight:600;}' +
-        '.total-row{border-top:2px solid #C9A96E;margin-top:8px;padding-top:14px;font-size:16px;}' +
-        '.footer{margin-top:30px;font-size:11px;color:rgba(245,240,232,0.35);text-align:center;line-height:1.8;}' +
-        '@media print{body{background:#fff;color:#000;} h1,.ref{color:#8B6914;} .breakdown{background:#f9f9f9;border-color:#8B6914;} .val{color:#8B6914;}}' +
-      '</style></head><body>' +
-      '<h1>Ivory Arc Travels</h1>' +
-      '<div class="ref">Estimate Reference: ' + refText + '</div>' +
-      '<div class="breakdown">' + pricingEl.innerHTML + '</div>' +
-      '<div class="footer">' +
-        'This estimate is valid for 7 days and subject to availability at time of booking.<br>' +
-        'Ivory Arc Travels &nbsp;·&nbsp; hello@ivoryarctravels.com &nbsp;·&nbsp; +91 74550 37397' +
+    var refText = ref ? ref.textContent.trim() : ('EST-' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000));
+    var today = new Date(); var validUntil = new Date(today); validUntil.setDate(validUntil.getDate() + 10);
+    var fmtD = function(d) { return d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}); };
+    var cur = activeCurrency || 'INR';
+    var cvtAmt = function(inr) {
+      if (inr < 0) return '- ' + cvtAmt(Math.abs(inr));
+      if (cur === 'INR' || !fxRates[cur]) return '&#8377;' + inr.toLocaleString('en-IN');
+      var v = Math.round(inr * fxRates[cur]);
+      return (cur==='USD'?'$':'&#8364;') + v.toLocaleString() + ' <small style="color:#999;">(&#8377;' + inr.toLocaleString('en-IN') + ')</small>';
+    };
+    var fxNote = (cur !== 'INR' && fxRates[cur]) ? '1 INR = ' + (cur==='USD'?'$':'&#8364;') + fxRates[cur].toFixed(6) + ' (live rate)' : '';
+    var allTours = DESTINATIONS.dayTours.concat(DESTINATIONS.multiDay);
+    var destObj = activeTourId ? allTours.find(function(t){return t.id===activeTourId;}) : null;
+    var tl = {t1:'1-2 People',t2:'3-4 People',t3:'5-6 People',t4:'7-10 People'};
+    var linesHTML = calc.lines.map(function(l) {
+      return '<tr><td style="padding:9px 12px;border-bottom:1px solid #E8E0D0;color:#3D3020;vertical-align:top;">' + l.label + (l.detail ? '<div style="font-size:10px;color:#999;margin-top:2px;">' + l.detail + '</div>' : '') + '</td><td style="padding:9px 12px;border-bottom:1px solid #E8E0D0;text-align:right;white-space:nowrap;color:#5C3D11;font-weight:600;">' + cvtAmt(l.amount) + '</td></tr>';
+    }).join('');
+    var printWin = window.open('','_blank','width=860,height=1100');
+    printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ivory Arc Estimate ' + refText + '</title>' +
+      '<style>body{font-family:Georgia,serif;background:#fff;color:#2D1F0E;margin:0;padding:0;font-size:13px;}.page{max-width:780px;margin:0 auto;padding:40px;}.ai-notice{background:#FFF8E7;border-left:4px solid #C9A96E;padding:10px 16px;font-size:11px;color:#8B6914;margin-bottom:20px;}.header{border-bottom:2px solid #C9A96E;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;}.brand{font-style:italic;font-size:28px;color:#C9A96E;font-weight:700;margin:0;}.ref-val{font-size:18px;color:#C9A96E;letter-spacing:2px;font-style:italic;}.ref-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;}h2{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#8B6914;border-bottom:1px solid #E8E0D0;padding-bottom:8px;margin:28px 0 14px;}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}.sum-item{background:#FBF8F4;border:1px solid #E8E0D0;border-radius:6px;padding:10px 14px;}.sum-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#8B6914;}.sum-val{font-size:14px;color:#2D1F0E;font-weight:600;margin-top:2px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;}th{background:#FBF8F4;padding:9px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:2px solid #E8E0D0;}th:last-child{text-align:right;}.gst-row td{color:#666;font-size:12px;border-top:1px dashed #E8E0D0;padding:8px 12px;}.total-row td{background:#FBF8F4;font-weight:700;font-size:15px;color:#C9A96E;border-top:2px solid #C9A96E;padding:12px;}.perperson{background:#FFF8E7;border:1px solid #C9A96E;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}.section-box{background:#FBF8F4;border:1px solid #E8E0D0;border-radius:6px;padding:14px 18px;margin-bottom:14px;font-size:12px;line-height:1.75;}.caveat-box{background:#FFF8E7;border:1px solid #C9A96E;border-radius:6px;padding:14px 18px;margin-bottom:14px;font-size:12px;color:#5C3D11;line-height:1.75;}.warn-box{background:#FFF3F3;border:1px solid #F8A0A0;border-radius:6px;padding:12px 16px;font-size:11px;color:#8B2020;line-height:1.75;margin-bottom:14px;}ul{margin:6px 0 0;padding-left:18px;}li{margin-bottom:4px;}.footer{border-top:1px solid #E8E0D0;margin-top:30px;padding-top:16px;font-size:11px;color:#999;text-align:center;line-height:1.8;}</style></head><body><div class="page">' +
+      '<div class="ai-notice">&#9888; This is an AI-generated tour estimate. All pricing is indicative and will be reviewed and confirmed by Ivory Arc Travels before finalisation.</div>' +
+      '<div class="header"><div><div class="brand">Ivory Arc Travels</div><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8B6914;margin-top:4px;">Private Journeys &middot; Curated Experiences</div></div><div style="text-align:right;"><div class="ref-label">Estimate Reference</div><div class="ref-val">' + refText + '</div><div style="font-size:11px;color:#999;margin-top:4px;">Generated: ' + fmtD(today) + ' &middot; Valid until: ' + fmtD(validUntil) + '</div>' + (fxNote ? '<div style="font-size:11px;color:#8B6914;margin-top:3px;">' + fxNote + '</div>' : '') + '</div></div>' +
+      '<h2>Journey Summary</h2><div class="summary-grid">' +
+        (destObj ? '<div class="sum-item"><div class="sum-lbl">Destination</div><div class="sum-val">' + destObj.name + '</div></div>' : '') +
+        (tdStart ? '<div class="sum-item"><div class="sum-lbl">Tour Start</div><div class="sum-val">' + fmtD(tdStart) + '</div></div>' : '') +
+        (tdEnd   ? '<div class="sum-item"><div class="sum-lbl">Tour End</div><div class="sum-val">' + fmtD(tdEnd) + '</div></div>' : '') +
+        '<div class="sum-item"><div class="sum-lbl">Duration</div><div class="sum-val">' + calc.days + ' Day' + (calc.days!==1?'s':'') + ', ' + calc.nights + ' Night' + (calc.nights!==1?'s':'') + '</div></div>' +
+        '<div class="sum-item"><div class="sum-lbl">Group Size</div><div class="sum-val">' + calc.pax + ' Traveller' + (calc.pax!==1?'s':'') + (activeTierId?' ('+tl[activeTierId]+')':'') + '</div></div>' +
+        (tdGroupType ? '<div class="sum-item"><div class="sum-lbl">Travelling As</div><div class="sum-val" style="text-transform:capitalize">' + tdGroupType + '</div></div>' : '') +
+        (wantHotel!==null ? '<div class="sum-item"><div class="sum-lbl">Hotel Arrangement</div><div class="sum-val">' + (wantHotel?'Ivory Arc Recommendation':'Own Arrangement') + '</div></div>' : '') +
       '</div>' +
-      '</body></html>'
-    );
+      '<h2>Cost Breakdown</h2><table><thead><tr><th>Item</th><th style="text-align:right;">Amount</th></tr></thead><tbody>' + linesHTML +
+        '<tr class="gst-row"><td>Subtotal (before GST)</td><td style="text-align:right;">' + cvtAmt(calc.subtotal) + '</td></tr>' +
+        '<tr class="gst-row"><td>GST @ 5%</td><td style="text-align:right;">' + cvtAmt(calc.gst) + '</td></tr>' +
+        '<tr class="total-row"><td style="border-bottom:none;">Grand Total</td><td style="text-align:right;border-bottom:none;">' + cvtAmt(calc.grandTotal) + '</td></tr>' +
+      '</tbody></table>' +
+      '<div class="perperson"><div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;">Per Person Cost</div><div style="font-size:11px;color:#999;margin-top:2px;">Based on ' + calc.pax + ' traveller' + (calc.pax!==1?'s':'') + '</div></div><div style="font-size:22px;font-style:italic;color:#C9A96E;font-weight:700;">' + cvtAmt(calc.perPerson) + '</div></div>' +
+      '<h2>Cancellation &amp; Refund Policy</h2><div class="caveat-box">If any activity or service included in this estimate cannot be delivered due to reasons beyond the customer&#39;s control — including travel advisories, government restrictions, natural calamities, extreme weather, monument closures, wildlife zone restrictions, public health emergencies, road blockages, or force majeure events — <strong>Ivory Arc Travels will refund the full cost of the affected service excluding GST to the original payment source on the same day of cancellation confirmation.</strong></div>' +
+      '<h2>Payment Terms</h2><div class="section-box"><ul><li><strong>50% advance</strong> required to confirm booking. Balance 50% due before tour start date.</li><li><strong>No cash payments</strong> accepted by Ivory Arc Travels. All payments via bank transfer, UPI, or card to official Ivory Arc accounts only.</li><li>Ivory Arc Travels holds no responsibility for any cash exchange between customers and our driver, guide, or vendor partners.</li><li>Minimum billing of <strong>300 km/day</strong> applies for every day the transportation vehicle is in use. Driver allowance of <strong>&#8377;800/day</strong> for overnight halts.</li><li>Toll charges and parking billed at actuals with receipts.</li><li>Additional km beyond estimated route billed at &#8377;18/km at tour end.</li></ul></div>' +
+      '<h2>Inclusions</h2><div class="section-box"><ul><li>Private air-conditioned vehicle for the duration of the tour</li><li>Professional driver partner with North India route expertise</li><li>Entry fees for all monuments listed as "Incl." in the estimate above</li>' + (calc.hasHotel ? '<li>Hotel accommodation as selected for the duration of the tour</li>' : '') + '<li>GST @ 5% on all above services</li><li>24&times;7 Ivory Arc Travels support throughout your journey</li><li>Complimentary itinerary review call before tour commencement</li></ul></div>' +
+      '<h2>Exclusions</h2><div class="section-box"><ul><li>Airfare, train tickets, or inter-city transport not listed in this estimate</li>' + (!calc.hasHotel ? '<li>Hotel accommodation (not included — own arrangement)</li>' : '') + '<li>Personal expenses, tips, and gratuity</li><li>Travel insurance (strongly recommended)</li><li>Activities, meals, or experiences not listed in the estimate</li><li>Camera/video fees at monuments</li><li>Porter charges at railway stations or airports</li></ul></div>' +
+      '<h2>Terms &amp; Conditions</h2><div class="section-box" style="font-size:11px;"><ul><li>This estimate is valid for <strong>10 days</strong> from ' + fmtD(today) + '. After this period, pricing may change due to seasonality or availability.</li><li>This is an AI-generated indicative estimate. Final confirmed pricing will be issued by an Ivory Arc Travels representative after a review call.</li><li>Hotel rates are subject to availability at booking. Variations communicated before confirmation — overpayments refunded same day.</li><li>Peak season surcharges (Oct-Feb, major Indian festivals) may apply and will be communicated at booking confirmation.</li><li>Children below 5 travel free. Ages 5-12 charged at 50% adult rate. Above 12 years, adult pricing applies.</li><li>Ivory Arc Travels reserves the right to substitute any listed hotel with an equal or higher category property at no extra cost.</li><li>Customers must carry valid ID (Aadhaar/Passport) for all travellers. Some monuments require ID for entry.</li><li>Ivory Arc Travels is not liable for delays caused by traffic, weather, road conditions, or factors outside our control.</li><li>Any dispute shall be subject to exclusive jurisdiction of courts in New Delhi, India.</li><li>By proceeding with this booking, the customer confirms acceptance of all terms and conditions above.</li></ul></div>' +
+      '<div class="warn-box">&#9888; This estimate does not constitute a confirmed booking. A booking is confirmed only upon receipt of advance payment and written confirmation from Ivory Arc Travels.</div>' +
+      '<div class="footer">Ivory Arc Travels &middot; hello@ivoryarctravels.com &middot; +91 74550 37397 &middot; ivoryarctravels.com<br>MSME Certified &middot; GST Registered &middot; Govt. of India Approved Tour Operator</div>' +
+    '</div></body></html>');
     printWin.document.close();
-    setTimeout(function() { printWin.print(); }, 500);
+    setTimeout(function() { printWin.print(); }, 600);
   }
 
   // ── Expose all functions to window for onclick handlers ──────────────────
@@ -3115,6 +2986,10 @@ function iaTrack(eventName, params) {
   if (typeof handleLeadSubmit !== 'undefined') window.handleLeadSubmit = handleLeadSubmit;
   if (typeof renderLeadForm !== 'undefined') window.renderLeadForm = renderLeadForm;
   if (typeof downloadEstimate !== 'undefined') window.downloadEstimate = downloadEstimate;
+  if (typeof dismissAncilPrompt !== 'undefined') window.dismissAncilPrompt = dismissAncilPrompt;
+  if (typeof sendOtp !== 'undefined') window.sendOtp = sendOtp;
+  if (typeof verifyOtp !== 'undefined') window.verifyOtp = verifyOtp;
+  if (typeof resendOtp !== 'undefined') window.resendOtp = resendOtp;
 
   ['delhi','agra','jaipur','shimla','manali','haridwar',
    'rishikesh','mathura','vrindavan','corbett','varanasi','amritsar'].forEach(function(cityId) {
