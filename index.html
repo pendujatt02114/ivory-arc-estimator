@@ -1138,9 +1138,16 @@ function iaTrack(eventName, params) {
     } else {
       if (teaser) teaser.style.display = 'block';
     }
-    // If OTP already verified, refresh the estimate immediately
+    // If OTP already verified, refresh the estimate and scroll to it
     if (typeof otpState !== 'undefined' && otpState.step === 'verified') {
       renderPricingSummary();
+      // Smooth scroll to the estimate section
+      setTimeout(function() {
+        var unlock = document.getElementById('ivory-estimate-unlocked');
+        if (unlock && unlock.style.display !== 'none') {
+          unlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
     }
     var panel = document.getElementById('ci-result-panel');
     if (!panel) return;
@@ -2879,51 +2886,108 @@ function iaTrack(eventName, params) {
   // ── Custom Journey Estimate Renderer ───────────────────────────────────────
   function renderCustomEstimate(el) {
     var b = ciResult;
-    var cur = activeCurrency || 'INR';
+    if (!b || b === 'loading' || b === 'error') return;
 
-    function cvt(inr) {
-      if (cur === 'USD') { return '$' + Math.round(inr / 85).toLocaleString('en-US'); }
-      if (cur === 'EUR') { return '€' + Math.round(inr / 100).toLocaleString('de-DE'); }
-      return '₹' + inr.toLocaleString('en-IN');
-    }
+    // Use formatCurrency so it respects activeCurrency exactly like regular tours
+    function fc(inr) { return formatCurrency(inr); }
 
-    var rows = '';
-    rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);"><span style="color:rgba(245,240,232,0.6);">Distance (' + b.billableKm + ' km × ₹18)</span><span>' + cvt(b.distCharge) + '</span></div>';
-    rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);"><span style="color:rgba(245,240,232,0.6);">Toll charges (estimated)</span><span>' + cvt(b.toll) + '</span></div>';
-    if (b.nightHalt) {
-      rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);"><span style="color:rgba(245,240,232,0.6);">Night halt — driver' + (b.isTwoWay ? ' (both ways)' : '') + '</span><span>' + cvt(b.nightCost) + '</span></div>';
-    }
-    if (b.hotelLine) {
-      rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
-        '<span style="color:rgba(245,240,232,0.6);">' + b.hotelLine.name + '<br><span style="font-size:10px;opacity:0.6;">' + cvt(b.hotelLine.price) + '/room/night × ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights!==1?'s':'') + ' × ' + (b.hotelLine.rooms||1) + ' room' + ((b.hotelLine.rooms||1)!==1?'s':'') + '</span></span>' +
-        '<span>' + cvt(b.hotelLine.total) + '</span></div>';
-    }
-    rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);font-size:12px;color:rgba(245,240,232,0.4);"><span>Parking</span><span style="color:#34D399;">At Actuals</span></div>';
-    var subtotalRow = '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.25);font-weight:600;"><span>Subtotal' + (b.hotelLine ? ' (transport + hotel)' : '') + '</span><span>' + cvt(b.subtotal) + '</span></div>';
-    var gstRow = '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.25);font-size:12px;color:rgba(245,240,232,0.6);"><span>GST (5%)</span><span>' + cvt(b.gst) + '</span></div>';
-    var rateNote = (cur !== 'INR') ? '<div style="font-size:10px;color:rgba(245,240,232,0.35);margin-top:8px;font-style:italic;">' + (cur === 'USD' ? 'Rate: $1 = ₹85' : 'Rate: €1 = ₹100') + ' · Final invoice at prevailing rate</div>' : '';
+    // Route header
     var route = b.pickup.split(',')[0] + ' ' + (b.isTwoWay ? '⇄' : '→') + ' ' + b.drop.split(',')[0];
+    var pax = activePax || 1;
+
+    // Build breakdown rows — same style as regular tour rows
+    var rowsHTML = '';
+    // Distance
+    rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;">' +
+        '<div><div style="font-size:13px;color:var(--ivory);">Distance charge</div>' +
+        '<div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:2px;">' + b.billableKm + ' km × ₹18' + (b.isTwoWay ? ' (two-way)' : '') + '</div></div>' +
+        '<div style="text-align:right;"><span style="color:var(--gold);font-weight:500;">' + fc(b.distCharge) + '</span></div>' +
+      '</div></div>';
+    // Tolls
+    rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;">' +
+        '<div><div style="font-size:13px;color:var(--ivory);">Toll charges</div>' +
+        '<div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:2px;">Estimated — billed at actuals with receipt</div></div>' +
+        '<div><span style="color:var(--gold);font-weight:500;">' + fc(b.toll) + '</span></div>' +
+      '</div></div>';
+    // Night halt
+    if (b.nightHalt) {
+      rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
+        '<div style="display:flex;justify-content:space-between;">' +
+          '<div style="font-size:13px;color:var(--ivory);">Night halt — driver' + (b.isTwoWay ? ' (both ways)' : '') + '</div>' +
+          '<span style="color:var(--gold);font-weight:500;">' + fc(b.nightCost) + '</span>' +
+        '</div></div>';
+    }
+    // Hotel
+    if (b.hotelLine) {
+      rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;">' +
+          '<div><div style="font-size:13px;color:var(--ivory);">' + b.hotelLine.name + '</div>' +
+          '<div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:2px;">' + fc(b.hotelLine.price) + '/room/night × ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights!==1?'s':'') + ' × ' + (b.hotelLine.rooms||1) + ' room' + ((b.hotelLine.rooms||1)!==1?'s':'') + '</div>' +
+          '<div style="font-size:11px;color:rgba(245,240,232,0.35);margin-top:2px;font-style:italic;">Rate based on availability. Changes communicated before confirmation.</div></div>' +
+          '<div><span style="color:var(--gold);font-weight:500;">' + fc(b.hotelLine.total) + '</span></div>' +
+        '</div></div>';
+    }
+    // Parking
+    rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
+      '<div style="display:flex;justify-content:space-between;">' +
+        '<div><div style="font-size:13px;color:var(--ivory);">Parking</div>' +
+        '<div style="font-size:11px;color:rgba(245,240,232,0.45);margin-top:2px;">Airport · sightseeing stops · overnight halts</div></div>' +
+        '<span style="color:#34D399;font-size:12px;text-align:right;line-height:1.4;">At Actuals<br><span style="font-size:10px;opacity:0.7;">Receipt provided</span></span>' +
+      '</div></div>';
+    // Subtotal
+    rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.25);display:flex;justify-content:space-between;font-weight:600;">' +
+      '<span>Subtotal' + (b.hotelLine ? ' (transport + hotel)' : '') + '</span>' +
+      '<span>' + fc(b.subtotal) + '</span></div>';
+    // GST
+    rowsHTML += '<div style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.1);display:flex;justify-content:space-between;font-size:12px;color:rgba(245,240,232,0.6);">' +
+      '<div><div>GST (5%)</div><div style="font-size:10px;margin-top:2px;opacity:0.7;">Applicable on all services as per Govt. of India regulations</div></div>' +
+      '<span>' + fc(b.gst) + '</span></div>';
+
+    // FX caveat
+    var fxCaveat = (activeCurrency !== 'INR') ?
+      '<div style="font-size:11px;color:rgba(245,240,232,0.35);font-style:italic;text-align:center;margin-top:10px;padding:0 4px;line-height:1.55;">' +
+        (activeCurrency === 'USD' ? 'Rate used: $1 = ₹85' : 'Rate used: €1 = ₹100') +
+        ' · Final invoice will use rate prevailing on payment date.' +
+      '</div>' : '';
+
+    // Per person (if pax known)
+    var perPersonRow = '';
+    if (pax > 1) {
+      perPersonRow = '<div style="font-size:11px;color:rgba(245,240,232,0.4);margin-top:2px;">' + fc(b.total) + ' ÷ ' + pax + ' people</div>';
+    }
 
     el.innerHTML =
       '<div style="background:var(--dark);border:1px solid var(--gold);border-radius:10px;overflow:hidden;">' +
-        '<div style="background:rgba(201,169,110,0.1);padding:16px 24px;border-bottom:1px solid rgba(201,169,110,0.25);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">' +
+
+        // ── Header ──
+        '<div style="background:rgba(201,169,110,0.1);padding:16px 24px;border-bottom:1px solid rgba(201,169,110,0.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">' +
           '<div>' +
-            '<div style="font-family:Georgia,serif;font-style:italic;font-size:20px;color:#fff;">Custom Journey — Full Estimate</div>' +
-            '<div style="font-size:11px;color:rgba(245,240,232,0.5);margin-top:3px;">' + route + (b.isTwoWay ? ' · Two-Way' : ' · One-Way') + '</div>' +
+            '<div style="font-family:Georgia,serif;font-style:italic;font-size:20px;color:#fff;">Custom Journey — Full Cost Breakdown</div>' +
+            '<div style="font-size:11px;color:rgba(245,240,232,0.5);margin-top:3px;">' + route + (b.isTwoWay ? ' · Two-Way' : ' · One-Way') + (b.hotelLine ? ' · incl. hotel' : '') + '</div>' +
           '</div>' +
           currencySelectorHTML() +
         '</div>' +
-        '<div style="padding:16px 24px 4px;">' + rows + subtotalRow + gstRow + rateNote + '</div>' +
-        '<div style="background:rgba(201,169,110,0.1);border-radius:8px;margin:16px 24px;overflow:hidden;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;">' +
-            '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">Total</div>' +
-            '<div style="font-family:Georgia,serif;font-style:italic;font-size:24px;color:var(--gold);">' + cvt(b.total) + '</div>' +
+
+        // ── Breakdown ──
+        '<div style="padding:16px 24px 20px;">' + rowsHTML + fxCaveat + '</div>' +
+
+        // ── Total + buttons — same as regular tour per-person row ──
+        '<div style="background:rgba(201,169,110,0.1);border-radius:0;overflow:hidden;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;">' +
+            '<div>' +
+              '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">Total' + (b.hotelLine ? ' (incl. hotel)' : '') + '</div>' +
+              perPersonRow +
+            '</div>' +
+            '<div style="font-family:Georgia,serif;font-style:italic;font-size:24px;color:var(--gold);">' + fc(b.total) + '</div>' +
           '</div>' +
-          '<div style="display:flex;gap:8px;padding:0 14px 14px;">' +
-            '<button onclick="downloadCustomEstimate()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;background:var(--gold);color:var(--black);border:none;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">&#11015; Download PDF</button>' +
-            '<a href="https://wa.me/917455037397" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;background:#25D366;color:#fff;text-decoration:none;border-radius:7px;font-size:12px;font-weight:700;">&#128172; WhatsApp</a>' +
+          '<div style="display:flex;gap:8px;padding:0 24px 16px;">' +
+            '<button onclick="downloadCustomEstimate()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 12px;background:var(--gold);color:var(--black);border:none;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:sans-serif;">&#11015; Download Estimate PDF</button>' +
+            '<a href="https://wa.me/917455037397" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 12px;background:#25D366;color:#fff;text-decoration:none;border-radius:7px;font-size:12px;font-weight:700;">&#128172; Discuss on WhatsApp</a>' +
           '</div>' +
         '</div>' +
+
       '</div>';
   }
 
@@ -2940,11 +3004,18 @@ function iaTrack(eventName, params) {
         renderCustomEstimate(el);
         return;
       }
-      // No result yet — show contextual prompt
-      var promptMsg = ciPickup && ciDrop
-        ? 'Route entered. Press <strong style="color:var(--gold);">Calculate</strong> in the Custom Itinerary section above to generate your estimate.'
-        : 'Enter your pickup and drop locations in the Custom Itinerary section above, then press Calculate.';
-      el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.7;">' + promptMsg + '</div>';
+      // No result yet
+      if (ciPickupPlaceId && ciDropPlaceId && tripType) {
+        // Route is complete — auto-trigger calculation
+        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;">' +
+          '<div class="hotel-loading" style="color:rgba(245,240,232,0.7);">Calculating your route&hellip;</div></div>';
+        calculateCustomRoute();
+      } else {
+        var promptMsg = (!ciPickup || !ciDrop)
+          ? 'Enter your pickup and drop locations in the <strong style="color:var(--gold);">Custom Itinerary</strong> section above.'
+          : 'Select <strong style="color:var(--gold);">Drop Only</strong> or <strong style="color:var(--gold);">Two Way</strong> in the Custom Itinerary section above.';
+        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.8;">' + promptMsg + '</div>';
+      }
       return;
     }
 
@@ -3208,15 +3279,27 @@ function iaTrack(eventName, params) {
     var unlock = document.getElementById('ivory-estimate-unlocked');
     if (unlock) {
       unlock.style.display = 'block';
-      // In custom mode: recalculate to include any hotel selection before showing
-      if (customMode && ciResult && ciResult !== 'loading' && ciResult !== 'error') {
-        ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+
+      if (customMode) {
+        if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+          // Already have a result — recalculate to pick up hotel changes
+          ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+          renderPricingSummary();
+        } else if (ciPickupPlaceId && ciDropPlaceId && tripType) {
+          // Route is fully entered but not calculated yet — auto-calculate now
+          renderPricingSummary(); // show prompt first
+          calculateCustomRoute(); // this will call renderPricingSummary when done
+        } else {
+          renderPricingSummary(); // show prompt to complete route
+        }
+      } else {
+        renderPricingSummary();
       }
-      renderPricingSummary();
-      // Scroll to the estimate
+
+      // Scroll to estimate
       setTimeout(function() {
         if (unlock) unlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
+      }, 300);
     }
 
 
@@ -3349,13 +3432,30 @@ function iaTrack(eventName, params) {
     if (airportSvcs.has("porterage")) ai.push("Porterage");
     if (airportSvcs.has("waiting")) ai.push("Arrivals Waiting");
     var calc = (typeof calculateTotalEstimate === "function") ? calculateTotalEstimate() : null;
+
+    // For custom mode: get total from ciResult
+    var customTotal = (customMode && ciResult && ciResult !== 'loading' && ciResult !== 'error') ? ciResult.total : 0;
+    var estimateTotal = customMode
+      ? (customTotal ? "Rs." + customTotal.toLocaleString("en-IN") : "")
+      : (calc ? "Rs." + calc.grandTotal.toLocaleString("en-IN") : "");
+
+    // Custom route summary
+    var customRouteSummary = "";
+    if (customMode && ciPickup && ciDrop && ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+      customRouteSummary = ciPickup + " to " + ciDrop
+        + " | " + (tripType === 'twoway' ? 'Two-Way' : 'One-Way')
+        + " | " + ciResult.googleKm + "km (Google) / " + ciResult.billableKm + "km billable"
+        + (ciNightHalt ? " | Night Halt" : "")
+        + (selectedHotel ? " | Hotel: " + selectedHotel.name : (hotelTier ? " | Tier: " + hotelTier : ""));
+    }
+
     return {
       estimateRef:ref, timestamp:new Date().toISOString(),
       name:name, email:email, phone:phone,
       tourStartDate:tdStart?tdStart.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}):"",
       tourEndDate:tdEnd?tdEnd.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}):"",
       nights:String(nightsBetween(tdStart,tdEnd)),
-      destination:destObj?destObj.name:"",
+      destination:destObj?destObj.name:(customMode?"Custom Itinerary":""),
       groupSize:(activeTierId?tl[activeTierId]:"")+(activePax?" ("+activePax+")":""),
       travellingAs:tdGroupType||"",
       occasions:tdTags?Array.from(tdTags).join(", "):"",
@@ -3367,9 +3467,9 @@ function iaTrack(eventName, params) {
       hotelAdults:String(hotelAdults||2),
       hotelChildren:String(hotelChildren||0),
       hotelSpecialReq:hotelSpecialReq||"",
-      customRoute:(customMode&&ciPickup&&ciDrop)?ciPickup+" to "+ciDrop:"",
+      customRoute:customRouteSummary,
       customNotes:ciNotes||"", arrivalFlight:tdArrFlight||"", departureFlight:tdDepFlight||"",
-      estimateTotal:calc?"Rs."+calc.grandTotal.toLocaleString("en-IN"):"",
+      estimateTotal:estimateTotal,
       source:"Ivory Arc Web Estimator"
     };
   }
