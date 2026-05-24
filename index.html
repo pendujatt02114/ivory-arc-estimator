@@ -2568,83 +2568,76 @@ function iaTrack(eventName, params) {
 
 
   // ── Firebase OTP Module ──────────────────────────────────────────────────
-  // ============================================================
-  // IVORY ARC — FIREBASE PHONE OTP MODULE
-  // Version 1.0 — Master Build Integration Candidate
-  // ============================================================
 
-  // ── Firebase Config ───────────────────────────────────────────
+  // ── Config (new project, modular SDK v12) ─────────────────────
   var FIREBASE_CONFIG = {
-    apiKey:     'AIzaSyBo7tO9TfcrW8_I2wCl2q0To0WFyu5Frqo',
-    authDomain: 'ivory-arc-estimator-70e40.firebaseapp.com',
-    projectId:  'ivory-arc-estimator-70e40'
+    apiKey:            'AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM',
+    authDomain:        'ivory-arc-estimator-8727e.firebaseapp.com',
+    projectId:         'ivory-arc-estimator-8727e',
+    storageBucket:     'ivory-arc-estimator-8727e.firebasestorage.app',
+    messagingSenderId: '551942404838',
+    appId:             '1:551942404838:web:4ca6260483724506271927'
   };
-  var RECAPTCHA_SITE_KEY = '6LemQfksAAAAAIfKFjpx3o-gSHY7AiWcC1Eetm1w';
 
   // ── OTP State ─────────────────────────────────────────────────
   var otpState = {
-    step:             'idle',
+    step:               'idle',
     confirmationResult: null,
-    sessionInfo:      null,
     recaptchaVerifier:  null,
-    recaptchaReady:     false,
-    phone:            '',
-    name:             '',
-    email:            '',
-    error:            '',
-    resendCooldown:   0,
-    resendTimer:      null,
-    verifiedPhone:    null,
+    phone:              '',
+    name:               '',
+    email:              '',
+    error:              '',
+    resendCooldown:     0,
+    resendTimer:        null,
+    verifiedPhone:      null,
   };
 
-  // ── Firebase loader ───────────────────────────────────────────
+  // ── Firebase loader (compat SDK — most stable for phone auth) ──
   var firebaseLoaded = false;
 
   function loadFirebase(onReady) {
     if (firebaseLoaded && window.firebase && window.firebase.auth) {
       onReady(); return;
     }
-    if (document.getElementById('firebase-app-script')) {
-      var wait = setInterval(function() {
-        if (window.firebase && window.firebase.auth) {
-          clearInterval(wait);
-          if (!firebaseLoaded) {
-            try { firebase.initializeApp(FIREBASE_CONFIG); } catch(e) {}
-            firebaseLoaded = true;
+    function loadScript(src, id, cb) {
+      if (document.getElementById(id)) {
+        // already injected — wait for it
+        var t = setInterval(function() {
+          if (window.firebase && window.firebase.auth) {
+            clearInterval(t); cb();
           }
-          onReady();
-        }
-      }, 100);
-      return;
-    }
-    function injectScript(src, id, onLoad, onErr) {
+        }, 80);
+        return;
+      }
       var s = document.createElement('script');
       s.src = src; s.id = id;
-      s.onload = onLoad;
-      s.onerror = onErr || function() {
+      s.onerror = function() {
         otpState.error = 'Could not load verification service. Please check your connection.';
-        otpState.step = 'error'; renderOtpSection();
+        otpState.step  = 'error';
+        renderOtpSection();
       };
+      s.onload = cb;
       document.head.appendChild(s);
     }
-    injectScript(
+    loadScript(
       'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
-      'firebase-app-script',
+      'fb-app-compat',
       function() {
-        injectScript(
+        loadScript(
           'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
-          'firebase-auth-script',
+          'fb-auth-compat',
           function() {
             try {
-              // Check if already initialised
-              if (firebase.apps.length === 0) {
-                firebase.initializeApp(FIREBASE_CONFIG);
+              if (!window.firebase.apps || window.firebase.apps.length === 0) {
+                window.firebase.initializeApp(FIREBASE_CONFIG);
               }
               firebaseLoaded = true;
               onReady();
             } catch(e) {
               otpState.error = 'Could not initialise verification. Please refresh and try again.';
-              otpState.step = 'error'; renderOtpSection();
+              otpState.step  = 'error';
+              renderOtpSection();
             }
           }
         );
@@ -2652,46 +2645,32 @@ function iaTrack(eventName, params) {
     );
   }
 
-  // ── Invisible reCAPTCHA setup ─────────────────────────────────
-  function setupRecaptcha() {
-    if (otpState.recaptchaReady && otpState.recaptchaVerifier) return;
-    var container = document.getElementById('ivory-recaptcha-container');
-    if (!container) {
-      // Container not in DOM yet - render first
-      renderOtpSection();
-      container = document.getElementById('ivory-recaptcha-container');
-      if (!container) return;
-    }
-
-    // Clear any previous instance
+  // ── reCAPTCHA setup ───────────────────────────────────────────
+  function setupRecaptcha(cb) {
+    // Clear any stale verifier
     if (otpState.recaptchaVerifier) {
       try { otpState.recaptchaVerifier.clear(); } catch(e) {}
       otpState.recaptchaVerifier = null;
-      otpState.recaptchaReady    = false;
     }
+    var container = document.getElementById('ivory-recaptcha-container');
+    if (!container) { if (cb) cb(new Error('No recaptcha container')); return; }
 
-    otpState.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    otpState.recaptchaVerifier = new window.firebase.auth.RecaptchaVerifier(
       'ivory-recaptcha-container',
       {
         size: 'invisible',
-        siteKey: RECAPTCHA_SITE_KEY,
-        callback: function() {
-          otpState.recaptchaReady = true;
-        },
+        callback: function() {},
         'expired-callback': function() {
-          otpState.recaptchaReady = false;
           otpState.recaptchaVerifier = null;
-          setupRecaptcha();
         }
       }
     );
-
-    otpState.recaptchaVerifier.render().then(function() {
-      otpState.recaptchaReady = true;
-    }).catch(function(err) {
-      console.warn('reCAPTCHA render error:', err);
-      otpState.recaptchaReady = true; // allow proceed, Firebase will handle it
-    });
+    otpState.recaptchaVerifier.render()
+      .then(function() { if (cb) cb(null); })
+      .catch(function(err) {
+        console.warn('reCAPTCHA render error:', err);
+        if (cb) cb(null); // proceed anyway — Firebase handles it internally
+      });
   }
 
   // ── Send OTP ──────────────────────────────────────────────────
@@ -2706,21 +2685,17 @@ function iaTrack(eventName, params) {
     var raw      = phoneInput.value.trim();
     var digits   = raw.replace(/\D/g, '');
 
-    // Validate all three fields
     if (nameVal.length < 2) {
       otpState.error = 'Please enter your full name.';
-      renderOtpSection();
-      return;
+      renderOtpSection(); return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) {
       otpState.error = 'Please enter a valid email address.';
-      renderOtpSection();
-      return;
+      renderOtpSection(); return;
     }
     if (!raw.startsWith('+') || digits.length < 10 || digits.length > 15) {
       otpState.error = 'Please enter a valid number with country code e.g. +91 98765 43210';
-      renderOtpSection();
-      return;
+      renderOtpSection(); return;
     }
 
     otpState.name  = nameVal;
@@ -2731,39 +2706,27 @@ function iaTrack(eventName, params) {
     renderOtpSection();
 
     loadFirebase(function() {
-      setupRecaptcha();
-
-      function trySignIn() {
-        if (!otpState.recaptchaVerifier) {
-          otpState.error = 'Security check not ready. Please wait a moment and try again.';
-          otpState.step  = 'idle';
-          renderOtpSection();
-          return;
-        }
-        firebase.auth().signInWithPhoneNumber(raw, otpState.recaptchaVerifier)
-        .then(function(confirmationResult) {
-          otpState.confirmationResult = confirmationResult;
-          otpState.step               = 'code_sent';
-          otpState.error              = '';
-          startResendCooldown();
-          renderOtpSection();
-          // Auto-focus OTP input
-          setTimeout(function() {
-            var inp = document.getElementById('otp-code-input');
-            if (inp) inp.focus();
-          }, 100);
-        })
-        .catch(function(err) {
-          otpState.step  = 'idle';
-          otpState.error = friendlyFirebaseError(err.code);
-          // Reset recaptcha on error
-          otpState.recaptchaReady    = false;
-          otpState.recaptchaVerifier = null;
-          renderOtpSection();
-        });
-      }
-      // Give reCAPTCHA time to fully initialise
-      setTimeout(trySignIn, 1000);
+      setupRecaptcha(function() {
+        window.firebase.auth().signInWithPhoneNumber(raw, otpState.recaptchaVerifier)
+          .then(function(confirmationResult) {
+            otpState.confirmationResult = confirmationResult;
+            otpState.step               = 'code_sent';
+            otpState.error              = '';
+            startResendCooldown();
+            renderOtpSection();
+            setTimeout(function() {
+              var inp = document.getElementById('otp-code-input');
+              if (inp) inp.focus();
+            }, 100);
+          })
+          .catch(function(err) {
+            console.error('signInWithPhoneNumber error:', err);
+            otpState.step               = 'idle';
+            otpState.error              = friendlyFirebaseError(err.code);
+            otpState.recaptchaVerifier  = null;
+            renderOtpSection();
+          });
+      });
     });
   }
 
@@ -2771,35 +2734,17 @@ function iaTrack(eventName, params) {
   function verifyOtp() {
     var codeInput = document.getElementById('otp-code-input');
     if (!codeInput) return;
-
     var code = codeInput.value.trim().replace(/\s/g, '');
     if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
       otpState.error = 'Please enter the 6-digit code sent to your phone.';
-      renderOtpSection();
-      return;
+      renderOtpSection(); return;
     }
-
     otpState.step  = 'verifying';
     otpState.error = '';
     renderOtpSection();
 
-    // Handle both REST API and SDK verification
-    if (otpState.sessionInfo) {
-      // REST API path
-      var apiKey = FIREBASE_CONFIG.apiKey;
-      fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=' + apiKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionInfo: otpState.sessionInfo, code: code })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.error) {
-          otpState.step  = 'code_sent';
-          otpState.error = 'Incorrect code. Please check the SMS and try again.';
-          renderOtpSection();
-          return;
-        }
+    otpState.confirmationResult.confirm(code)
+      .then(function() {
         if (typeof iaTrack === 'function') iaTrack('phone_verified');
         otpState.step          = 'verified';
         otpState.verifiedPhone = otpState.phone;
@@ -2808,29 +2753,11 @@ function iaTrack(eventName, params) {
         renderOtpSection();
         unlockEstimate();
       })
-      .catch(function() {
+      .catch(function(err) {
         otpState.step  = 'code_sent';
-        otpState.error = 'Verification failed. Please try again.';
+        otpState.error = friendlyFirebaseError(err.code);
         renderOtpSection();
       });
-    } else {
-      // SDK path
-      otpState.confirmationResult.confirm(code)
-        .then(function() {
-          if (typeof iaTrack === 'function') iaTrack('phone_verified');
-          otpState.step          = 'verified';
-          otpState.verifiedPhone = otpState.phone;
-          otpState.error         = '';
-          clearResendCooldown();
-          renderOtpSection();
-          unlockEstimate();
-        })
-        .catch(function(err) {
-          otpState.step  = 'code_sent';
-          otpState.error = friendlyFirebaseError(err.code);
-          renderOtpSection();
-        });
-    }
   }
 
   // ── Resend cooldown ───────────────────────────────────────────
@@ -2839,37 +2766,28 @@ function iaTrack(eventName, params) {
     clearResendCooldown();
     otpState.resendTimer = setInterval(function() {
       otpState.resendCooldown--;
-      var el = document.getElementById('otp-resend-timer');
-      if (el) el.textContent = otpState.resendCooldown > 0
-        ? 'Resend in ' + otpState.resendCooldown + 's'
-        : '';
+      var el  = document.getElementById('otp-resend-timer');
       var btn = document.getElementById('otp-resend-btn');
-      if (btn) {
-        btn.disabled = otpState.resendCooldown > 0;
-        btn.style.opacity = otpState.resendCooldown > 0 ? '0.4' : '1';
-      }
+      if (el)  el.textContent = otpState.resendCooldown > 0 ? 'Resend in ' + otpState.resendCooldown + 's' : '';
+      if (btn) { btn.disabled = otpState.resendCooldown > 0; btn.style.opacity = otpState.resendCooldown > 0 ? '0.4' : '1'; }
       if (otpState.resendCooldown <= 0) clearResendCooldown();
     }, 1000);
   }
 
   function clearResendCooldown() {
-    if (otpState.resendTimer) {
-      clearInterval(otpState.resendTimer);
-      otpState.resendTimer = null;
-    }
+    if (otpState.resendTimer) { clearInterval(otpState.resendTimer); otpState.resendTimer = null; }
   }
 
   function resendOtp() {
     otpState.step               = 'idle';
     otpState.confirmationResult = null;
-    otpState.recaptchaReady     = false;
     otpState.recaptchaVerifier  = null;
     otpState.error              = '';
     clearResendCooldown();
     renderOtpSection();
     setTimeout(function() {
       var inp = document.getElementById('otp-phone-input');
-      if (inp) { inp.value = otpState.phone; }
+      if (inp) inp.value = otpState.phone;
       sendOtp();
     }, 200);
   }
@@ -2878,14 +2796,13 @@ function iaTrack(eventName, params) {
   function unlockEstimate() {
     var lock   = document.getElementById('ivory-estimate-lock');
     var unlock = document.getElementById('ivory-estimate-unlocked');
-    if (lock)   lock.style.display   = 'none';
+    if (lock)   lock.style.display = 'none';
     if (unlock) {
       unlock.style.display = 'block';
       renderPricingSummary();
       var leadContainer = document.getElementById('ivory-lead-form-container');
       if (leadContainer) {
         leadContainer.innerHTML = renderLeadForm();
-        // Pre-fill with details already collected during OTP
         var nameEl  = document.getElementById('lead-name');
         var emailEl = document.getElementById('lead-email');
         var phoneEl = document.getElementById('lead-phone');
@@ -2899,36 +2816,35 @@ function iaTrack(eventName, params) {
   // ── Friendly error messages ───────────────────────────────────
   function friendlyFirebaseError(code) {
     var msgs = {
-      'auth/invalid-phone-number':       'That does not look like a valid phone number. Please include your country code e.g. +91.',
-      'auth/too-many-requests':          'Too many attempts. Please wait a few minutes and try again.',
-      'auth/code-expired':               'The verification code has expired. Please request a new one.',
-      'auth/invalid-verification-code':  'Incorrect code. Please check the SMS and try again.',
-      'auth/quota-exceeded':             'SMS quota exceeded. Please try again later.',
-      'auth/network-request-failed':     'Network error. Please check your connection and try again.',
-      'auth/captcha-check-failed':       'Security check failed. Please refresh the page and try again.',
-    'auth/internal-error':             'Verification failed. Please ensure your number includes the country code (+91 for India) and try again. If the issue persists, the phone authentication service may need to be enabled in your Firebase Console.',
-    'auth/app-not-authorized':         'This app is not authorised for phone sign-in. Please add this domain to Firebase Console under Authentication > Authorised domains.',
-    'auth/missing-phone-number':       'Please enter your phone number with country code e.g. +91 98765 43210.',
+      'auth/invalid-phone-number':      'Please enter a valid number with country code e.g. +91 98765 43210',
+      'auth/too-many-requests':         'Too many attempts. Please wait a few minutes and try again.',
+      'auth/code-expired':              'The code has expired. Please request a new one.',
+      'auth/invalid-verification-code': 'Incorrect code. Please check the SMS and try again.',
+      'auth/quota-exceeded':            'SMS quota exceeded. Please try again later.',
+      'auth/network-request-failed':    'Network error. Please check your connection and try again.',
+      'auth/captcha-check-failed':      'Security check failed. Please refresh the page and try again.',
+      'auth/internal-error':            'Verification failed. Please ensure your number includes country code (+91) and try again.',
+      'auth/app-not-authorized':        'This domain is not authorised. Please contact support.',
+      'auth/missing-phone-number':      'Please enter your phone number with country code e.g. +91 98765 43210.',
     };
     return msgs[code] || 'Something went wrong (' + (code || 'unknown') + '). Please try again.';
   }
 
-  // ── OTP Section HTML Renderer ─────────────────────────────────
+  // ── OTP Section Renderer ──────────────────────────────────────
   function renderOtpSection() {
     var el = document.getElementById('ivory-otp-section');
     if (!el) return;
-
     var step  = otpState.step;
     var error = otpState.error;
 
-    // ── Verified state ──
+    // Verified
     if (step === 'verified') {
       el.innerHTML =
         '<div style="background:rgba(52,211,153,0.08);border:1px solid var(--green);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:16px;">' +
           '<div style="width:44px;height:44px;border-radius:50%;background:rgba(52,211,153,0.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:var(--green);">&#10003;</div>' +
           '<div>' +
             '<div style="font-size:14px;font-weight:600;color:var(--green);">Phone Verified</div>' +
-            '<div style="font-size:12px;color:rgba(245,240,232,0.55);margin-top:2px;">' + otpState.verifiedPhone + ' confirmed successfully. Your estimate is now unlocked.</div>' +
+            '<div style="font-size:12px;color:rgba(245,240,232,0.55);margin-top:2px;">' + otpState.verifiedPhone + ' confirmed. Your estimate is now unlocked.</div>' +
           '</div>' +
           '<div id="ivory-recaptcha-container"></div>' +
         '</div>';
@@ -2939,7 +2855,7 @@ function iaTrack(eventName, params) {
       ? '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--red);">' + error + '</div>'
       : '';
 
-    // ── Idle / Enter details ──
+    // Idle / Sending — collect name, email, phone
     if (step === 'idle' || step === 'sending') {
       var btnDisabled = step === 'sending' ? 'disabled' : '';
       var btnText     = step === 'sending' ? 'Sending code...' : 'Send Verification Code';
@@ -2952,44 +2868,28 @@ function iaTrack(eventName, params) {
           errorHTML +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
             '<div><label style="' + lSt + '">Full Name</label>' +
-            '<input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name"' +
-            ' value="' + (otpState.name || '') + '" style="' + iSt + '"></div>' +
+            '<input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name" value="' + (otpState.name || '') + '" style="' + iSt + '"></div>' +
             '<div><label style="' + lSt + '">Email Address</label>' +
-            '<input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email"' +
-            ' value="' + (otpState.email || '') + '" style="' + iSt + '"></div>' +
+            '<input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email" value="' + (otpState.email || '') + '" style="' + iSt + '"></div>' +
           '</div>' +
           '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
             '<label style="' + lSt + '">Mobile Number</label>' +
-            '<input id="otp-phone-input" type="tel"' +
-            ' placeholder="+91 98765 43210"' +
-            ' autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false"' +
-            ' data-lpignore="true"' +
-            ' value="' + (otpState.phone || '') + '"' +
-            ' style="' + iSt + '"' +
-            ' onkeydown="if(event.key===\'Enter\')sendOtp()">' +
+            '<input id="otp-phone-input" type="tel" placeholder="+91 98765 43210" autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="' + (otpState.phone || '') + '" style="' + iSt + '" onkeydown="if(event.key===\'Enter\')sendOtp()">' +
           '</div>' +
           '<div style="display:flex;align-items:flex-start;gap:10px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.3);border-radius:6px;padding:12px 14px;margin-bottom:18px;">' +
             '<div style="font-size:16px;flex-shrink:0;">&#128274;</div>' +
-            '<div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">' +
-              'Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.' +
-            '</div>' +
+            '<div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.</div>' +
           '</div>' +
-          '<button onclick="sendOtp()" ' + btnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;' + (step === 'sending' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' +
-            btnText +
-          '</button>' +
+          '<button onclick="sendOtp()" ' + btnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;' + (step === 'sending' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' + btnText + '</button>' +
           '<div id="ivory-recaptcha-container" style="margin-top:8px;"></div>' +
         '</div>';
-
-      // Setup recaptcha after render
       if (step === 'idle') {
-        setTimeout(function() {
-          loadFirebase(function() { setupRecaptcha(); });
-        }, 300);
+        setTimeout(function() { loadFirebase(function() {}); }, 300);
       }
       return;
     }
 
-    // ── Code sent / verifying ──
+    // Code sent / verifying
     if (step === 'code_sent' || step === 'verifying') {
       var vBtnDisabled = step === 'verifying' ? 'disabled' : '';
       var vBtnText     = step === 'verifying' ? 'Verifying...' : 'Verify Code';
@@ -3000,16 +2900,9 @@ function iaTrack(eventName, params) {
           errorHTML +
           '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">' +
             '<label style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">6-Digit Code</label>' +
-            '<input id="otp-code-input" type="tel" maxlength="6"' +
-            ' placeholder="e.g. 4 8 2 1 9 3"' +
-            ' autocomplete="one-time-code" inputmode="numeric"' +
-            ' style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:14px 14px;font-size:22px;letter-spacing:8px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;text-align:center;"' +
-            ' onkeydown="if(event.key===\'Enter\')verifyOtp()"' +
-            ' oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
+            '<input id="otp-code-input" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" autocomplete="one-time-code" inputmode="numeric" style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:14px;font-size:28px;letter-spacing:12px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;width:100%;text-align:center;" onkeydown="if(event.key===\'Enter\')verifyOtp()" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">' +
           '</div>' +
-          '<button onclick="verifyOtp()" ' + vBtnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:14px;' + (step === 'verifying' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' +
-            vBtnText +
-          '</button>' +
+          '<button onclick="verifyOtp()" ' + vBtnDisabled + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:14px;' + (step === 'verifying' ? 'opacity:0.6;cursor:not-allowed;' : '') + '">' + vBtnText + '</button>' +
           '<div style="display:flex;align-items:center;justify-content:space-between;">' +
             '<button id="otp-resend-btn" onclick="resendOtp()" disabled style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;opacity:0.4;font-family:\'DM Sans\',sans-serif;padding:0;">Resend Code</button>' +
             '<span id="otp-resend-timer" style="font-size:11px;color:rgba(245,240,232,0.4);"></span>' +
@@ -3019,21 +2912,18 @@ function iaTrack(eventName, params) {
       return;
     }
 
-    // ── Error state ──
+    // Error state
     if (step === 'error') {
       el.innerHTML =
         '<div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:20px 24px;">' +
           '<div style="color:var(--red);font-size:14px;margin-bottom:12px;">' + error + '</div>' +
-          '<button onclick="otpState.step=\'idle\';renderOtpSection();" style="background:none;border:1px solid var(--gold);color:var(--gold);padding:8px 20px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:13px;">Try Again</button>' +
+          '<button onclick="otpState.step=\'idle\';otpState.recaptchaVerifier=null;renderOtpSection();" style="background:none;border:1px solid var(--gold);color:var(--gold);padding:8px 20px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:13px;">Try Again</button>' +
           '<div id="ivory-recaptcha-container"></div>' +
         '</div>';
     }
   }
 
-
-
-
-  // ── Abandonment tracking ──────────────────────────────────────────────────
+    // ── Abandonment tracking ──────────────────────────────────────────────────
   window.addEventListener('beforeunload', function() {
     var started = activeTourId || (tdStart !== null) || (ciPickup !== '');
     var submitted = otpState && otpState.step === 'verified';
