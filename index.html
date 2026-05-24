@@ -724,6 +724,10 @@ function iaTrack(eventName, params) {
   let hotelTier      = null;   // '3star' | '4star' | '5star'
   let hotelResults   = null;   // null | 'loading' | 'error' | array
   let selectedHotel  = null;   // hotel object for single-city tours
+  let hotelRooms     = 1;      // number of rooms (default 1)
+  let hotelAdults    = 2;      // number of adults (default 2 — rate is per room/2 guests)
+  let hotelChildren  = 0;      // number of children
+  let hotelSpecialReq = '';    // special requests / notes for hotel
 
   // Multi-city hotel selections — keyed by sub-city id
   // Golden Triangle: delhi, agra, jaipur
@@ -1217,22 +1221,25 @@ function iaTrack(eventName, params) {
     var hotelLine = null;
     if (wantHotel === true && selectedHotel && selectedHotel.price) {
       var nights = nightsBetween(tdStart, tdEnd) || 1;
-      hotelCost = selectedHotel.price * nights;
+      var rooms  = hotelRooms || 1;
+      hotelCost = selectedHotel.price * nights * rooms;
       hotelLine = {
         name:   selectedHotel.name,
         price:  selectedHotel.price,
         nights: nights,
+        rooms:  rooms,
         total:  hotelCost
       };
     } else if (wantHotel === true && hotelTier && !selectedHotel) {
-      // Tier selected but no specific hotel chosen yet — use midpoint estimate
       var midpoints = { '3star': 5500, '4star': 13000, '5star': 25000 };
       var nights = nightsBetween(tdStart, tdEnd) || 1;
-      hotelCost = (midpoints[hotelTier] || 5500) * nights;
+      var rooms  = hotelRooms || 1;
+      hotelCost = (midpoints[hotelTier] || 5500) * nights * rooms;
       hotelLine = {
         name:   ({ '3star': '3-Star Comfort', '4star': '4-Star Premium', '5star': '5-Star Luxury' })[hotelTier] + ' (estimated)',
         price:  midpoints[hotelTier] || 5500,
         nights: nights,
+        rooms:  rooms,
         total:  hotelCost
       };
     }
@@ -1320,6 +1327,7 @@ function iaTrack(eventName, params) {
         ciDrop        = p.name + (p.formatted_address ? ', ' + p.formatted_address : '');
         ciDropPlaceId = p.place_id;
         ciDropLatLng  = p.geometry ? p.geometry.location : null;
+        render(); // refresh accommodation section with drop city hotels
         updateCalcBtn();
       });
       dropEl.addEventListener('input', () => {
@@ -1821,6 +1829,47 @@ function iaTrack(eventName, params) {
   };
   HOTEL_FALLBACK['golden'] = HOTEL_FALLBACK['delhi']; // placeholder — multi-city logic handles it
 
+  // ── Hotel guest/room/special-request controls ───────────────────────────
+  function hotelGuestRoomControls() {
+    var iSt = 'background:rgba(0,0,0,0.35);border:1px solid rgba(201,169,110,0.4);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;width:100%;box-sizing:border-box;';
+    var lSt = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px;';
+    return '<div style="margin-top:20px;border-top:1px solid rgba(201,169,110,0.2);padding-top:18px;">' +
+      '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Room & Guest Details</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">' +
+        '<div>' +
+          '<label style="' + lSt + '">Rooms</label>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<button onclick="hotelRooms=Math.max(1,hotelRooms-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelRooms||1) + '</span>' +
+            '<button onclick="hotelRooms=Math.min(20,(hotelRooms||1)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+          '</div>' +
+        '</div>' +
+        '<div>' +
+          '<label style="' + lSt + '">Adults</label>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<button onclick="hotelAdults=Math.max(1,hotelAdults-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelAdults||2) + '</span>' +
+            '<button onclick="hotelAdults=Math.min(40,(hotelAdults||2)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+          '</div>' +
+        '</div>' +
+        '<div>' +
+          '<label style="' + lSt + '">Children</label>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<button onclick="hotelChildren=Math.max(0,hotelChildren-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelChildren||0) + '</span>' +
+            '<button onclick="hotelChildren=Math.min(20,(hotelChildren||0)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:rgba(245,240,232,0.4);margin-bottom:14px;font-style:italic;">Rates shown are for 2 guests per room. Extra charges may apply for additional guests or specific room types — final confirmation on booking.</div>' +
+      '<div>' +
+        '<label style="' + lSt + '">Special Requests</label>' +
+        '<textarea oninput="hotelSpecialReq=this.value" placeholder="e.g. early check-in, connecting rooms, ground floor, honeymoon setup, extra bed for child..." style="' + iSt + 'height:72px;resize:vertical;">' + (hotelSpecialReq||'') + '</textarea>' +
+        '<div style="font-size:10px;color:rgba(245,240,232,0.3);margin-top:4px;">We will do our best to accommodate your requests — subject to availability at time of booking.</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   function accommodationSection() {
     const tour   = activeTour();
     const isMulti = tour && MULTI_CITY_DESTS[tour.id];
@@ -1891,7 +1940,8 @@ function iaTrack(eventName, params) {
       '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Drop Location</div>' +
       '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;">' + cityLabel + '</div>' +
       '</div></div>' +
-      '<div class="hotel-tier-grid">' + tierCards + '</div>' + hotelsHTML;
+      '<div class="hotel-tier-grid">' + tierCards + '</div>' + hotelsHTML +
+      hotelGuestRoomControls();
   }
 
   // ── Single-city accommodation (Delhi, Agra, Jaipur, Varanasi, Amritsar, Corbett) ──
@@ -1929,7 +1979,7 @@ function iaTrack(eventName, params) {
         </div>` : ''}
       </div>
       <div class="hotel-tier-grid">${tierCards}</div>
-      ${hotelsHTML}`;
+      ${hotelsHTML}` + hotelGuestRoomControls();
   }
 
   // ── Multi-city accommodation ───────────────────────────────────────────────
@@ -2044,10 +2094,10 @@ function iaTrack(eventName, params) {
               <span>${h.rating} / 5</span>
             </div>
             <div class="hotel-price">₹${h.price.toLocaleString('en-IN')}</div>
-            <div class="hotel-price-sub">per room / per night · incl. convenience charges</div>
+            <div class="hotel-price-sub">per room / 2 guests · per night · incl. convenience charges</div>
             ${totalCost ? `<div class="hotel-total-cost">
-              ${nights} night${nights!==1?'s':''} ·
-              <strong style="color:var(--gold)">₹${totalCost.toLocaleString('en-IN')} total</strong>
+              ${nights} night${nights!==1?'s':''} × ${hotelRooms||1} room${(hotelRooms||1)!==1?'s':''} ·
+              <strong style="color:var(--gold)">₹${(totalCost*(hotelRooms||1)).toLocaleString('en-IN')} total</strong>
             </div>` : ''}
           </div>`;
       }).join('')}
@@ -2585,7 +2635,7 @@ function iaTrack(eventName, params) {
     }
     if (b.hotelLine) {
       rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);">' +
-        '<span style="color:rgba(245,240,232,0.6);">' + b.hotelLine.name + '<br><span style="font-size:10px;opacity:0.6;">' + cvt(b.hotelLine.price) + '/night × ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights !== 1 ? 's' : '') + '</span></span>' +
+        '<span style="color:rgba(245,240,232,0.6);">' + b.hotelLine.name + '<br><span style="font-size:10px;opacity:0.6;">' + cvt(b.hotelLine.price) + '/room/night × ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights!==1?'s':'') + ' × ' + (b.hotelLine.rooms||1) + ' room' + ((b.hotelLine.rooms||1)!==1?'s':'') + '</span></span>' +
         '<span>' + cvt(b.hotelLine.total) + '</span></div>';
     }
     rows += '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(201,169,110,0.1);font-size:12px;color:rgba(245,240,232,0.4);"><span>Parking</span><span style="color:#34D399;">At Actuals</span></div>';
@@ -3038,6 +3088,10 @@ function iaTrack(eventName, params) {
       guide:guideChoice?(gl[guideChoice]||""):"",
       airportServices:ai.join(", "),
       hotelSelection:selectedHotel?selectedHotel.name+" Rs."+selectedHotel.price+"/night":(hotelTier||""),
+      hotelRooms:String(hotelRooms||1),
+      hotelAdults:String(hotelAdults||2),
+      hotelChildren:String(hotelChildren||0),
+      hotelSpecialReq:hotelSpecialReq||"",
       customRoute:(customMode&&ciPickup&&ciDrop)?ciPickup+" to "+ciDrop:"",
       customNotes:ciNotes||"", arrivalFlight:tdArrFlight||"", departureFlight:tdDepFlight||"",
       estimateTotal:calc?"Rs."+calc.grandTotal.toLocaleString("en-IN"):"",
@@ -3076,7 +3130,7 @@ function iaTrack(eventName, params) {
       })
       .catch(function(){
         leadSubmitting=false;
-        if(btn){btn.disabled=false;btn.textContent="Send My Estimate";}
+        if(btn){btn.disabled=false;}
         if(eb){eb.innerHTML="<div>Submission failed. Please email hello@ivoryarctravels.com</div>";eb.style.display="block";}
       });
   }
