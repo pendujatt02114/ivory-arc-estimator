@@ -2118,49 +2118,30 @@ function iaTrack(eventName, params) {
   // Fallback pax if exact not selected
   var TIER_DEFAULT_PAX = { t1: 1, t2: 3, t3: 5, t4: 7 };
 
-  // ── FX Rate Fetcher (Frankfurter API — no key needed) ─────────
+  // ── FX Rate Fetcher ──────────────────────────────────────────
+  // Uses open.er-api.com (USD base) — free, no key, reliable
+  // Logic: 1 USD = X INR and 1 USD = Y EUR
+  //        so 1 INR = (1/X) USD  and  1 INR = (Y/X) EUR
   function fetchFxRates(onDone) {
     if (fxLoading) return;
     fxLoading = true;
     fxError   = false;
 
-    // Try Frankfurter first (ECB rates, no key needed)
-    // Fallback to open.er-api.com if Frankfurter fails
-    function tryFrankfurter() {
-      return fetch('https://api.frankfurter.app/latest?from=INR&to=USD,EUR')
-        .then(function(r) {
-          if (!r.ok) throw new Error('frankfurter ' + r.status);
-          return r.json();
-        })
-        .then(function(data) {
-          if (!data.rates || !data.rates.USD) throw new Error('bad data');
-          fxRates.USD = data.rates.USD;
-          fxRates.EUR = data.rates.EUR;
-          return true;
-        });
-    }
-
-    function tryOpenER() {
-      // open.er-api.com returns rates FROM USD - we need to convert
-      return fetch('https://open.er-api.com/v6/latest/USD')
-        .then(function(r) {
-          if (!r.ok) throw new Error('open-er ' + r.status);
-          return r.json();
-        })
-        .then(function(data) {
-          if (!data.rates || !data.rates.INR) throw new Error('bad data');
-          // Convert: 1 USD = X INR, so 1 INR = 1/X USD
-          var usdPerInr = 1 / data.rates.INR;
-          var eurPerInr = data.rates.EUR / data.rates.INR;
-          fxRates.USD = parseFloat(usdPerInr.toFixed(6));
-          fxRates.EUR = parseFloat(eurPerInr.toFixed(6));
-          return true;
-        });
-    }
-
-    tryFrankfurter()
-      .catch(function() { return tryOpenER(); })
-      .then(function() {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(function(r) {
+        if (!r.ok) throw new Error('open-er-api status ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        if (!data || !data.rates || !data.rates.INR || !data.rates.EUR) {
+          throw new Error('Unexpected response structure');
+        }
+        var inrPerUsd = data.rates.INR;  // e.g. 84.5
+        var eurPerUsd = data.rates.EUR;  // e.g. 0.92
+        // 1 INR = 1/inrPerUsd USD
+        // 1 INR = eurPerUsd/inrPerUsd EUR
+        fxRates.USD = parseFloat((1 / inrPerUsd).toFixed(8));
+        fxRates.EUR = parseFloat((eurPerUsd / inrPerUsd).toFixed(8));
         fxFetchedAt = new Date();
         fxLoading   = false;
         fxError     = false;
@@ -2168,11 +2149,26 @@ function iaTrack(eventName, params) {
         if (onDone) onDone(true);
       })
       .catch(function(err) {
-        console.warn('Ivory Arc: FX fetch failed:', err.message);
-        fxLoading = false;
-        fxError   = true;
-        renderPricingSummary();
-        if (onDone) onDone(false);
+        console.warn('Ivory Arc FX fetch failed:', err.message);
+        // Fallback: try exchangerate-api
+        fetch('https://api.exchangerate-api.com/v4/latest/USD')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.rates || !data.rates.INR) throw new Error('bad fallback');
+            fxRates.USD = parseFloat((1 / data.rates.INR).toFixed(8));
+            fxRates.EUR = parseFloat((data.rates.EUR / data.rates.INR).toFixed(8));
+            fxFetchedAt = new Date();
+            fxLoading   = false;
+            fxError     = false;
+            renderPricingSummary();
+            if (onDone) onDone(true);
+          })
+          .catch(function() {
+            fxLoading = false;
+            fxError   = true;
+            renderPricingSummary();
+            if (onDone) onDone(false);
+          });
       });
   }
 
@@ -2184,6 +2180,9 @@ function iaTrack(eventName, params) {
   }
 
   function formatCurrency(amountINR) {
+    // If a foreign currency is selected but rate hasn't loaded yet, show INR
+    if (activeCurrency === 'USD' && !fxRates.USD) return '\u20b9' + amountINR.toLocaleString('en-IN');
+    if (activeCurrency === 'EUR' && !fxRates.EUR) return '\u20b9' + amountINR.toLocaleString('en-IN');
     var converted = convertFromINR(amountINR);
     if (activeCurrency === 'USD') {
       return '$' + converted.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -3037,9 +3036,50 @@ function iaTrack(eventName, params) {
     h += "<div id='lead-success-wrap' style='display:none;text-align:center;padding:20px 0;'>";
     h += "<div style='font-size:48px;color:var(--green);margin-bottom:12px;'>&#10003;</div>";
     h += "<div style='font-size:22px;color:#fff;margin-bottom:10px;'>Estimate Sent Successfully</div>";
-    h += "<div style='font-size:13px;color:var(--ivory);'>Reference: <strong id='lead-ref-display' style='color:var(--gold);letter-spacing:2px;'></strong></div>";
+    h += "<div style='font-size:13px;color:var(--ivory);margin-bottom:6px;'>Reference: <strong id='lead-ref-display' style='color:var(--gold);letter-spacing:2px;'></strong></div>";
+    h += "<div style='font-size:12px;color:rgba(245,240,232,0.5);margin-bottom:20px;'>A copy has been emailed to you. Our team will be in touch within 2 hours.</div>";
+    h += "<button onclick='downloadEstimate()' style='display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;'>&#11015; Download Estimate PDF</button>";
     h += "</div></div>";
     return h;
+  }
+
+  // ── Download Estimate as PDF ─────────────────────────────────────────────────
+  function downloadEstimate() {
+    var pricingEl = document.getElementById('ivory-pricing-summary');
+    if (!pricingEl) return;
+
+    var ref = document.getElementById('lead-ref-display');
+    var refText = ref ? ref.textContent : 'Ivory-Arc-Estimate';
+
+    var printWin = window.open('', '_blank', 'width=800,height=900');
+    printWin.document.write(
+      '<!DOCTYPE html><html><head>' +
+      '<meta charset="UTF-8">' +
+      '<title>Ivory Arc Estimate — ' + refText + '</title>' +
+      '<style>' +
+        'body{font-family:Georgia,serif;background:#0D0B08;color:#F5F0E8;padding:40px;margin:0;}' +
+        'h1{font-style:italic;color:#C9A96E;font-size:26px;margin-bottom:4px;}' +
+        '.ref{font-size:12px;letter-spacing:2px;color:#C9A96E;margin-bottom:30px;}' +
+        '.breakdown{background:#1A1612;border:1px solid #C9A96E;border-radius:8px;padding:24px;}' +
+        '.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(201,169,110,0.1);font-size:13px;}' +
+        '.row:last-child{border-bottom:none;}' +
+        '.label{color:rgba(245,240,232,0.6);}' +
+        '.val{color:#C9A96E;font-weight:600;}' +
+        '.total-row{border-top:2px solid #C9A96E;margin-top:8px;padding-top:14px;font-size:16px;}' +
+        '.footer{margin-top:30px;font-size:11px;color:rgba(245,240,232,0.35);text-align:center;line-height:1.8;}' +
+        '@media print{body{background:#fff;color:#000;} h1,.ref{color:#8B6914;} .breakdown{background:#f9f9f9;border-color:#8B6914;} .val{color:#8B6914;}}' +
+      '</style></head><body>' +
+      '<h1>Ivory Arc Travels</h1>' +
+      '<div class="ref">Estimate Reference: ' + refText + '</div>' +
+      '<div class="breakdown">' + pricingEl.innerHTML + '</div>' +
+      '<div class="footer">' +
+        'This estimate is valid for 7 days and subject to availability at time of booking.<br>' +
+        'Ivory Arc Travels &nbsp;·&nbsp; hello@ivoryarctravels.com &nbsp;·&nbsp; +91 74550 37397' +
+      '</div>' +
+      '</body></html>'
+    );
+    printWin.document.close();
+    setTimeout(function() { printWin.print(); }, 500);
   }
 
   // ── Expose all functions to window for onclick handlers ──────────────────
@@ -3074,6 +3114,7 @@ function iaTrack(eventName, params) {
   if (typeof renderPricingSummary !== 'undefined') window.renderPricingSummary = renderPricingSummary;
   if (typeof handleLeadSubmit !== 'undefined') window.handleLeadSubmit = handleLeadSubmit;
   if (typeof renderLeadForm !== 'undefined') window.renderLeadForm = renderLeadForm;
+  if (typeof downloadEstimate !== 'undefined') window.downloadEstimate = downloadEstimate;
 
   ['delhi','agra','jaipur','shimla','manali','haridwar',
    'rishikesh','mathura','vrindavan','corbett','varanasi','amritsar'].forEach(function(cityId) {
