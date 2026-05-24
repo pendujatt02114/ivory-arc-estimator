@@ -1822,10 +1822,7 @@ function iaTrack(eventName, params) {
       hotelsHTML = `<div class="hotel-loading">Searching for the finest stays in ${tour.name}&hellip;</div>`;
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
       hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
-        <div class="hotel-serpapi-note">
-          Live rates via Google Hotels · 
-          Prices are indicative and subject to availability at time of booking.
-        </div>`;
+<div class="hotel-serpapi-note">Live rates via Google Hotels &middot; Subject to availability at time of booking.</div>`;
     } else {
       hotelsHTML = `<div class="hotel-no-dest">No hotel data available. Please contact us directly.</div>`;
     }
@@ -1904,7 +1901,7 @@ function iaTrack(eventName, params) {
           html += `<div class="hotel-loading">Searching stays in ${activeCity.charAt(0).toUpperCase()+activeCity.slice(1)}&hellip;</div>`;
         } else if (Array.isArray(results) && results.length) {
           html += hotelCardsHTML(results, nights, selected, `selectMultiCityHotel_${activeCity}`);
-          html += `<div class="hotel-serpapi-note">Curated reference rates · Subject to availability at time of booking.</div>`;
+          html += `<div class="hotel-serpapi-note">Rates inclusive of convenience charges &middot; Subject to availability at time of booking.</div>`;
         }
       }
     } else {
@@ -1932,7 +1929,7 @@ function iaTrack(eventName, params) {
               results === 'loading' ? `<div class="hotel-loading">Finding stays in ${city.name}&hellip;</div>` :
               Array.isArray(results) && results.length ?
                 hotelCardsHTML(results, null, selected, `selectMultiCityHotel_${city.id}`) +
-                `<div class="hotel-serpapi-note" style="margin-top:10px;">Curated reference rates · Subject to availability.</div>`
+                `<div class="hotel-serpapi-note" style="margin-top:10px;">Rates inclusive of convenience charges &middot; Subject to availability.</div>`
               : `<div class="hotel-no-dest">No data — contact us directly.</div>`
             }
           </div>`;
@@ -1957,7 +1954,7 @@ function iaTrack(eventName, params) {
               <span>${h.rating} / 5</span>
             </div>
             <div class="hotel-price">₹${h.price.toLocaleString('en-IN')}</div>
-            <div class="hotel-price-sub">per room / per night</div>
+            <div class="hotel-price-sub">per room / per night · incl. convenience charges</div>
             ${totalCost ? `<div class="hotel-total-cost">
               ${nights} night${nights!==1?'s':''} ·
               <strong style="color:var(--gold)">₹${totalCost.toLocaleString('en-IN')} total</strong>
@@ -2013,36 +2010,52 @@ function iaTrack(eventName, params) {
   });
 
   // ── Unified fetch function ────────────────────────────────────────────────
+  // SerpAPI proxy URL — your Apps Script acts as a CORS-safe middleman
+  var SERPAPI_PROXY = 'https://script.google.com/macros/s/AKfycbzsJqOKQltBR0tuZ19-ZRkFYtxP7oAPifIdFIfI__eZucf9TEelye-_9pgkJy3zYR41/exec';
+
   function fetchHotels(destId, tier, callback) {
-    if (SERPAPI_KEY && SERPAPI_KEY !== 'YOUR_SERPAPI_KEY') {
+    if (SERPAPI_KEY) {
       const cityName = {
-        delhi:'New Delhi',agra:'Agra',jaipur:'Jaipur',varanasi:'Varanasi',
-        amritsar:'Amritsar',shimla:'Shimla',manali:'Manali',haridwar:'Haridwar',
-        rishikesh:'Rishikesh',mathura:'Mathura',vrindavan:'Vrindavan',corbett:'Jim Corbett'
+        delhi:'New Delhi', agra:'Agra', jaipur:'Jaipur', varanasi:'Varanasi',
+        amritsar:'Amritsar', shimla:'Shimla', manali:'Manali', haridwar:'Haridwar',
+        rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan', corbett:'Jim Corbett'
       }[destId] || destId;
       const stars = tier.replace('star','');
-      const query = encodeURIComponent(stars + ' star hotels in ' + cityName + ' India');
-      const ci = tdStart  ? tdStart.toISOString().slice(0,10)  : '';
-      const co = tdEnd    ? tdEnd.toISOString().slice(0,10)    : '';
-      const url = 'https://serpapi.com/search.json?engine=google_hotels&q=' + query
-                + '&check_in_date=' + ci + '&check_out_date=' + co
-                + '&currency=INR&gl=in&hl=en&api_key=' + SERPAPI_KEY;
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          const props = (data.properties || []).slice(0, 6).map(p => ({
-            name:   p.name,
-            rating: p.overall_rating || 4.0,
-            price:  p.rate_per_night ? parseInt(p.rate_per_night.lowest.replace(/[^0-9]/g,'')) : 10000,
-            link:   p.link || ''
-          }));
+      const ci = tdStart ? tdStart.toISOString().slice(0,10) : '';
+      const co = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
+
+      // Route through Apps Script proxy to avoid CORS
+      const proxyUrl = SERPAPI_PROXY
+        + '?action=hotels'
+        + '&city=' + encodeURIComponent(cityName)
+        + '&stars=' + stars
+        + '&ci=' + ci
+        + '&co=' + co
+        + '&key=' + SERPAPI_KEY;
+
+      fetch(proxyUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var props = (data.properties || []).slice(0, 6).map(function(p) {
+            var rawPrice = p.rate_per_night
+              ? parseInt((p.rate_per_night.lowest || '0').replace(/[^0-9]/g,''))
+              : 0;
+            // Add 10% convenience charge
+            var priceWithConvenience = rawPrice ? Math.round(rawPrice * 1.10) : 0;
+            return {
+              name:    p.name,
+              rating:  p.overall_rating || 4.0,
+              price:   priceWithConvenience,
+              rawPrice: rawPrice,
+              link:    p.link || ''
+            };
+          }).filter(function(p) { return p.price > 0; });
           callback(props.length ? props : getFallback(destId, tier));
         })
-        .catch(() => callback(getFallback(destId, tier)));
+        .catch(function() { callback(getFallback(destId, tier)); });
       return;
     }
-    // Fallback with slight delay for UX
-    setTimeout(() => callback(getFallback(destId, tier)), 500);
+    setTimeout(function() { callback(getFallback(destId, tier)); }, 500);
   }
 
   function getFallback(destId, tier) {
@@ -2182,29 +2195,40 @@ function iaTrack(eventName, params) {
     if (fxLoading) return;
     fxLoading = true;
     fxError   = false;
-    fetch('https://open.er-api.com/v6/latest/USD')
-      .then(function(r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
-      .then(function(data) {
-        if (!data || !data.rates || !data.rates.INR) throw new Error('bad data');
-        fxRates.USD = parseFloat((1 / data.rates.INR).toFixed(8));
-        fxRates.EUR = parseFloat((data.rates.EUR / data.rates.INR).toFixed(8));
+
+    // Uses @fawazahmed0/currency-api — fully CORS-friendly, no key needed, updated daily
+    // Returns USD base: usd.inr and usd.eur
+    var today = new Date().toISOString().slice(0, 10);
+    var urls = [
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json',
+      'https://latest.currency-api.pages.dev/v1/currencies/usd.json'
+    ];
+
+    function tryUrl(idx) {
+      if (idx >= urls.length) {
+        // All failed — use hardcoded fallback rates
+        fxRates.USD = 0.01183; // ~₹84.5 = $1
+        fxRates.EUR = 0.01087; // ~₹92 = €1
         fxFetchedAt = new Date(); fxLoading = false; fxError = false;
         renderPricingSummary();
         if (onDone) onDone(true);
-      })
-      .catch(function(err) {
-        fetch('https://api.exchangerate-api.com/v4/latest/USD')
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            if (!data || !data.rates || !data.rates.INR) throw new Error('bad fallback');
-            fxRates.USD = parseFloat((1 / data.rates.INR).toFixed(8));
-            fxRates.EUR = parseFloat((data.rates.EUR / data.rates.INR).toFixed(8));
-            fxFetchedAt = new Date(); fxLoading = false; fxError = false;
-            renderPricingSummary();
-            if (onDone) onDone(true);
-          })
-          .catch(function() { fxLoading = false; fxError = true; renderPricingSummary(); if (onDone) onDone(false); });
-      });
+        return;
+      }
+      fetch(urls[idx])
+        .then(function(r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+        .then(function(data) {
+          if (!data || !data.usd || !data.usd.inr || !data.usd.eur) throw new Error('bad data');
+          // data.usd.inr = how many INR per 1 USD, e.g. 84.5
+          // So 1 INR = 1/84.5 USD
+          fxRates.USD = parseFloat((1 / data.usd.inr).toFixed(8));
+          fxRates.EUR = parseFloat((data.usd.eur / data.usd.inr).toFixed(8));
+          fxFetchedAt = new Date(); fxLoading = false; fxError = false;
+          renderPricingSummary();
+          if (onDone) onDone(true);
+        })
+        .catch(function() { tryUrl(idx + 1); });
+    }
+    tryUrl(0);
   }
 
   function convertFromINR(amountINR) {
