@@ -2364,51 +2364,70 @@ function iaTrack(eventName, params) {
         rishikesh:'Rishikesh', mathura:'Mathura', vrindavan:'Vrindavan',
         corbett:'Jim Corbett', chandigarh:'Chandigarh'
       };
-      // Use actual city name if provided (custom mode), otherwise use hub name
-      const cityName = actualCityName || hubNames[destId] || destId;
-      const stars = tier.replace('star','');
-      const ci = tdStart ? tdStart.toISOString().slice(0,10) : '';
-      const co = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
+      // For custom mode: search the actual city; if it returns nothing, retry with hub city
+      const baseCity  = actualCityName || hubNames[destId] || destId;
+      const hubCity   = hubNames[destId] || null;
+      const stars     = tier.replace('star','');
+      const ci        = tdStart ? tdStart.toISOString().slice(0,10) : '';
+      const co        = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
 
-      // Route through Apps Script proxy to avoid CORS
-      const proxyUrl = SERPAPI_PROXY
-        + '?action=hotels'
-        + '&city=' + encodeURIComponent(cityName)
-        + '&stars=' + stars
-        + '&ci=' + ci
-        + '&co=' + co
-        + '&key=' + SERPAPI_KEY;
+      function buildProxyUrl(city) {
+        return SERPAPI_PROXY
+          + '?action=hotels'
+          + '&city=' + encodeURIComponent(stars + ' star hotels near ' + city + ' India')
+          + '&stars=' + stars
+          + '&ci=' + ci
+          + '&co=' + co
+          + '&key=' + SERPAPI_KEY;
+      }
 
-      fetch(proxyUrl)
+      function parseProps(data) {
+        return (data.properties || []).slice(0, 6).map(function(p) {
+          var rawPrice = p.rate_per_night
+            ? parseInt((p.rate_per_night.lowest || '0').replace(/[^0-9]/g,''))
+            : 0;
+          return {
+            name:    p.name,
+            rating:  p.overall_rating || 4.0,
+            price:   rawPrice ? Math.round(rawPrice * 1.10) : 0,
+            rawPrice: rawPrice,
+            link:    p.link || ''
+          };
+        }).filter(function(p) { return p.price > 0; });
+      }
+
+      // First try: search the actual drop city
+      fetch(buildProxyUrl(baseCity))
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          var props = (data.properties || []).slice(0, 6).map(function(p) {
-            var rawPrice = p.rate_per_night
-              ? parseInt((p.rate_per_night.lowest || '0').replace(/[^0-9]/g,''))
-              : 0;
-            var priceWithConvenience = rawPrice ? Math.round(rawPrice * 1.10) : 0;
-            return {
-              name:    p.name,
-              rating:  p.overall_rating || 4.0,
-              price:   priceWithConvenience,
-              rawPrice: rawPrice,
-              link:    p.link || ''
-            };
-          }).filter(function(p) { return p.price > 0; });
-
+          var props = parseProps(data);
           if (props.length) {
             callback(props);
-          } else if (actualCityName) {
-            // Custom mode: SerpAPI returned nothing for this city — show popup, no fallback
+            return;
+          }
+          // Zero results — if custom mode with a different hub city, retry with hub
+          if (actualCityName && hubCity && hubCity !== baseCity) {
+            return fetch(buildProxyUrl(hubCity))
+              .then(function(r2) { return r2.json(); })
+              .then(function(data2) {
+                var props2 = parseProps(data2);
+                if (props2.length) {
+                  callback(props2);
+                } else if (actualCityName) {
+                  callback('no_results');
+                } else {
+                  callback(getFallback(destId, tier));
+                }
+              });
+          }
+          if (actualCityName) {
             callback('no_results');
           } else {
-            // Regular destination mode: use curated fallback hotels
             callback(getFallback(destId, tier));
           }
         })
         .catch(function() {
           if (actualCityName) {
-            // Custom mode: API error — show popup, no fallback
             callback('no_results');
           } else {
             callback(getFallback(destId, tier));
@@ -2416,7 +2435,6 @@ function iaTrack(eventName, params) {
         });
       return;
     }
-    // No SerpAPI key — use fallback for regular destinations only
     if (actualCityName) {
       callback('no_results');
     } else {
