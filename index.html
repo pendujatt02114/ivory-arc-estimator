@@ -1856,11 +1856,11 @@ function iaTrack(eventName, params) {
   function singleCityAccommodationForCity(destId, cityLabel) {
     var nights = nightsBetween(tdStart, tdEnd) || 1;
     var tierCards = HOTEL_TIERS.map(function(t) {
-      return '<div class="hotel-tier-card ' + (hotelTier === t.id ? 'active' : '') + '" onclick="selectHotelTier('' + t.id + '')">' +
+      var ac = hotelTier === t.id ? ' active' : '';
+      return '<div class="hotel-tier-card' + ac + '" onclick="selectHotelTier(\"' + t.id + '\")">' +
         '<div class="hotel-tier-stars">' + t.stars + '</div>' +
         '<div class="hotel-tier-label">' + t.label + '</div>' +
-        '<div class="hotel-tier-range">' + t.range + '</div>' +
-        '</div>';
+        '<div class="hotel-tier-range">' + t.range + '</div></div>';
     }).join('');
 
     var hotelsHTML = '';
