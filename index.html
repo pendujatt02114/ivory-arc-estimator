@@ -2427,16 +2427,20 @@ function iaTrack(eventName, params) {
       return hotels;
     }
 
+    // Safety net: if this destId has curated hotels, we ALWAYS have something to show
+    // SerpAPI failure or empty results never triggers popup for known destinations
+    var curatedHotels = getFallback(destId, tier);
+    var hasCurated = curatedHotels && curatedHotels.length > 0;
+
     if (!SERPAPI_KEY) {
-      var fb = getFallback(destId, tier);
-      setTimeout(function() { callback(fb.length ? tagResult(fb,tier) : 'no_results'); }, 300);
+      setTimeout(function() { callback(hasCurated ? tagResult(curatedHotels, tier) : 'no_results'); }, 300);
       return;
     }
 
     function tryTier(idx) {
       if (idx >= tiersToTry.length) {
-        var fallback = getFallback(destId, tier);
-        callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
+        // All SerpAPI attempts exhausted — use curated if available, popup only for truly unknown cities
+        callback(hasCurated ? tagResult(curatedHotels, tier) : 'no_results');
         return;
       }
       var t = tiersToTry[idx];
@@ -2458,7 +2462,10 @@ function iaTrack(eventName, params) {
             tryTier(idx + 1);
           }
         })
-        .catch(function() { callback(getFallback(destId, tier)); });
+        .catch(function() {
+          // Network/API error — show curated hotels silently, never popup
+          callback(hasCurated ? tagResult(curatedHotels, tier) : 'no_results');
+        });
     }
 
     tryTier(0);
