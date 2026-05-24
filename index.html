@@ -2674,6 +2674,7 @@ function iaTrack(eventName, params) {
       'ivory-recaptcha-container',
       {
         size: 'invisible',
+        siteKey: RECAPTCHA_SITE_KEY,
         callback: function() {
           otpState.recaptchaReady = true;
         },
