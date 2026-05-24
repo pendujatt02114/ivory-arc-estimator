@@ -1856,6 +1856,12 @@ function iaTrack(eventName, params) {
     '5star': [{name:'Taj Corbett Resort',rating:4.9,price:35000},{name:'The Riverview Retreat',rating:4.8,price:28000},{name:'Aahana Resort Corbett',rating:4.7,price:22000}],
   };
   HOTEL_FALLBACK['golden'] = HOTEL_FALLBACK['delhi']; // placeholder — multi-city logic handles it
+  HOTEL_FALLBACK['chandigarh'] = {
+    '3star': [{name:'Hotel Aroma Chandigarh',rating:3.8,price:4000},{name:'Hotel Shivalik View',rating:3.7,price:3500},{name:'Hotel Mountview Budget',rating:3.6,price:3200}],
+    '4star': [{name:'Hyatt Regency Chandigarh',rating:4.5,price:12000},{name:'JW Marriott Chandigarh',rating:4.6,price:14000},{name:'Hotel Taj Chandigarh',rating:4.4,price:11000}],
+    '5star': [{name:'The Oberoi Sukhvilas Chandigarh',rating:4.9,price:35000},{name:'JW Marriott Chandigarh',rating:4.7,price:18000},{name:'Taj Chandigarh',rating:4.8,price:22000}],
+  };
+  HOTEL_FALLBACK['mohali'] = HOTEL_FALLBACK['chandigarh'];
 
   // ── Hotel guest/room/special-request controls ───────────────────────────
   function hotelGuestRoomControls() {
@@ -2141,18 +2147,84 @@ function iaTrack(eventName, params) {
   // ── Single-city handlers ──────────────────────────────────────────────────
   // Shared city map for hotel lookups
   var HOTEL_CITY_MAP = {
-    agra:'agra',jaipur:'jaipur',delhi:'delhi',haridwar:'haridwar',rishikesh:'rishikesh',
-    varanasi:'varanasi',amritsar:'amritsar',shimla:'shimla',manali:'manali',
-    mathura:'mathura',vrindavan:'vrindavan',corbett:'corbett',
-    lucknow:'delhi',chandigarh:'shimla',dehradun:'rishikesh',
-    jammu:'amritsar',ambala:'delhi',ludhiana:'amritsar',jalandhar:'amritsar',
-    patiala:'delhi',gurdaspur:'amritsar',pathankot:'amritsar',
-    dharamshala:'shimla',kasol:'shimla',meerut:'delhi',noida:'delhi',
-    gurgaon:'delhi',gurugram:'delhi',faridabad:'delhi',
-    aligarh:'agra',gwalior:'agra',mussoorie:'rishikesh',nainital:'corbett',
-    pushkar:'jaipur',ajmer:'jaipur',udaipur:'jaipur',jodhpur:'jaipur',
-    prayagraj:'varanasi',ayodhya:'varanasi',kanpur:'delhi',saharanpur:'rishikesh',
-    moradabad:'corbett',bareilly:'corbett',lansdowne:'corbett'
+    // Delhi & NCR
+    'delhi':'delhi','new delhi':'delhi','old delhi':'delhi','noida':'delhi',
+    'greater noida':'delhi','gurgaon':'delhi','gurugram':'delhi','faridabad':'delhi',
+    'ghaziabad':'delhi','bahadurgarh':'delhi','sonipat':'delhi','rohtak':'delhi',
+    'jhajjar':'delhi','rewari':'delhi','palwal':'delhi','ballabhgarh':'delhi',
+    'manesar':'delhi','bhiwadi':'delhi','karnal':'delhi','panipat':'delhi',
+    'hisar':'delhi','bhiwani':'delhi','sirsa':'delhi','fatehabad':'delhi',
+    'jind':'delhi','mewat':'delhi','nuh':'delhi','shamli':'delhi',
+    'meerut':'delhi','hapur':'delhi','bulandshahr':'delhi',
+    // Agra hub
+    'agra':'agra','taj mahal':'agra','fatehpur sikri':'agra','aligarh':'agra',
+    'hathras':'agra','firozabad':'agra','etawah':'agra','mainpuri':'agra',
+    'gwalior':'agra','morena':'agra','bharatpur':'agra','dholpur':'agra',
+    'karauli':'agra','khurja':'agra','etah':'agra','kasganj':'agra',
+    // Mathura/Vrindavan
+    'mathura':'mathura','vrindavan':'vrindavan','govardhan':'mathura',
+    'barsana':'mathura','nandgaon':'mathura','gokul':'mathura','baldeo':'mathura',
+    // Jaipur hub
+    'jaipur':'jaipur','amber':'jaipur','amer':'jaipur','pushkar':'jaipur',
+    'ajmer':'jaipur','kishangarh':'jaipur','alwar':'jaipur','sariska':'jaipur',
+    'neemrana':'jaipur','behror':'jaipur','kotputli':'jaipur','dausa':'jaipur',
+    'sikar':'jaipur','jhunjhunu':'jaipur','churu':'jaipur','nagaur':'jaipur',
+    'tonk':'jaipur','kota':'jaipur','bundi':'jaipur','udaipur':'jaipur',
+    'chittorgarh':'jaipur','jodhpur':'jaipur','pali':'jaipur','bikaner':'jaipur',
+    'hanumangarh':'jaipur','ganganagar':'jaipur','narnaul':'jaipur',
+    'mahendragarh':'jaipur','sawai madhopur':'agra',
+    // Amritsar hub
+    'amritsar':'amritsar','golden temple':'amritsar','ludhiana':'amritsar',
+    'jalandhar':'amritsar','phagwara':'amritsar','nakodar':'amritsar',
+    'kapurthala':'amritsar','gurdaspur':'amritsar','batala':'amritsar',
+    'pathankot':'amritsar','dalhousie':'amritsar','chamba':'amritsar',
+    'hoshiarpur':'amritsar','nawanshahr':'amritsar','anandpur sahib':'amritsar',
+    'bathinda':'amritsar','mansa':'amritsar','faridkot':'amritsar',
+    'ferozepur':'amritsar','moga':'amritsar','barnala':'amritsar',
+    'sangrur':'amritsar','malerkotla':'amritsar','jammu':'amritsar',
+    'katra':'amritsar','udhampur':'amritsar','samba':'amritsar',
+    // Chandigarh hub
+    'chandigarh':'chandigarh','mohali':'chandigarh','sahibzada ajit':'chandigarh',
+    'sas nagar':'chandigarh','panchkula':'chandigarh','zirakpur':'chandigarh',
+    'kharar':'chandigarh','dera bassi':'chandigarh','baddi':'chandigarh',
+    'nalagarh':'chandigarh','morni':'chandigarh','ambala':'chandigarh',
+    'kurukshetra':'chandigarh','patiala':'chandigarh','rajpura':'chandigarh',
+    'ropar':'chandigarh','rupnagar':'chandigarh',
+    // Shimla hub
+    'shimla':'shimla','kufri':'shimla','chail':'shimla','kasauli':'shimla',
+    'solan':'shimla','parwanoo':'shimla','nahan':'shimla','paonta sahib':'shimla',
+    'sarahan':'shimla','sangla':'shimla','kalpa':'shimla','kinnaur':'shimla',
+    'kaza':'shimla','spiti':'shimla','dharamshala':'shimla','dharamsala':'shimla',
+    'mcleod ganj':'shimla','mcleod':'shimla','kangra':'shimla','palampur':'shimla',
+    'baijnath':'shimla','una':'shimla','bilaspur':'shimla','hamirpur':'shimla',
+    // Manali hub
+    'manali':'manali','kullu':'manali','kasol':'manali','manikaran':'manali',
+    'bhuntar':'manali','naggar':'manali','solang':'manali','rohtang':'manali',
+    'lahaul':'manali','kheerganga':'manali',
+    // Haridwar hub
+    'haridwar':'haridwar',
+    // Rishikesh hub
+    'rishikesh':'rishikesh','dehradun':'rishikesh','mussoorie':'rishikesh',
+    'saharanpur':'rishikesh','roorkee':'rishikesh','uttarkashi':'rishikesh',
+    'barkot':'rishikesh','tehri':'rishikesh','devprayag':'rishikesh',
+    'pauri':'rishikesh','kotdwar':'rishikesh','muzaffarnagar':'rishikesh',
+    'yamunanagar':'rishikesh','srinagar garhwal':'rishikesh',
+    // Corbett hub
+    'corbett':'corbett','jim corbett':'corbett','ramnagar':'corbett',
+    'nainital':'corbett','bhimtal':'corbett','sattal':'corbett',
+    'mukteshwar':'corbett','ranikhet':'corbett','almora':'corbett',
+    'kausani':'corbett','haldwani':'corbett','kathgodam':'corbett',
+    'rudrapur':'corbett','kashipur':'corbett','moradabad':'corbett',
+    'bareilly':'corbett','pilibhit':'corbett','bijnor':'corbett',
+    'lansdowne':'corbett','badaun':'corbett','shahjahanpur':'corbett',
+    // Varanasi hub
+    'varanasi':'varanasi','banaras':'varanasi','benares':'varanasi',
+    'sarnath':'varanasi','prayagraj':'varanasi','allahabad':'varanasi',
+    'ayodhya':'varanasi','faizabad':'varanasi','lucknow':'varanasi',
+    'kanpur':'varanasi','raebareli':'varanasi','jaunpur':'varanasi',
+    'ghazipur':'varanasi','mirzapur':'varanasi','vindhyachal':'varanasi',
+    'mughalsarai':'varanasi','chandauli':'varanasi','sitapur':'varanasi',
+    'hardoi':'varanasi','unnao':'varanasi'
   };
 
   function getHotelDestId(cityString) {
