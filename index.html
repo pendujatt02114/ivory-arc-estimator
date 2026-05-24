@@ -8,7 +8,6 @@
 <script>
 (function() {
   var MAPS_KEY = 'AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso';
-  if (!MAPS_KEY || MAPS_KEY === 'AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso') return;
   var s = document.createElement('script');
   s.src = 'https://maps.googleapis.com/maps/api/js?key=' + MAPS_KEY + '&libraries=places&callback=__ivoryMapsReady';
   document.head.appendChild(s);
@@ -813,29 +812,21 @@ function iaTrack(eventName, params) {
         <div class="section-head">Accommodation</div>
         ${accommodationSection()}
 
-        <div class="section-head">Verify &amp; Get Your Estimate</div>
-        <div id="ivory-otp-section"></div>
-        <div id="ivory-estimate-lock" style="margin-top:16px;">
-          <div style="background:rgba(201,169,110,0.05);border:1px dashed rgba(201,169,110,0.3);border-radius:10px;padding:32px 24px;text-align:center;">
-            <div style="font-size:28px;margin-bottom:12px;">&#128274;</div>
-            <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:20px;color:#fff;margin-bottom:8px;">Verify your phone to unlock your estimate</div>
-            <div style="font-size:13px;color:rgba(245,240,232,0.5);line-height:1.65;">Enter your number above and verify with a one-time code to see your full personalised cost breakdown.</div>
-          </div>
-        </div>
-        <div id="ivory-estimate-unlocked" style="display:none;">
-          <div class="section-head">Your Total Estimate</div>
-          <div id="ivory-pricing-summary"></div>
-          <div id="ivory-lead-form-container"></div>
-        </div>
+        <div class="section-head">Your Total Estimate</div>
+        <div id="ivory-pricing-summary"></div>
+        <div id="ivory-lead-form-container"></div>
 
 
     `;
 
     if (customMode) initAC();
-    // Update OTP section and pricing summary whenever state changes
-    renderOtpSection();
-    // Pricing summary only updates if already unlocked
-    if (otpState && otpState.step === 'verified') renderPricingSummary();
+    // Always show pricing summary and lead form
+    renderPricingSummary();
+    // Inject lead form if container exists
+    var lfc = document.getElementById('ivory-lead-form-container');
+    if (lfc && typeof renderLeadForm === 'function' && !lfc.innerHTML) {
+      lfc.innerHTML = renderLeadForm();
+    }
   }
 
   function guideSection() {
@@ -1776,7 +1767,7 @@ function iaTrack(eventName, params) {
     } else if (Array.isArray(hotelResults) && hotelResults.length) {
       hotelsHTML = hotelCardsHTML(hotelResults, nights, selectedHotel, 'selectHotel') + `
         <div class="hotel-serpapi-note">
-          ${SERPAPI_KEY !== 'YOUR_SERPAPI_KEY' ? 'Live rates via Google Hotels · ' : 'Curated reference rates · '}
+          ${'Curated reference rates · '}
           Prices are indicative and subject to availability at time of booking.
         </div>`;
     } else {
@@ -1967,7 +1958,7 @@ function iaTrack(eventName, params) {
 
   // ── Unified fetch function ────────────────────────────────────────────────
   function fetchHotels(destId, tier, callback) {
-    if (SERPAPI_KEY && SERPAPI_KEY !== 'YOUR_SERPAPI_KEY') {
+    if (SERPAPI_KEY && SERPAPI_KEY !== '') {
       const cityName = {
         delhi:'New Delhi',agra:'Agra',jaipur:'Jaipur',varanasi:'Varanasi',
         amritsar:'Amritsar',shimla:'Shimla',manali:'Manali',haridwar:'Haridwar',
@@ -2630,10 +2621,6 @@ function iaTrack(eventName, params) {
               if (firebase.apps.length === 0) {
                 firebase.initializeApp(FIREBASE_CONFIG);
               }
-              // Force standard reCAPTCHA v2 instead of Enterprise
-              try {
-                firebase.auth().settings.appVerificationDisabledForTesting = false;
-              } catch(e) {}
               firebaseLoaded = true;
               onReady();
             } catch(e) {
