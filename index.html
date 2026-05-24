@@ -1147,10 +1147,11 @@ function iaTrack(eventName, params) {
       <div class="ci-result">
         <div class="ci-result-header">
           <div class="ci-result-title">Your Itinerary Estimate</div>
-          <div class="ci-result-route">${b.pickup} → ${b.drop} &nbsp;·&nbsp; ${b.googleKm} km (Google) → ${b.billableKm} km (billable)</div>
+          <div class="ci-result-route">${b.pickup} ${b.isTwoWay ? '&#8644;' : '&rarr;'} ${b.drop} &nbsp;&middot;&nbsp; ${b.isTwoWay ? b.googleKm+'km &times;2 = '+b.effectiveKm+'km' : b.googleKm+'km'} &rarr; ${b.billableKm}km billable</div>
         </div>
         <div class="ci-breakdown">
-          <div class="ci-line"><span class="ci-line-label">Distance (Google Maps)</span><span class="ci-line-val">${b.googleKm} km</span></div>
+          <div class="ci-line"><span class="ci-line-label">Distance (Google Maps)${b.isTwoWay ? ' &mdash; One Way' : ''}</span><span class="ci-line-val">${b.googleKm} km</span></div>
+          ${b.isTwoWay ? '<div class="ci-line"><span class="ci-line-label" style="color:var(--gold);">Two-Way &times;2</span><span class="ci-line-val" style="color:var(--gold);">'+(b.googleKm*2)+' km effective</span></div>' : ''}
           <div class="ci-line" style="border-bottom:1px solid rgba(201,169,110,0.2);padding-bottom:10px;margin-bottom:4px;">
             <span class="ci-line-label" style="font-size:11px;line-height:1.5;">
               Commercial buffer +${b.buffer} km<br>
@@ -1160,7 +1161,7 @@ function iaTrack(eventName, params) {
           </div>
           <div class="ci-line"><span class="ci-line-label">Distance charge (${b.billableKm} km × ₹18)</span><span class="ci-line-val">₹${b.distCharge.toLocaleString('en-IN')}</span></div>
           <div class="ci-line"><span class="ci-line-label">Toll charges (estimated)</span><span class="ci-line-val">₹${b.toll.toLocaleString('en-IN')}</span></div>
-          ${b.nightHalt ? '<div class="ci-line"><span class="ci-line-label">Night halt — driver</span><span class="ci-line-val">₹800</span></div>' : ''}
+          ${b.nightHalt ? '<div class="ci-line"><span class="ci-line-label">Night halt — driver'+(b.isTwoWay?' (both ways)':'')+'</span><span class="ci-line-val">&#8377;'+b.nightCost.toLocaleString('en-IN')+'</span></div>' : ''}
           <div class="ci-line">
             <span class="ci-line-label" style="line-height:1.5;">Parking<br>
               <span style="font-size:10px;opacity:0.6;">Airport · sightseeing stops · overnight halts</span>
@@ -1176,6 +1177,9 @@ function iaTrack(eventName, params) {
         <div class="ci-disclaimer">
           Tolls billed at actuals with receipt. Parking charged at actuals only. Receipts provided for all parking charges collected.
           This estimate covers transportation costs only. Final amount may vary slightly based on actual route conditions.
+        </div>
+        <div style="text-align:center;padding:16px 0 4px;">
+          <button onclick="downloadCustomEstimate()" style="display:inline-flex;align-items:center;gap:8px;padding:11px 24px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;">&#11015; Download Estimate</button>
         </div>
       </div>`;
   }
@@ -2204,30 +2208,30 @@ function iaTrack(eventName, params) {
   function fetchFxRates(onDone) {
     if (fxLoading) return;
     fxLoading = true;
-    fxError   = false;
 
-    // Set working rates immediately so UI never gets stuck on "Fetching..."
-    // These are real rates updated manually — USD/INR ~84.5, EUR/INR ~92
-    fxRates.USD = 0.01183;
-    fxRates.EUR = 0.01087;
-    fxFetchedAt = new Date();
-    fxLoading   = false;
-    fxError     = false;
-    renderPricingSummary();
-    if (onDone) onDone(true);
+    // Apply hardcoded rates INSTANTLY — UI never waits
+    function applyRates(usd, eur, src) {
+      fxRates.USD = usd; fxRates.EUR = eur;
+      fxFetchedAt = new Date(); fxLoading = false; fxError = false;
+      renderPricingSummary();
+      if (onDone) onDone(true);
+    }
 
-    // Also attempt live rate fetch in background — updates display if successful
+    // Set immediately with reliable hardcoded rates (USD/INR 84.5, EUR/INR 77.8)
+    applyRates(0.01183, 0.01087, 'default');
+
+    // Try live rate silently in background to update if possible
     var today = new Date().toISOString().slice(0, 10);
-    fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.json')
+    fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + today + '/v1/currencies/usd.min.json')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data || !data.usd || !data.usd.inr) return;
-        fxRates.USD = parseFloat((1 / data.usd.inr).toFixed(8));
-        fxRates.EUR = parseFloat((data.usd.eur / data.usd.inr).toFixed(8));
-        fxFetchedAt = new Date();
-        renderPricingSummary(); // re-render with live rate
-      })
-      .catch(function() {}); // silent — hardcoded rates already showing
+      .then(function(d) {
+        if (d && d.usd && d.usd.inr && d.usd.eur) {
+          fxRates.USD = parseFloat((1 / d.usd.inr).toFixed(8));
+          fxRates.EUR = parseFloat((d.usd.eur / d.usd.inr).toFixed(8));
+          fxFetchedAt = new Date();
+          renderPricingSummary();
+        }
+      }).catch(function() {});
   }
 
   function convertFromINR(amountINR) {
@@ -2475,11 +2479,11 @@ function iaTrack(eventName, params) {
     var rateInfo = '';
     if (activeCurrency !== 'INR') {
       if (fxLoading) {
-        rateInfo = '<div style="font-size:11px;color:var(--gold);margin-top:8px;">Fetching live exchange rate...</div>';
+        rateInfo = '<div style="font-size:11px;color:rgba(245,240,232,0.5);margin-top:8px;">' + fxRateLabel() + '</div>';
       } else if (fxError) {
         rateInfo = '<div style="font-size:11px;color:var(--red);margin-top:8px;">Could not fetch live rate. Showing INR pricing.</div>';
       } else if (fxFetchedAt) {
-        rateInfo = '<div style="font-size:11px;color:rgba(245,240,232,0.5);margin-top:8px;">' + fxRateLabel() + ' (European Central Bank via Frankfurter API)</div>';
+        rateInfo = '<div style="font-size:11px;color:rgba(245,240,232,0.5);margin-top:8px;">' + fxRateLabel() + '</div>';
       }
     }
 
@@ -2505,6 +2509,13 @@ function iaTrack(eventName, params) {
   function renderPricingSummary() {
     var el = document.getElementById('ivory-pricing-summary');
     if (!el) return;
+
+    // Custom itinerary mode — show custom route estimate instead
+    if (customMode && ciResult && ciResult !== 'loading' && ciResult !== 'error') {
+      updateResultPanel(); // already handles display
+      el.innerHTML = ''; // pricing summary stays empty in custom mode
+      return;
+    }
 
     var calc = calculateTotalEstimate();
 
@@ -2681,7 +2692,10 @@ function iaTrack(eventName, params) {
     if (!phoneInput) return;
     var nameVal  = nameInput  ? nameInput.value.trim()  : (otpState.name  || '');
     var emailVal = emailInput ? emailInput.value.trim() : (otpState.email || '');
-    var raw      = phoneInput.value.trim();
+    var ccSel    = document.getElementById('otp-country-code');
+    var cc       = ccSel ? ccSel.value : '+91';
+    var numVal   = phoneInput.value.trim().replace(/^0+/, '');
+    var raw      = numVal.startsWith('+') ? numVal : (cc + numVal.replace(/\D/g,''));
     var digits   = raw.replace(/\D/g, '');
     if (nameVal.length < 2) { otpState.error = 'Please enter your full name.'; renderOtpSection(); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailVal)) { otpState.error = 'Please enter a valid email address.'; renderOtpSection(); return; }
@@ -2825,10 +2839,10 @@ function iaTrack(eventName, params) {
         '<div style="font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;">Enter your details below. A one-time code will be sent to your mobile to verify your number and release your full cost breakdown.</div>' +
         errHTML +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
-          '<div><label style="' + lSt + '">Full Name</label><input id="otp-name-input" type="text" placeholder="e.g. Rajan Mehta" autocomplete="name" value="' + (otpState.name||'') + '" style="' + iSt + '"></div>' +
-          '<div><label style="' + lSt + '">Email Address</label><input id="otp-email-input" type="email" placeholder="e.g. rajan@email.com" autocomplete="email" value="' + (otpState.email||'') + '" style="' + iSt + '"></div>' +
+          '<div><label style="' + lSt + '">Full Name</label><input id="otp-name-input" type="text" placeholder="e.g. John Doe" autocomplete="name" value="' + (otpState.name||'') + '" style="' + iSt + '"></div>' +
+          '<div><label style="' + lSt + '">Email Address</label><input id="otp-email-input" type="email" placeholder="e.g. john.doe@xyz.com" autocomplete="email" value="' + (otpState.email||'') + '" style="' + iSt + '"></div>' +
         '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"><label style="' + lSt + '">Mobile Number</label><input id="otp-phone-input" type="tel" placeholder="+91 98765 43210" autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="' + (otpState.phone||'') + '" style="' + iSt + '" onkeydown="if(event.key===\'Enter\')sendOtp()"></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"><label style="' + lSt + '">Mobile Number</label>' +'<div style="display:flex;gap:8px;">' +'<select id="otp-country-code" style="background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 8px;font-size:13px;color:var(--ivory);font-family:\'DM Sans\',sans-serif;outline:none;cursor:pointer;min-width:120px;">' +'<option value="+1">+1 USA</option><option value="+91" selected>+91 India</option><option value="+44">+44 UK</option><option value="+971">+971 UAE</option><option value="+65">+65 Singapore</option><option value="+61">+61 Australia</option><option value="+49">+49 Germany</option><option value="+33">+33 France</option><option value="+81">+81 Japan</option><option value="+86">+86 China</option><option value="+55">+55 Brazil</option><option value="+27">+27 S.Africa</option><option value="+64">+64 N.Zealand</option><option value="+34">+34 Spain</option><option value="+41">+41 Switzerland</option></select>' +'<input id="otp-phone-input" type="tel" placeholder="98765 43210" autocomplete="tel" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" style="' + iSt + 'flex:1;" onkeydown="if(event.key===\'Enter\')sendOtp()"></div></div>' +
         '<div style="display:flex;align-items:flex-start;gap:10px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.3);border-radius:6px;padding:12px 14px;margin-bottom:18px;"><div style="font-size:16px;flex-shrink:0;">&#128274;</div><div style="font-size:12px;color:rgba(245,240,232,0.65);line-height:1.6;">Your full itinerary and cost breakdown will be unlocked and emailed to you <strong style="color:var(--gold);">after successful mobile verification.</strong> Your details are never shared or used for marketing.</div></div>' +
         '<button onclick="sendOtp()" ' + btnDis + ' style="width:100%;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;">' + btnTxt + '</button>' +
         '<div id="ivory-recaptcha-container" style="margin-top:8px;"></div></div>';
@@ -2947,34 +2961,16 @@ function iaTrack(eventName, params) {
   }
 
   function renderLeadForm() {
-    var i = "background:rgba(0,0,0,0.4);border:1px solid rgba(201,169,110,0.45);border-radius:6px;padding:12px 14px;font-size:14px;color:var(--ivory);outline:none;box-sizing:border-box;width:100%;";
-    var l = "font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px;";
-    var h = "";
-    h += "<div style='background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px 24px;margin-top:20px;'>";
-    h += "<div style='font-size:22px;color:#fff;margin-bottom:6px;'>Receive Your Full Estimate</div>";
-    h += "<div style='font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;'>Enter your details and we will send a full breakdown to your inbox within 2 hours.</div>";
-    h += "<div id='lead-error-box' style='display:none;background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--red);'></div>";
-    h += "<div id='lead-form-wrap'>";
-    h += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;'>";
-    h += "<div><label style='"+l+"'>Full Name</label><input id='lead-name' type='text' placeholder='e.g. Rajan Mehta' style='"+i+"'></div>";
-    h += "<div><label style='"+l+"'>Email Address</label><input id='lead-email' type='email' placeholder='e.g. rajan@email.com' style='"+i+"'></div>";
-    h += "</div>";
-    h += "<div style='margin-bottom:20px;'><label style='"+l+"'>Mobile Number</label><input id='lead-phone' type='tel' placeholder='+91 98765 43210' style='"+i+"'></div>";
-    h += "<button id='lead-submit-btn' onclick='handleLeadSubmit()' style='width:100%;padding:14px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;'>Send My Estimate</button>";
-    h += "<a href='https://wa.me/917455037397' target='_blank' style='display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px;'>&#128172; Discuss This Journey on WhatsApp</a>";
-    h += "<div style='text-align:center;font-size:11px;color:rgba(245,240,232,0.3);'>Your details are never shared.</div>";
-    h += "</div>";
-    h += "<div id='lead-success-wrap' style='display:none;text-align:center;padding:20px 0;'>";
-    h += "<div style='font-size:48px;color:var(--green);margin-bottom:12px;'>&#10003;</div>";
-    h += "<div style='font-size:22px;color:#fff;margin-bottom:10px;'>Estimate Sent Successfully</div>";
-    h += "<div style='font-size:13px;color:var(--ivory);margin-bottom:6px;'>Reference: <strong id='lead-ref-display' style='color:var(--gold);letter-spacing:2px;'></strong></div>";
-    h += "<div style='font-size:12px;color:rgba(245,240,232,0.5);margin-bottom:20px;'>A copy has been emailed to you. Our team will be in touch within 2 hours.</div>";
-    h += "<button onclick='downloadEstimate()' style='display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:DM Sans,sans-serif;'>&#11015; Download Estimate PDF</button>";
-    h += "</div></div>";
-    return h;
+    return "<div style='background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:24px;margin-top:20px;text-align:center;'>" +
+      "<div style='font-family:\'Playfair Display\',serif;font-style:italic;font-size:20px;color:#fff;margin-bottom:8px;'>Your Estimate is Ready</div>" +
+      "<div style='font-size:13px;color:rgba(245,240,232,0.6);margin-bottom:20px;line-height:1.6;'>Download your full personalised cost breakdown. Our team will be in touch within 2 hours.</div>" +
+      "<button onclick='downloadEstimate()' style='display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:var(--gold);color:var(--black);border:none;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:12px;width:100%;justify-content:center;'>&#11015; Download Estimate PDF</button>" +
+      "<a href='https://wa.me/917455037397' target='_blank' style='display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 32px;background:#25D366;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:1px;'>&#128172; Discuss on WhatsApp</a>" +
+      "<div style='font-size:11px;color:rgba(245,240,232,0.35);margin-top:14px;'>Your details are never shared.</div>" +
+      "</div>";
   }
 
-  // ── Download / Print Estimate ─────────────────────────────────────────────
+
   function downloadEstimate() {
     var calc = (typeof calculateTotalEstimate === 'function') ? calculateTotalEstimate() : null;
     if (!calc) { alert('Please complete your tour selection first.'); return; }
@@ -3028,6 +3024,54 @@ function iaTrack(eventName, params) {
     setTimeout(function() { printWin.print(); }, 600);
   }
 
+  // ── Download Custom Route Estimate ──────────────────────────────────────────
+  function downloadCustomEstimate() {
+    var b = ciResult;
+    if (!b || b === 'loading' || b === 'error') { alert('Please calculate your route first.'); return; }
+    var today = new Date();
+    var validUntil = new Date(today); validUntil.setDate(validUntil.getDate() + 10);
+    var fmtD = function(d) { return d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}); };
+    var refText = 'EST-' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000);
+    var printWin = window.open('', '_blank', 'width=820,height:900');
+    printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ivory Arc Custom Route Estimate</title>' +
+      '<style>body{font-family:Georgia,serif;background:#fff;color:#2D1F0E;padding:40px;font-size:13px;}' +
+      '.brand{font-style:italic;font-size:26px;color:#C9A96E;font-weight:700;}.ai{background:#FFF8E7;border-left:4px solid #C9A96E;padding:10px 16px;font-size:11px;color:#8B6914;margin:16px 0;}' +
+      'h2{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1px solid #E8E0D0;padding-bottom:8px;margin:24px 0 12px;}' +
+      '.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0ebe0;font-size:13px;}' +
+      '.lbl{color:#666;}.val{font-weight:600;color:#3D3020;}.total{font-size:16px;font-weight:700;color:#C9A96E;border-top:2px solid #C9A96E;margin-top:8px;padding-top:12px;}' +
+      '.footer{border-top:1px solid #E8E0D0;margin-top:30px;padding-top:16px;text-align:center;font-size:11px;color:#999;}</style></head><body>' +
+      '<div class="brand">Ivory Arc Travels</div>' +
+      '<div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8B6914;margin-bottom:16px;">Private Journeys &middot; Curated Experiences</div>' +
+      '<div class="ai">&#9888; AI-generated estimate &mdash; valid 10 days. Final pricing confirmed by Ivory Arc Travels team.</div>' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;">Reference</span><br><span style="font-size:18px;font-style:italic;color:#C9A96E;">' + refText + '</span></div>' +
+      '<div style="text-align:right;font-size:11px;color:#999;">Generated: ' + fmtD(today) + '<br>Valid until: ' + fmtD(validUntil) + '</div></div>' +
+      '<h2>Route Details</h2>' +
+      '<div class="row"><span class="lbl">Route</span><span class="val">' + b.pickup + ' ' + (b.isTwoWay ? '&#8644;' : '&rarr;') + ' ' + b.drop + '</span></div>' +
+      '<div class="row"><span class="lbl">Trip Type</span><span class="val">' + (b.isTwoWay ? 'Two-Way Return' : 'One-Way Drop') + '</span></div>' +
+      '<div class="row"><span class="lbl">Google Maps Distance</span><span class="val">' + b.googleKm + ' km' + (b.isTwoWay ? ' &times; 2 = ' + b.effectiveKm + ' km' : '') + '</span></div>' +
+      '<div class="row"><span class="lbl">Commercial Buffer</span><span class="val">+' + b.buffer + ' km</span></div>' +
+      '<div class="row"><span class="lbl">Billable Distance</span><span class="val">' + b.billableKm + ' km</span></div>' +
+      '<h2>Cost Breakdown</h2>' +
+      '<div class="row"><span class="lbl">Distance Charge (' + b.billableKm + ' km &times; &#8377;18)</span><span class="val">&#8377;' + b.distCharge.toLocaleString('en-IN') + '</span></div>' +
+      '<div class="row"><span class="lbl">Toll Charges (estimated)</span><span class="val">&#8377;' + b.toll.toLocaleString('en-IN') + '</span></div>' +
+      (b.nightHalt ? '<div class="row"><span class="lbl">Night Halt &mdash; Driver</span><span class="val">&#8377;' + b.nightCost.toLocaleString('en-IN') + '</span></div>' : '') +
+      '<div class="row"><span class="lbl">Parking</span><span class="val" style="color:#16a34a;">At Actuals (receipt provided)</span></div>' +
+      '<div class="row"><span class="lbl">Subtotal</span><span class="val">&#8377;' + b.subtotal.toLocaleString('en-IN') + '</span></div>' +
+      '<div class="row"><span class="lbl">GST (5%)</span><span class="val">&#8377;' + b.gst.toLocaleString('en-IN') + '</span></div>' +
+      '<div class="row total"><span class="lbl">Total Estimate</span><span class="val">&#8377;' + b.total.toLocaleString('en-IN') + '</span></div>' +
+      '<h2>Terms</h2>' +
+      '<ul style="font-size:12px;color:#444;line-height:1.8;padding-left:18px;">' +
+      '<li>Minimum billing 300 km/day at &#8377;18/km. Driver allowance &#8377;800/day for overnight halts.</li>' +
+      '<li>Toll and parking billed at actuals with receipts.</li>' +
+      '<li>50% advance to confirm. Balance before tour start. No cash payments accepted.</li>' +
+      '<li>This estimate covers transportation only. Valid for 10 days from generation date.</li>' +
+      '</ul>' +
+      '<div class="footer">Ivory Arc Travels &middot; hello@ivoryarctravels.com &middot; +91 74550 37397 &middot; ivoryarctravels.com</div>' +
+      '</body></html>');
+    printWin.document.close();
+    setTimeout(function() { printWin.print(); }, 500);
+  }
+
   // ── Expose all functions to window for onclick handlers ──────────────────
   if (typeof calClick !== 'undefined') window.calClick = calClick;
   if (typeof calNav !== 'undefined') window.calNav = calNav;
@@ -3061,6 +3105,7 @@ function iaTrack(eventName, params) {
   if (typeof handleLeadSubmit !== 'undefined') window.handleLeadSubmit = handleLeadSubmit;
   if (typeof renderLeadForm !== 'undefined') window.renderLeadForm = renderLeadForm;
   if (typeof downloadEstimate !== 'undefined') window.downloadEstimate = downloadEstimate;
+  if (typeof downloadCustomEstimate !== 'undefined') window.downloadCustomEstimate = downloadCustomEstimate;
   if (typeof dismissAncilPrompt !== 'undefined') window.dismissAncilPrompt = dismissAncilPrompt;
   if (typeof sendOtp !== 'undefined') window.sendOtp = sendOtp;
   if (typeof verifyOtp !== 'undefined') window.verifyOtp = verifyOtp;
