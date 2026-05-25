@@ -780,6 +780,7 @@ function iaTrack(eventName, params) {
   let ciNightHalt    = false;
   let ciNotes        = '';
   let ciResult       = null;  // null | 'loading' | 'error' | {breakdown object}
+  let ciLastResult   = null;  // persists through render() — used by unlockEstimate
   let ciErrorMsg     = '';
 
   DESTINATIONS.multiDay.forEach(t => { tourDays[t.id] = t.recommendedDays; });
@@ -1137,6 +1138,8 @@ function iaTrack(eventName, params) {
   }
 
   function updateResultPanel() {
+    // Restore ciResult from ciLastResult if cleared by render()
+    if (!ciResult && ciLastResult) ciResult = ciLastResult;
     // Show only teaser in the custom tab — full estimate is under "Your Total Estimate"
     var teaser = document.getElementById('ci-teaser');
     if (!ciResult || ciResult === 'loading' || ciResult === 'error') {
@@ -1345,7 +1348,9 @@ function iaTrack(eventName, params) {
         ciDrop        = p.name + (p.formatted_address ? ', ' + p.formatted_address : '');
         ciDropPlaceId = p.place_id;
         ciDropLatLng  = p.geometry ? p.geometry.location : null;
-        render(); // refresh accommodation section with drop city hotels
+        // Update ONLY the accommodation section — do NOT call render()
+        // render() rebuilds the entire DOM which collapses the custom itinerary box
+        updateAccommodationSection();
         updateCalcBtn();
       });
       dropEl.addEventListener('input', () => {
@@ -1474,6 +1479,7 @@ function iaTrack(eventName, params) {
           if (typeof showOOSPopup === 'function') showOOSPopup(dropShort);
         } else {
           ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
+          ciLastResult = ciResult;  // persist through render cycles
         }
         updateResultPanel();
       }, 800);
@@ -1510,6 +1516,7 @@ function iaTrack(eventName, params) {
       }
 
       ciResult = applyPricingLogic(km, ciPickup, ciDrop, ciNightHalt, tripType==='twoway');
+      ciLastResult = ciResult;  // persist through render cycles
       updateResultPanel();
     });
   }
@@ -1889,25 +1896,25 @@ function iaTrack(eventName, params) {
         '<div>' +
           '<label style="' + lSt + '">Rooms</label>' +
           '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<button onclick="hotelRooms=Math.max(1,hotelRooms-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<button onclick="hotelRooms=Math.max(1,hotelRooms-1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
             '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelRooms||1) + '</span>' +
-            '<button onclick="hotelRooms=Math.min(20,(hotelRooms||1)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+            '<button onclick="hotelRooms=Math.min(20,(hotelRooms||1)+1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
           '</div>' +
         '</div>' +
         '<div>' +
           '<label style="' + lSt + '">Adults</label>' +
           '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<button onclick="hotelAdults=Math.max(1,hotelAdults-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<button onclick="hotelAdults=Math.max(1,hotelAdults-1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
             '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelAdults||2) + '</span>' +
-            '<button onclick="hotelAdults=Math.min(40,(hotelAdults||2)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+            '<button onclick="hotelAdults=Math.min(40,(hotelAdults||2)+1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
           '</div>' +
         '</div>' +
         '<div>' +
           '<label style="' + lSt + '">Children</label>' +
           '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<button onclick="hotelChildren=Math.max(0,hotelChildren-1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+            '<button onclick="hotelChildren=Math.max(0,hotelChildren-1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
             '<span style="font-size:18px;font-weight:600;color:#fff;min-width:20px;text-align:center;">' + (hotelChildren||0) + '</span>' +
-            '<button onclick="hotelChildren=Math.min(20,(hotelChildren||0)+1);render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
+            '<button onclick="hotelChildren=Math.min(20,(hotelChildren||0)+1);customMode?updateAccommodationSection():render();" style="width:32px;height:32px;border-radius:6px;border:1px solid rgba(201,169,110,0.4);background:rgba(0,0,0,0.3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1946,7 +1953,7 @@ function iaTrack(eventName, params) {
       }
       var destId = getHotelDestId(ciDrop);
       var dropCityName = ciDrop.split(',')[0];
-      return singleCityAccommodationForCity(destId, dropCityName) + hotelGuestRoomControls();
+      return singleCityAccommodationForCity(destId, dropCityName);
     }
 
     // Non-custom mode — check wantHotel
@@ -1965,7 +1972,7 @@ function iaTrack(eventName, params) {
     if (isMulti) {
       return multiCityAccommodation(tour);
     }
-    return singleCityAccommodation(tour) + hotelGuestRoomControls();
+    return singleCityAccommodation(tour);
   }
 
   // ── Hotel display for custom itinerary by city name ──────────────────────
@@ -2020,7 +2027,8 @@ function iaTrack(eventName, params) {
       hotelsHTML = '';
     }
 
-    return '<div class="hotel-context-bar"><div>' +
+    return hotelGuestRoomControls() +
+      '<div class="hotel-context-bar"><div>' +
       '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Drop Location</div>' +
       '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;">' + cityLabel + '</div>' +
       '</div></div>' +
@@ -2058,19 +2066,19 @@ function iaTrack(eventName, params) {
       hotelsHTML = `<div class="hotel-no-dest">No hotel data available. Please contact us directly.</div>`;
     }
 
-    return `
-      <div class="hotel-context-bar">
-        <div>
-          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Selected Destination</div>
-          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#fff;">${tour.name}</div>
-        </div>
-        ${nights > 0 ? `<div style="text-align:right;">
-          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Total Tour Nights</div>
-          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:var(--gold);">${nights} Night${nights!==1?'s':''}</div>
-        </div>` : ''}
-      </div>
-      <div class="hotel-tier-grid">${tierCards}</div>
-      ${hotelsHTML}`;
+    return hotelGuestRoomControls() + (
+      '<div class="hotel-context-bar"><div>' +
+      '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Selected Destination</div>' +
+      '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:#fff;">' + tour.name + '</div>' +
+      '</div>' +
+      (nights > 0 ? '<div style="text-align:right;">' +
+        '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ivory);margin-bottom:4px;">Total Tour Nights</div>' +
+        '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:22px;color:var(--gold);">' + nights + ' Night' + (nights!==1?'s':'') + '</div>' +
+        '</div>' : '') +
+      '</div>' +
+      '<div class="hotel-tier-grid">' + tierCards + '</div>' +
+      hotelsHTML
+    );
   }
 
   // ── Multi-city accommodation ───────────────────────────────────────────────
@@ -2437,6 +2445,7 @@ function iaTrack(eventName, params) {
     // REGULAR MODE: search the known hub name.
     var searchCity = actualCityName || hubNames[destId] || destId;
 
+    // Dates are guaranteed non-null — custom mode is gated behind date confirmation
     var ci = tdStart ? tdStart.toISOString().slice(0,10) : '';
     var co = tdEnd   ? tdEnd.toISOString().slice(0,10)   : '';
 
@@ -2627,7 +2636,34 @@ function iaTrack(eventName, params) {
   }
 
   function toggleCustomMode(on) {
-    if (on) iaTrack('custom_itinerary_started');
+    if (on) {
+      // Hard gate: travel dates must be set before enabling custom journey
+      if (!tdStart || !tdEnd) {
+        // Snap the toggle back off
+        var cb = document.querySelector('#ivory-arc-app input[type="checkbox"][onchange*="toggleCustomMode"]');
+        if (cb) cb.checked = false;
+        // Show a clear inline alert under the toggle
+        var alertEl = document.getElementById('custom-mode-date-alert');
+        if (!alertEl) {
+          alertEl = document.createElement('div');
+          alertEl.id = 'custom-mode-date-alert';
+          alertEl.style.cssText = 'margin-top:10px;padding:10px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;font-size:12px;color:rgba(248,113,113,0.9);text-align:center;';
+          alertEl.innerHTML = '&#9888;&nbsp; Please select your <strong>Tour Start Date</strong> and <strong>Tour End Date</strong> in the Travel Details section above before planning a custom journey.';
+          if (cb) cb.closest('div') && cb.closest('div').parentNode && cb.closest('div').parentNode.appendChild(alertEl);
+        } else {
+          alertEl.style.display = 'block';
+        }
+        setTimeout(function() {
+          var el = document.getElementById('custom-mode-date-alert');
+          if (el) el.style.display = 'none';
+        }, 5000);
+        return;
+      }
+      // Dates confirmed — proceed
+      var alertEl = document.getElementById('custom-mode-date-alert');
+      if (alertEl) alertEl.style.display = 'none';
+      iaTrack('custom_itinerary_started');
+    }
     customMode = on;
     if (on) {
       activeTourId = null; activeAncils = []; activeTierId = null;
@@ -3057,10 +3093,12 @@ function iaTrack(eventName, params) {
 
     // Custom itinerary mode — show combined estimate (transport + hotel + GST)
     if (customMode) {
-      // If we have a valid result, show it — don't require ciPickupPlaceId
+      // Restore from ciLastResult if ciResult was cleared by render()
+      if (!ciResult && ciLastResult) ciResult = ciLastResult;
+      // If we have a valid result, show it
       if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
-        // Recalculate to pick up any hotel changes since last calculate
         ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+        ciLastResult = ciResult;
         renderCustomEstimate(el);
         return;
       }
@@ -3344,18 +3382,19 @@ function iaTrack(eventName, params) {
       unlock.style.display = 'block';
 
       if (customMode) {
+        // Restore ciResult from ciLastResult if it was cleared by render()
+        if (!ciResult && ciLastResult) {
+          ciResult = ciLastResult;
+        }
         if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
-          // Already have a result — recalculate to pick up any hotel changes and render
+          // Recalculate to pick up hotel selection changes, then render
           ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
+          ciLastResult = ciResult;
           renderPricingSummary();
         } else if (ciPickupPlaceId && ciDropPlaceId) {
-          // Place IDs exist — auto-calculate (tripType defaults to 'droponly' if not set)
           if (!tripType) tripType = 'droponly';
-          renderPricingSummary(); // show "calculating" spinner
-          calculateCustomRoute(); // fires async, calls renderPricingSummary when done
-        } else if (ciPickup && ciDrop && !ciPickupPlaceId) {
-          // Text is there but PlaceIds lost — prompt customer to re-select from dropdown
           renderPricingSummary();
+          calculateCustomRoute();
         } else {
           renderPricingSummary();
         }
