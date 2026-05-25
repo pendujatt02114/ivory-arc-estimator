@@ -846,7 +846,13 @@ function iaTrack(eventName, params) {
       if (otpState && otpState.step === 'verified') {
         var unlock = document.getElementById('ivory-estimate-unlocked');
         if (unlock) unlock.style.display = 'block';
-        renderPricingSummary();
+        if (customMode && !ciResult && ciPickupPlaceId && ciDropPlaceId) {
+          // OTP done but no result yet — auto-calculate now
+          if (!tripType) tripType = 'droponly';
+          calculateCustomRoute();
+        } else {
+          renderPricingSummary();
+        }
       }
     }
   }
@@ -2183,6 +2189,9 @@ function iaTrack(eventName, params) {
     'agra':'agra','taj mahal':'agra','fatehpur sikri':'agra','aligarh':'agra',
     'hathras':'agra','firozabad':'agra','etawah':'agra','mainpuri':'agra',
     'gwalior':'agra','morena':'agra','bharatpur':'agra','dholpur':'agra',
+    'tundla':'agra','firozabad':'agra','shikohabad':'agra','etmadpur':'agra',
+    'sikandra':'agra','kheragarh':'agra','bah':'agra','pinahat':'agra',
+    'fatehabad agra':'agra','jalesar':'agra','kasganj':'agra',
     'karauli':'agra','khurja':'agra','etah':'agra','kasganj':'agra',
     // Mathura/Vrindavan
     'mathura':'mathura','vrindavan':'vrindavan','govardhan':'mathura',
@@ -3005,16 +3014,19 @@ function iaTrack(eventName, params) {
         return;
       }
       // No result yet
-      if (ciPickupPlaceId && ciDropPlaceId && tripType) {
+      if (ciPickupPlaceId && ciDropPlaceId) {
         // Route is complete — auto-trigger calculation
+        if (!tripType) tripType = 'droponly';
         el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;">' +
           '<div class="hotel-loading" style="color:rgba(245,240,232,0.7);">Calculating your route&hellip;</div></div>';
         calculateCustomRoute();
+      } else if (ciPickup && ciDrop && !ciPickupPlaceId) {
+        // Text entered but no PlaceId — autocomplete wasn't selected properly
+        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.8;">' +
+          'Please re-select your <strong style="color:var(--gold);">pickup and drop</strong> locations from the dropdown in the Custom Itinerary section above, then press Calculate.</div>';
       } else {
-        var promptMsg = (!ciPickup || !ciDrop)
-          ? 'Enter your pickup and drop locations in the <strong style="color:var(--gold);">Custom Itinerary</strong> section above.'
-          : 'Select <strong style="color:var(--gold);">Drop Only</strong> or <strong style="color:var(--gold);">Two Way</strong> in the Custom Itinerary section above.';
-        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.8;">' + promptMsg + '</div>';
+        el.innerHTML = '<div style="background:var(--dark);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:28px 24px;text-align:center;font-size:13px;color:rgba(245,240,232,0.5);line-height:1.8;">' +
+          'Enter your pickup and drop locations in the <strong style="color:var(--gold);">Custom Itinerary</strong> section above, then press Calculate.</div>';
       }
       return;
     }
@@ -3282,15 +3294,19 @@ function iaTrack(eventName, params) {
 
       if (customMode) {
         if (ciResult && ciResult !== 'loading' && ciResult !== 'error') {
-          // Already have a result — recalculate to pick up hotel changes
+          // Already have a result — recalculate to pick up any hotel changes and render
           ciResult = applyPricingLogic(ciResult.googleKm, ciPickup, ciDrop, ciNightHalt, tripType === 'twoway');
           renderPricingSummary();
-        } else if (ciPickupPlaceId && ciDropPlaceId && tripType) {
-          // Route is fully entered but not calculated yet — auto-calculate now
-          renderPricingSummary(); // show prompt first
-          calculateCustomRoute(); // this will call renderPricingSummary when done
+        } else if (ciPickupPlaceId && ciDropPlaceId) {
+          // Place IDs exist — auto-calculate (tripType defaults to 'droponly' if not set)
+          if (!tripType) tripType = 'droponly';
+          renderPricingSummary(); // show "calculating" spinner
+          calculateCustomRoute(); // fires async, calls renderPricingSummary when done
+        } else if (ciPickup && ciDrop && !ciPickupPlaceId) {
+          // Text is there but PlaceIds lost — prompt customer to re-select from dropdown
+          renderPricingSummary();
         } else {
-          renderPricingSummary(); // show prompt to complete route
+          renderPricingSummary();
         }
       } else {
         renderPricingSummary();
