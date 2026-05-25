@@ -2479,7 +2479,7 @@ function iaTrack(eventName, params) {
     // Star filtering is done client-side by overall_rating
     function buildCityUrl(t, city) {
       return SERPAPI_PROXY + '?action=hotels' +
-        '&city=' + encodeURIComponent(city + ' Hotels') +
+        '&city=' + encodeURIComponent(city) +
         '&stars=' + t.replace('star','') + '&ci=' + ci + '&co=' + co + '&key=' + SERPAPI_KEY;
     }
 
