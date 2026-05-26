@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ivory Arc Travels | Premium Estimator</title>
 <!-- v2.1 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script>
   window.__ivoryMapsReady = function() {};
@@ -3628,334 +3627,601 @@ function iaTrack(eventName, params) {
   function renderLeadForm() { return ''; }
 
 
-  // ═══════════════════════════════════════════════════════════
-  // IVORY ARC ESTIMATE ENGINE v3
-  // Replaces downloadEstimate() and downloadCustomEstimate()
-  // ═══════════════════════════════════════════════════════════
 
-  function iaGenRef() {
-    return 'EST-' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000);
+  /* ============================================================
+     IVORY ARC LUXURY PDF ENGINE — HELPER LAYER + OUTPUT FUNCTIONS
+     Replaces downloadEstimate() and downloadCustomEstimate() only.
+     Zero changes to estimator logic.
+  ============================================================ */
+
+  var IVORY_PDF = {
+    logo: 'https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png',
+    gst:  '09AYIPT0745R2ZH',
+    msme: 'UDYAM-UP-01-0033031',
+    whatsapp: '917455037397',
+    website:  'https://ivoryarctravels.com',
+    insta:    'https://instagram.com/ivoryarctravels',
+    email:    'hello@ivoryarctravels.com'
+  };
+
+  function pdfFmtDate(d) {
+    if (!d) return '';
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
   }
 
-  function iaFmtDate(d) {
-    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  function generateEstimateRef() {
+    var a = Math.floor(Math.random() * 9000 + 1000);
+    var b = Math.floor(Math.random() * 9000 + 1000);
+    return 'EST-' + a + '-' + b;
   }
 
-  function iaBuildWhatsApp(ref, name, routeOrPackage, dates, guests, total) {
-    var msg = [
-      'Hello Ivory Arc Travels,',
-      '',
-      'I reviewed Estimate Ref: ' + ref + ' and would like to discuss my journey.',
-      '',
-      'Customer Name: ' + (name || 'Not provided'),
-      'Journey: ' + (routeOrPackage || 'Private Custom Journey'),
-      (dates ? 'Travel Dates: ' + dates : null),
-      'Guests: ' + (guests || 'To be confirmed'),
-      'Estimated Value: ' + (total || 'As per estimate'),
-      '',
-      'Please assist me with the next steps.'
-    ].filter(function(l){ return l !== null && l !== undefined; }).join('\n');
-    return 'https://wa.me/917455037397?text=' + encodeURIComponent(msg);
+  function buildDynamicEstimateUrl(ref) {
+    return 'https://estimator.ivoryarctravels.com/?estimate=' + encodeURIComponent(ref);
   }
 
-  function iaBuildQRDataURL(ref, callback) {
-    var url = 'https://ivoryarctravels.com/estimate/' + ref;
-    var tmpDiv = document.createElement('div');
-    tmpDiv.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:120px;height:120px;';
-    document.body.appendChild(tmpDiv);
-    try {
-      var qr = new QRCode(tmpDiv, { text: url, width: 120, height: 120, colorDark: '#0D0B08', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
-      setTimeout(function() {
-        var canvas = tmpDiv.querySelector('canvas');
-        var dataUrl = canvas ? canvas.toDataURL('image/png') : null;
-        document.body.removeChild(tmpDiv);
-        callback(dataUrl, url);
-      }, 100);
-    } catch(e) {
-      document.body.removeChild(tmpDiv);
-      callback(null, url);
+  function buildWhatsAppPrefill(data) {
+    var msg =
+      'Hello Ivory Arc Travels,\n\n' +
+      'I reviewed Estimate Ref: ' + (data.ref || '') + '\n' +
+      'Journey: ' + (data.route || '') + '\n' +
+      (data.dates ? 'Travel Dates: ' + data.dates + '\n' : '') +
+      'Guests: ' + (data.guests || 'To be confirmed') + '\n' +
+      'Estimated Value: ' + (data.total || '') + '\n\n' +
+      'Please assist me with the next steps.';
+    return 'https://wa.me/' + IVORY_PDF.whatsapp + '?text=' + encodeURIComponent(msg);
+  }
+
+  /* -- Destination-specific skylines -- */
+
+  function skylineAgra() {
+    return '<svg viewBox="0 0 900 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:80px;" preserveAspectRatio="xMidYMid meet">' +
+      '<g stroke="#C9A96E" stroke-width="0.8" fill="none" opacity="0.55">' +
+      '<path d="M400 78L400 44Q420 20,450 17Q480 14,485 17Q515 14,520 44L520 78"/>' +
+      '<ellipse cx="460" cy="18" rx="9" ry="11"/><line x1="460" y1="7" x2="460" y2="4"/>' +
+      '<path d="M380 78L380 52L387 47L394 52L394 78"/>' +
+      '<path d="M524 78L524 52L531 47L538 52L538 78"/>' +
+      '<rect x="364" y="54" width="16" height="24"/><rect x="538" y="54" width="16" height="24"/>' +
+      '<rect x="340" y="46" width="8" height="32"/><path d="M340 46Q344 38,348 46"/>' +
+      '<rect x="554" y="46" width="8" height="32"/><path d="M554 46Q558 38,562 46"/>' +
+      '<line x1="0" y1="78" x2="900" y2="78"/>' +
+      '</g></svg>';
+  }
+
+  function skylineJaipur() {
+    return '<svg viewBox="0 0 900 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:80px;" preserveAspectRatio="xMidYMid meet">' +
+      '<g stroke="#C9A96E" stroke-width="0.8" fill="none" opacity="0.55">' +
+      '<rect x="300" y="22" width="300" height="56"/>' +
+      '<path d="M300 22Q315 12,330 22Q345 12,360 22Q375 12,390 22Q405 12,420 22Q435 12,450 22Q465 12,480 22Q495 12,510 22Q525 12,540 22Q555 12,570 22Q585 12,600 22"/>' +
+      '<line x1="350" y1="22" x2="350" y2="78"/><line x1="400" y1="22" x2="400" y2="78"/>' +
+      '<line x1="450" y1="22" x2="450" y2="78"/><line x1="500" y1="22" x2="500" y2="78"/>' +
+      '<line x1="550" y1="22" x2="550" y2="78"/>' +
+      '<line x1="0" y1="78" x2="900" y2="78"/>' +
+      '</g></svg>';
+  }
+
+  function skylineTemple() {
+    return '<svg viewBox="0 0 900 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:80px;" preserveAspectRatio="xMidYMid meet">' +
+      '<g stroke="#C9A96E" stroke-width="0.8" fill="none" opacity="0.55">' +
+      '<path d="M360 78L360 46L390 18L420 46L420 78"/>' +
+      '<path d="M445 78L445 36L480 8L515 36L515 78"/>' +
+      '<path d="M540 78L540 50L565 28L590 50L590 78"/>' +
+      '<line x1="390" y1="18" x2="390" y2="12"/><circle cx="390" cy="10" r="3"/>' +
+      '<line x1="480" y1="8" x2="480" y2="2"/><circle cx="480" cy="0" r="3"/>' +
+      '<line x1="565" y1="28" x2="565" y2="22"/><circle cx="565" cy="20" r="2.5"/>' +
+      '<line x1="0" y1="78" x2="900" y2="78"/>' +
+      '</g></svg>';
+  }
+
+  function skylineMountains() {
+    return '<svg viewBox="0 0 900 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:80px;" preserveAspectRatio="xMidYMid meet">' +
+      '<g stroke="#C9A96E" stroke-width="0.8" fill="none" opacity="0.55">' +
+      '<path d="M0 78L120 28L240 78"/>' +
+      '<path d="M180 78L340 8L500 78"/>' +
+      '<path d="M420 78L600 22L780 78"/>' +
+      '<path d="M680 78L820 38L900 78"/>' +
+      '<line x1="0" y1="78" x2="900" y2="78"/>' +
+      '</g></svg>';
+  }
+
+  function skylineDelhi() {
+    return '<svg viewBox="0 0 900 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:80px;" preserveAspectRatio="xMidYMid meet">' +
+      '<g stroke="#C9A96E" stroke-width="0.8" fill="none" opacity="0.55">' +
+      '<path d="M38 78L42 32L48 78"/><line x1="34" y1="60" x2="52" y2="60"/><line x1="36" y1="46" x2="50" y2="46"/>' +
+      '<path d="M140 78L140 34Q146 28,152 34L152 78"/><path d="M132 48Q146 42,158 48"/><rect x="132" y="46" width="26" height="4"/>' +
+      '<rect x="250" y="26" width="76" height="52"/>' +
+      '<path d="M250 26Q258 16,266 26Q274 16,282 26Q290 16,298 26Q306 16,314 26Q322 16,326 26"/>' +
+      '<path d="M540 78L540 46Q548 28,558 25Q568 22,572 25Q582 22,586 46L586 78"/>' +
+      '<ellipse cx="564" cy="26" rx="8" ry="10"/><line x1="564" y1="16" x2="564" y2="13"/>' +
+      '<path d="M524 78L524 54L530 50L536 54L536 78"/>' +
+      '<path d="M588 78L588 54L594 50L600 54L600 78"/>' +
+      '<rect x="700" y="32" width="56" height="46"/><rect x="712" y="22" width="32" height="12"/>' +
+      '<path d="M716 22Q728 10,740 22"/><circle cx="728" cy="8" r="5"/>' +
+      '<line x1="0" y1="78" x2="900" y2="78"/>' +
+      '</g></svg>';
+  }
+
+  function getDestSkyline(destId) {
+    switch (destId) {
+      case 'agra':                          return skylineAgra();
+      case 'jaipur':                        return skylineJaipur();
+      case 'varanasi': case 'mathura':
+      case 'vrindavan': case 'amritsar':    return skylineTemple();
+      case 'shimla': case 'manali':
+      case 'haridwar': case 'rishikesh':
+      case 'corbett':                       return skylineMountains();
+      default:                              return skylineDelhi();
     }
   }
 
-  function iaBuildEstimateHTML(opts) {
-    var ref = opts.ref;
-    var fmtD = iaFmtDate;
-    var fmtInr = function(n) { if (!n && n !== 0) return ''; return '\u20b9' + Number(n).toLocaleString('en-IN'); };
-    var isCustom = opts.estimateType === 'custom';
-    var today = opts.today || new Date();
-    var validUntil = opts.validUntil || (function(){ var d=new Date(today); d.setDate(d.getDate()+10); return d; })();
-
-    var routeDesc = isCustom ? (opts.pickup + ' \u2192 ' + opts.drop) : (opts.packageName || opts.destinations || 'Private Journey');
-    var travelDates = opts.travelDates || '';
-    var guestsStr = opts.guests || (opts.pax ? opts.pax + ' Traveller' + (opts.pax !== 1 ? 's' : '') : '');
-    var waUrl = iaBuildWhatsApp(ref, opts.customerName, routeDesc, travelDates, guestsStr, fmtInr(opts.total));
-
-    var linesHTML = (opts.lines || []).map(function(l) {
-      return '<tr><td style="padding:8px 12px;border-bottom:1px solid #E8E0D0;color:#6B5B45;font-size:11px;vertical-align:top;">' + l.label + (l.detail ? '<div style="font-size:9px;color:#999;margin-top:1px;">' + l.detail + '</div>' : '') + '</td><td style="padding:8px 12px;border-bottom:1px solid #E8E0D0;text-align:right;white-space:nowrap;color:#5C3D11;font-weight:600;font-size:11px;">' + fmtInr(l.amount) + '</td></tr>';
-    }).join('');
-
-    var leftBlock = isCustom ? (
-      '<div style="border:1px solid #E8E0D0;border-radius:8px;overflow:hidden;">' +
-      '<div style="background:#FBF6EC;border-bottom:1px solid #E8D5A8;padding:8px 14px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#8B6914;font-weight:600;">\uD83D\uDCCD Route Details</div>' +
-      '<div style="padding:14px;">' +
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Route</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;text-align:right;max-width:200px;">' + (opts.pickup||'') + ' ' + (opts.isTwoWay ? '\u21CC' : '\u2192') + ' ' + (opts.drop||'') + '</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Trip Type</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + (opts.isTwoWay ? 'Two-Way Return' : 'One-Way Drop') + '</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Google Maps Distance</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + (opts.googleKm||'') + ' km' + (opts.isTwoWay ? ' \u00d7 2 = ' + (opts.effectiveKm||'') + ' km' : '') + '</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Commercial Buffer</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">+' + (opts.buffer||'') + ' km</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:#6B5B45;font-size:11px;">Billable Distance</span><span style="font-weight:700;color:#5C3D11;font-size:14px;">' + (opts.billableKm||'') + ' km</span></div>' +
-      '</div></div>'
-    ) : (
-      '<div style="border:1px solid #E8E0D0;border-radius:8px;overflow:hidden;">' +
-      '<div style="background:#FBF6EC;border-bottom:1px solid #E8D5A8;padding:8px 14px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#8B6914;font-weight:600;">\uD83D\uDDFA\uFE0F Package Details</div>' +
-      '<div style="padding:14px;">' +
-        (opts.packageName ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Package</span><span style="font-weight:700;color:#5C3D11;font-size:12px;">' + opts.packageName + '</span></div>' : '') +
-        (opts.destinations ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Destination(s)</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + opts.destinations + '</span></div>' : '') +
-        (opts.duration ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Duration</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + opts.duration + '</span></div>' : '') +
-        (travelDates ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Travel Dates</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + travelDates + '</span></div>' : '') +
-        (guestsStr ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Guests</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + guestsStr + '</span></div>' : '') +
-        (opts.accommodation ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E8E0D0;"><span style="color:#6B5B45;font-size:11px;">Accommodation</span><span style="font-weight:600;color:#2D1F0E;font-size:11px;">' + opts.accommodation + '</span></div>' : '') +
-        '<div style="margin-top:10px;border-top:1px solid #E8E0D0;padding-top:10px;"><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;margin-bottom:6px;">Inclusions</div>' +
-        (opts.inclusions || ['Private chauffeur-driven transport','Premium accommodation','Guided sightseeing','Breakfast daily','Toll & parking','Concierge assistance 24\u00d77']).map(function(i){ return '<div style="display:flex;gap:6px;padding:2px 0;font-size:10.5px;color:#2D1F0E;"><span style="color:#C9A96E;font-size:8px;margin-top:3px;">\u2736</span>' + i + '</div>'; }).join('') +
-        '</div>' +
-      '</div></div>'
-    );
-
-    var qrHTML = opts.qrDataUrl
-      ? '<img src="' + opts.qrDataUrl + '" width="96" height="96" alt="QR Code" style="display:block;">'
-      : '<div style="width:96px;height:96px;background:#f5f0e8;border:1px solid #C9A96E;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999;">QR</div>';
-
-    var inclusions = opts.inclusions || ['Private air-conditioned vehicle','Professional driver partner','Entry fees for included monuments',(opts.hasHotel ? 'Hotel accommodation as selected' : null),'GST @ 5% on all services','24\u00d77 Ivory Arc Travels support','Complimentary itinerary review call'].filter(Boolean);
-    var exclusions = opts.exclusions || ['Airfare or train tickets',(!opts.hasHotel ? 'Hotel accommodation (own arrangement)' : null),'Personal expenses, tips & gratuity','Travel insurance','Activities/meals not listed','Monument entry fees (unless marked Incl.)'].filter(Boolean);
-
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Ivory Arc Travels \u2014 ' + ref + '<\/title>' +
-      '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">' +
-      '<style>' +
-        '@page{size:A4;margin:0;}*{box-sizing:border-box;margin:0;padding:0;}' +
-        'body{font-family:"DM Sans",sans-serif;background:#fff;color:#2D1F0E;font-size:12px;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
-        '.page{max-width:820px;margin:0 auto;}' +
-        '@media print{body{background:#fff;}.no-print{display:none!important;}a{color:inherit!important;}}' +
-      '<\/style><\/head><body><div class="page">' +
-
-      // ── Header Band
-      '<div style="background:#0D0B08;padding:20px 36px 16px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(201,169,110,0.3);">' +
-          '<div>' +
-            '<div style="display:flex;align-items:center;gap:14px;">' +
-              '<div style="width:54px;height:54px;border:1.5px solid rgba(201,169,110,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(201,169,110,0.06);">' +
-                '<svg width="34" height="34" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 3 C18 3, 10 8, 10 16 L10 30 L26 30 L26 16 C26 8, 18 3, 18 3Z" fill="none" stroke="#C9A96E" stroke-width="1.2"/><text x="18" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="bold" fill="#C9A96E">IA<\/text><\/svg>' +
-              '<\/div>' +
-              '<div>' +
-                '<div style="font-family:\'Playfair Display\',serif;font-size:20px;font-weight:700;color:#C9A96E;letter-spacing:2px;text-transform:uppercase;line-height:1.1;">Ivory Arc Travels<\/div>' +
-                '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(201,169,110,0.55);margin-top:2px;">Curated Heritage &amp; Spiritual Journeys<\/div>' +
-                '<div style="display:flex;gap:6px;margin-top:6px;">' +
-                  '<span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:3px;padding:2px 7px;">MSME Certified<\/span>' +
-                  '<span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:3px;padding:2px 7px;">GST Registered<\/span>' +
-                  '<span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:3px;padding:2px 7px;">Govt. Approved<\/span>' +
-                '<\/div>' +
-              '<\/div>' +
-            '<\/div>' +
-            '<div style="display:flex;gap:10px;align-items:center;margin-top:10px;">' +
-              '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,240,232,0.35);">Verified by<\/span>' +
-              '<span style="font-size:8px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(201,169,110,0.18);border-radius:3px;padding:2px 8px;color:rgba(245,240,232,0.5);">\uD83D\uDD0D Google<\/span>' +
-              '<span style="font-size:8px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(201,169,110,0.18);border-radius:3px;padding:2px 8px;color:rgba(245,240,232,0.5);">\uD83E\uDD89 Tripadvisor<\/span>' +
-              '<span style="font-size:8px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(201,169,110,0.18);border-radius:3px;padding:2px 8px;color:rgba(245,240,232,0.5);">\u2708 Viator<\/span>' +
-            '<\/div>' +
-          '<\/div>' +
-          '<div style="text-align:right;">' +
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;">Reference<\/div>' +
-            '<div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#C9A96E;font-style:italic;letter-spacing:1px;margin:2px 0 6px;">' + ref + '<\/div>' +
-            '<div style="font-size:10px;color:rgba(245,240,232,0.4);line-height:1.7;">Generated: ' + fmtD(today) + '<br>Valid until: ' + fmtD(validUntil) + '<\/div>' +
-          '<\/div>' +
-        '<\/div>' +
-      '<\/div>' +
-
-      // AI bar
-      '<div style="background:rgba(201,169,110,0.06);border-top:1px solid rgba(201,169,110,0.18);border-bottom:1px solid rgba(201,169,110,0.18);padding:7px 36px;font-size:9.5px;color:rgba(201,169,110,0.65);">' +
-        '\u24d8\u00a0\u00a0AI-generated estimate \u2014 valid 10 days. Final pricing confirmed by Ivory Arc Travels team.' +
-      '<\/div>' +
-
-      // India skyline strip
-      '<div style="height:48px;overflow:hidden;background:linear-gradient(180deg,#1A1612 0%,rgba(201,169,110,0.03) 100%);opacity:0.65;">' +
-        '<svg viewBox="0 0 820 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:48px;" preserveAspectRatio="xMidYMid meet">' +
-          '<g opacity="0.55" stroke="#C9A96E" stroke-width="0.7" fill="none"><path d="M355 48 L355 24 Q360 12 370 10 Q380 8 385 10 Q395 8 400 24 L400 48Z"/><ellipse cx="377" cy="11" rx="7" ry="8"/><line x1="377" y1="3" x2="377" y2="1"/><path d="M340 48 L340 30 L345 27 L350 30 L350 48"/><path d="M404 48 L404 30 L409 27 L414 30 L414 48"/><rect x="330" y="32" width="10" height="16"/><rect x="414" y="32" width="10" height="16"/><rect x="310" y="26" width="6" height="22"/><path d="M310 26 Q313 21 316 26"/><rect x="428" y="26" width="6" height="22"/><path d="M428 26 Q431 21 434 26"/><\/g>' +
-          '<g opacity="0.35" stroke="#C9A96E" stroke-width="0.7" fill="none"><path d="M120 48 L120 22 Q125 18 130 22 L130 48"/><path d="M115 34 Q125 30 135 34"/><rect x="115" y="32" width="20" height="4"/><\/g>' +
-          '<g opacity="0.28" stroke="#C9A96E" stroke-width="0.7" fill="none"><rect x="210" y="16" width="60" height="32"/><path d="M210 16 Q215 10 220 16 Q225 10 230 16 Q235 10 240 16 Q245 10 250 16 Q255 10 260 16 Q265 10 270 16"/><\/g>' +
-          '<g opacity="0.25" stroke="#C9A96E" stroke-width="0.7" fill="none"><rect x="730" y="26" width="40" height="22"/><rect x="740" y="18" width="20" height="10"/><path d="M745 18 Q750 10 755 18"/><circle cx="750" cy="8" r="4"/><\/g>' +
-          '<g opacity="0.22" stroke="#C9A96E" stroke-width="0.7" fill="none"><path d="M30 48 L34 18 L40 48"/><line x1="30" y1="38" x2="40" y2="38"/><line x1="31" y1="29" x2="39" y2="29"/><\/g>' +
-          '<g opacity="0.25" stroke="#C9A96E" stroke-width="0.7" fill="none"><path d="M530 48 L530 32 L538 16 L546 32 L546 48"/><line x1="538" y1="16" x2="538" y2="10"/><circle cx="538" cy="8" r="2"/><\/g>' +
-        '<\/svg>' +
-      '<\/div>' +
-
-      // Main body
-      '<div style="padding:24px 36px 18px;background:#fff;">' +
-
-        // Title row
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid #C9A96E;">' +
-          '<div>' +
-            '<div style="font-family:\'Playfair Display\',serif;font-size:28px;font-weight:700;color:#0D0B08;line-height:1;">Ivory Arc Travels<\/div>' +
-            '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:13px;color:#8B6914;margin-top:4px;">Private Curated Journeys Across India<\/div>' +
-          '<\/div>' +
-          '<div style="text-align:right;">' +
-            '<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B6914;background:#FBF6EC;border:1px solid #C9A96E;border-radius:3px;padding:2px 8px;display:inline-block;margin-bottom:3px;">GST No. 09AYIPT0745R2ZH<\/div><br>' +
-            '<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8B6914;background:#FBF6EC;border:1px solid #C9A96E;border-radius:3px;padding:2px 8px;display:inline-block;">MSME No. UDYAM-UP-01-0033031<\/div>' +
-          '<\/div>' +
-        '<\/div>' +
-
-        // Two columns: left (route/package) + right (cost)
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">' +
-          leftBlock +
-          '<div style="border:1px solid #E8E0D0;border-radius:8px;overflow:hidden;">' +
-            '<div style="background:#FBF6EC;border-bottom:1px solid #E8D5A8;padding:8px 14px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#8B6914;font-weight:600;">\uD83E\uDDFE Cost Breakdown<\/div>' +
-            '<table style="width:100%;border-collapse:collapse;">' +
-              '<thead><tr><th style="background:#FBF6EC;padding:7px 12px;text-align:left;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:2px solid #E8D5A8;">Item<\/th><th style="background:#FBF6EC;padding:7px 12px;text-align:right;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:2px solid #E8D5A8;">Amount<\/th><\/tr><\/thead>' +
-              '<tbody>' +
-                linesHTML +
-                '<tr><td style="padding:7px 12px;border-bottom:1px solid #E8E0D0;color:#16a34a;font-size:10px;">Parking<\/td><td style="padding:7px 12px;border-bottom:1px solid #E8E0D0;text-align:right;color:#16a34a;font-size:9px;">At Actuals<br>(receipt provided)<\/td><\/tr>' +
-                '<tr><td style="padding:7px 12px;border-top:1px dashed #E8E0D0;color:#6B5B45;font-size:11px;">Subtotal<\/td><td style="padding:7px 12px;border-top:1px dashed #E8E0D0;text-align:right;font-weight:600;color:#5C3D11;font-size:11px;">' + fmtInr(opts.subtotal) + '<\/td><\/tr>' +
-                '<tr><td style="padding:6px 12px;color:#999;font-size:11px;">GST (5%)<\/td><td style="padding:6px 12px;text-align:right;color:#999;font-size:11px;">' + fmtInr(opts.gst) + '<\/td><\/tr>' +
-              '<\/tbody>' +
-              '<tfoot><tr><td style="background:#0D0B08;color:#C9A96E;font-size:12px;font-weight:700;padding:11px 12px;letter-spacing:1.5px;text-transform:uppercase;font-family:\'Playfair Display\',serif;">Total Estimate<\/td><td style="background:#0D0B08;color:#C9A96E;font-size:16px;font-weight:700;padding:11px 12px;text-align:right;font-family:\'Playfair Display\',serif;">' + fmtInr(opts.total) + '<\/td><\/tr><\/tfoot>' +
-            '<\/table>' +
-          '<\/div>' +
-        '<\/div>' +
-
-        // Per person bar
-        (opts.perPerson ? '<div style="background:#FBF6EC;border:1.5px solid #C9A96E;border-radius:6px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;"><div><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;">Per Person Cost<\/div><div style="font-size:9px;color:#999;margin-top:2px;">Based on ' + (opts.pax||2) + ' traveller' + ((opts.pax||2)!==1?'s':'') + '<\/div><\/div><div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#C9A96E;font-style:italic;font-weight:700;">' + fmtInr(opts.perPerson) + '<\/div><\/div>' : '') +
-
-        // Terms + CTA
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">' +
-
-          // Terms
-          '<div>' +
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1px solid #E8E0D0;padding-bottom:6px;margin-bottom:8px;font-weight:600;">\uD83D\uDCDC Terms &amp; Conditions<\/div>' +
-            '<div style="display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #E8E0D0;"><span style="font-size:12px;">\uD83D\uDE97<\/span><span style="font-size:10px;color:#6B5B45;line-height:1.5;">Minimum billing 300 km/day at \u20b918/km. Driver allowance \u20b9800/day for overnight halts.<\/span><\/div>' +
-            '<div style="display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #E8E0D0;"><span style="font-size:12px;">\uD83D\uDEE3\uFE0F<\/span><span style="font-size:10px;color:#6B5B45;line-height:1.5;">Toll and parking billed at actuals with receipts.<\/span><\/div>' +
-            '<div style="display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #E8E0D0;"><span style="font-size:12px;">\uD83D\uDCB3<\/span><span style="font-size:10px;color:#6B5B45;line-height:1.5;">50% advance to confirm booking. Balance before tour start. No cash payments accepted.<\/span><\/div>' +
-            '<div style="display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #E8E0D0;"><span style="font-size:12px;">\uD83C\uDFE8<\/span><span style="font-size:10px;color:#6B5B45;line-height:1.5;">This estimate covers transportation' + (opts.hasHotel ? ' and hotel accommodation' : '') + '. Valid 10 days from generation date.<\/span><\/div>' +
-            '<div style="display:flex;gap:7px;align-items:flex-start;padding:4px 0;"><span style="font-size:12px;">\u26A0\uFE0F<\/span><span style="font-size:10px;color:#6B5B45;line-height:1.5;">Not a confirmed booking. Confirmation upon advance payment and written confirmation from Ivory Arc Travels.<\/span><\/div>' +
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1px solid #E8E0D0;padding-bottom:5px;margin:12px 0 7px;font-weight:600;">\u2705 Inclusions<\/div>' +
-            inclusions.map(function(i){ return '<div style="display:flex;gap:6px;padding:2px 0;"><span style="color:#C9A96E;font-size:8px;margin-top:3px;">\u2736<\/span><span style="font-size:10.5px;color:#2D1F0E;line-height:1.4;">' + i + '<\/span><\/div>'; }).join('') +
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1px solid #E8E0D0;padding-bottom:5px;margin:10px 0 7px;font-weight:600;">\u274C Exclusions<\/div>' +
-            exclusions.map(function(i){ return '<div style="display:flex;gap:6px;padding:2px 0;"><span style="color:#ccc;font-size:8px;margin-top:3px;">\u2736<\/span><span style="font-size:10.5px;color:#6B5B45;line-height:1.4;">' + i + '<\/span><\/div>'; }).join('') +
-          '<\/div>' +
-
-          // CTA Card
-          '<div style="background:#1A1612;border:1px solid rgba(201,169,110,0.3);border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;">' +
-            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9A96E;margin-bottom:7px;font-weight:600;">\uD83D\uDCF1 Ready to Reserve Your Journey?<\/div>' +
-            '<div style="font-size:10.5px;color:rgba(245,240,232,0.55);line-height:1.6;margin-bottom:14px;">Click below to connect with our travel experts. We\'ll be happy to assist you.<\/div>' +
-            '<a href="' + waUrl + '" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;text-decoration:none;border-radius:8px;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;width:100%;justify-content:center;">' +
-              '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.998-1.424A9.95 9.95 0 0011.999 22c5.523 0 10-4.477 10-10S17.522 2 11.999 2z"\/><\/svg>' +
-              'Chat on WhatsApp \u2192' +
-            '<\/a>' +
-            '<div style="font-size:8.5px;color:rgba(245,240,232,0.3);line-height:1.5;margin-bottom:14px;">Opens WhatsApp with this estimate details pre-filled for a fast &amp; seamless response.<\/div>' +
-            '<div style="background:#fff;padding:5px;border-radius:6px;border:1px solid rgba(201,169,110,0.3);margin-bottom:6px;">' + qrHTML + '<\/div>' +
-            '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,240,232,0.35);">Scan to Visit<\/div>' +
-            '<a href="https://ivoryarctravels.com" style="font-size:8.5px;color:rgba(245,240,232,0.35);text-decoration:none;margin-top:3px;">ivoryarctravels.com<\/a>' +
-          '<\/div>' +
-        '<\/div>' +
-
-        // AI disclaimer
-        '<div style="background:#FFFBF0;border:1px solid #E8D5A8;border-left:4px solid #C9A96E;border-radius:4px;padding:9px 13px;font-size:10px;color:#5C3D11;line-height:1.65;margin-bottom:14px;">' +
-          '\u26A0\uFE0F This is an AI-generated indicative estimate. Final confirmed pricing will be issued by an Ivory Arc Travels representative after a review call. Estimate Reference: <strong>' + ref + '<\/strong>' +
-        '<\/div>' +
-
-      '<\/div>' + // /body-wrap
-
-      // Quote
-      '<div style="background:#FBF6EC;border-top:1px solid #E8D5A8;border-bottom:1px solid #E8D5A8;padding:12px 36px;text-align:center;">' +
-        '<div style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:12px;color:#5C3D11;line-height:1.7;">' +
-          '<span style="font-size:24px;color:#C9A96E;line-height:0.5;vertical-align:-8px;">\u201c<\/span>' +
-          'At Ivory Arc Travels, every journey is thoughtfully curated to deliver comfort, elegance, and unforgettable memories. We look forward to hosting you.' +
-          '<span style="font-size:24px;color:#C9A96E;line-height:0.5;vertical-align:-8px;">\u201d<\/span>' +
-        '<\/div>' +
-      '<\/div>' +
-
-      // Footer
-      '<div style="background:#0D0B08;padding:12px 36px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-        '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
-          '<a href="https://instagram.com/ivoryarctravels" style="font-size:9px;color:rgba(245,240,232,0.5);text-decoration:none;">&#128247; @ivoryarctravels<\/a>' +
-          '<a href="https://wa.me/917455037397" style="font-size:9px;color:rgba(245,240,232,0.5);text-decoration:none;">&#128172; +91 74550 37397<\/a>' +
-          '<a href="mailto:hello@ivoryarctravels.com" style="font-size:9px;color:rgba(245,240,232,0.5);text-decoration:none;">&#9993; hello@ivoryarctravels.com<\/a>' +
-          '<a href="https://ivoryarctravels.com" style="font-size:9px;color:rgba(245,240,232,0.5);text-decoration:none;">&#127760; ivoryarctravels.com<\/a>' +
-        '<\/div>' +
-        '<div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(201,169,110,0.35);text-align:right;">MSME Certified \u00b7 GST Registered<br>Govt. of India Approved<\/div>' +
-      '<\/div>' +
-
-      '<\/div>' + // /page
-      '<script>window.onload=function(){setTimeout(function(){window.print();},700);};<\/script>' +
-      '<\/body><\/html>';
+  /* -- QR via free API (no library needed) -- */
+  function buildQrImgTag(url) {
+    var src = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&color=1E1A17&bgcolor=FFFDF9&data=' +
+      encodeURIComponent(url);
+    return '<img src="' + src + '" width="130" height="130" alt="Scan" style="display:block;border-radius:6px;">';
   }
 
+  /* -- Shared money formatter -- */
+  function pdfMoney(n, cur, rates) {
+    if (typeof n !== 'number') return '';
+    if (n < 0) return '&minus; ' + pdfMoney(Math.abs(n), cur, rates);
+    if (!cur || cur === 'INR' || !rates || !rates[cur]) return '&#8377;' + n.toLocaleString('en-IN');
+    var v = Math.round(n * rates[cur]);
+    return (cur === 'USD' ? '$' : '&euro;') + v.toLocaleString() +
+      ' <span style="font-size:10px;opacity:0.5;">(&#8377;' + n.toLocaleString('en-IN') + ')</span>';
+  }
+
+  /* -- Core HTML builder -- */
+  function buildLuxuryEstimateHTML(o) {
+    /*
+      o = {
+        ref, today, validUntil,
+        type: 'package' | 'custom',
+        skylineId,
+        packageName, destinations, duration, travelDates, guests, accommodation,
+        pickup, drop, isTwoWay, googleKm, effectiveKm, buffer, billableKm,
+        lines[], subtotal, gst, total, perPerson, pax, hasHotel,
+        inclusions[], exclusions[],
+        customerName, cur, rates
+      }
+    */
+    var ref        = o.ref        || generateEstimateRef();
+    var today      = o.today      || new Date();
+    var validUntil = o.validUntil || (function(){ var d=new Date(today); d.setDate(d.getDate()+10); return d; }());
+    var cur        = o.cur        || 'INR';
+    var rates      = o.rates      || {};
+    var isCustom   = o.type       === 'custom';
+    var $ = function(n) { return pdfMoney(n, cur, rates); };
+
+    var skyline    = getDestSkyline(o.skylineId);
+    var estUrl     = buildDynamicEstimateUrl(ref);
+    var qrTag      = buildQrImgTag(estUrl);
+
+    var journey = isCustom
+      ? ((o.pickup||'') + (o.isTwoWay ? ' \u21CC ' : ' \u2192 ') + (o.drop||''))
+      : (o.packageName || o.destinations || 'Private Journey');
+
+    var travelDates = o.travelDates || '';
+    var guests      = o.guests || (o.pax ? o.pax + ' Traveller' + (o.pax!==1?'s':'') : '');
+    var waUrl       = buildWhatsAppPrefill({ ref:ref, route:journey, dates:travelDates, guests:guests, total:'&#8377;'+(o.total||0).toLocaleString('en-IN') });
+
+    var inclusions = o.inclusions || [
+      'Private air-conditioned vehicle',
+      'Professional driver — North India specialist',
+      o.hasHotel ? 'Hotel accommodation as selected' : null,
+      'Entry fees for all monuments marked Incl.',
+      'GST @ 5% on all services',
+      '24\u00d77 Ivory Arc concierge support',
+      'Complimentary itinerary review call'
+    ].filter(Boolean);
+
+    var exclusions = o.exclusions || [
+      'Airfare or train tickets',
+      !o.hasHotel ? 'Hotel accommodation (own arrangement)' : null,
+      'Personal expenses, tips & gratuity',
+      'Travel insurance (strongly recommended)',
+      'Activities or meals not listed',
+      'Monument camera / video fees'
+    ].filter(Boolean);
+
+    /* cost rows */
+    var costRows = (o.lines||[]).map(function(l) {
+      var amt = l.amount === 0
+        ? '<span style="color:#2a7a4f;font-size:11px;font-weight:600;letter-spacing:.5px;">INCLUDED</span>'
+        : '<span style="color:' + (l.amount<0?'#b94040':'#5C3D11') + ';font-weight:600;font-size:12px;">' + $(l.amount) + '</span>';
+      return '<tr>' +
+        '<td style="padding:10px 14px;border-bottom:1px solid #EDE8DF;color:#4A3C2C;font-size:12px;vertical-align:top;line-height:1.55;">' +
+          l.label +
+          (l.detail ? '<div style="font-size:10px;color:#A09080;margin-top:2px;">' + l.detail + '</div>' : '') +
+        '</td>' +
+        '<td style="padding:10px 14px;border-bottom:1px solid #EDE8DF;text-align:right;vertical-align:top;white-space:nowrap;">' + amt + '</td>' +
+      '</tr>';
+    }).join('');
+
+    /* left block — route or package */
+    var leftBlock = isCustom ? (
+      '<div style="background:#FFFDF9;border:1px solid #E0D5C5;border-radius:10px;overflow:hidden;">' +
+        '<div style="background:linear-gradient(135deg,#1E1A17,#2C251E);padding:11px 15px;display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#C9A96E;font-weight:600;">&#128205;&nbsp; Route Details</span>' +
+        '</div>' +
+        '<div style="padding:13px 15px;">' +
+          iRow('Route',              (o.pickup||'') + ' ' + (o.isTwoWay?'&#8644;':'&#8594;') + ' ' + (o.drop||''), false, true) +
+          iRow('Trip Type',          o.isTwoWay ? 'Two-Way Return' : 'One-Way Drop') +
+          iRow('Google Maps',        (o.googleKm||'') + ' km' + (o.isTwoWay ? ' &times; 2 = ' + (o.effectiveKm||'') + ' km' : '')) +
+          iRow('Commercial Buffer',  '+' + (o.buffer||'') + ' km') +
+          iRow('Billable Distance',  (o.billableKm||'') + ' km', true) +
+        '</div>' +
+      '</div>'
+    ) : (
+      '<div style="background:#FFFDF9;border:1px solid #E0D5C5;border-radius:10px;overflow:hidden;">' +
+        '<div style="background:linear-gradient(135deg,#1E1A17,#2C251E);padding:11px 15px;display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#C9A96E;font-weight:600;">&#128506;&nbsp; Package Details</span>' +
+        '</div>' +
+        '<div style="padding:13px 15px;">' +
+          (o.packageName   ? iRow('Package',       o.packageName, true)  : '') +
+          (o.destinations  ? iRow('Destination(s)', o.destinations)       : '') +
+          (o.duration      ? iRow('Duration',       o.duration)           : '') +
+          (travelDates     ? iRow('Travel Dates',   travelDates)          : '') +
+          (guests          ? iRow('Guests',         guests)               : '') +
+          (o.accommodation ? iRow('Accommodation',  o.accommodation)      : '') +
+          '<div style="margin-top:11px;padding-top:11px;border-top:1px solid #EDE8DF;">' +
+            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;margin-bottom:7px;">Inclusions</div>' +
+            inclusions.map(function(i){
+              return '<div style="display:flex;gap:6px;align-items:flex-start;padding:2px 0;">' +
+                '<span style="color:#C9A96E;font-size:9px;margin-top:3px;flex-shrink:0;">&#10022;</span>' +
+                '<span style="font-size:11px;color:#3A2E22;line-height:1.5;">' + i + '</span></div>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+
+    var fxNote = (cur !== 'INR' && rates[cur])
+      ? '<div style="font-size:10px;color:#B08D57;text-align:center;font-style:italic;padding:6px 14px;">Rate: 1 INR = ' + (cur==='USD'?'$':'&euro;') + rates[cur].toFixed(5) + ' &middot; Final invoice uses rate on payment date.</div>'
+      : '';
+
+    return (
+      /* ── GOLD TOP RULE ── */
+      '<div style="height:4px;background:linear-gradient(90deg,#8B6914,#C9A96E 40%,#E8D5A8 60%,#C9A96E 80%,#8B6914);"></div>' +
+
+      /* ── HEADER ── */
+      '<div style="background:linear-gradient(160deg,#1E1A17 0%,#16120F 65%,#1E1A17 100%);padding:20px 26px 16px;">' +
+
+        /* logo + ref row */
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(201,169,110,0.18);">' +
+
+          /* left: logo + brand */
+          '<div style="display:flex;align-items:center;gap:14px;">' +
+            '<img src="' + IVORY_PDF.logo + '" alt="Ivory Arc Travels" ' +
+              'style="height:68px;width:auto;object-fit:contain;display:block;flex-shrink:0;" crossorigin="anonymous">' +
+            '<div>' +
+              '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:21px;font-weight:600;color:#C9A96E;letter-spacing:2.5px;text-transform:uppercase;line-height:1.1;">Ivory Arc Travels</div>' +
+              '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-style:italic;font-size:11.5px;color:rgba(201,169,110,0.5);margin-top:2px;letter-spacing:0.8px;">Curated Heritage &amp; Spiritual Journeys</div>' +
+              '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">' +
+                '<span style="font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.16);border-radius:2px;padding:2px 6px;">MSME Certified</span>' +
+                '<span style="font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.16);border-radius:2px;padding:2px 6px;">GST Registered</span>' +
+                '<span style="font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.16);border-radius:2px;padding:2px 6px;">Govt. of India Approved</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          /* right: ref box */
+          '<div style="text-align:right;">' +
+            '<div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#8B6914;">Estimate Reference</div>' +
+            '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:20px;font-style:italic;color:#C9A96E;letter-spacing:1px;margin:3px 0 5px;">' + ref + '</div>' +
+            '<div style="font-size:10px;color:rgba(245,240,232,0.32);line-height:1.8;">Generated: ' + pdfFmtDate(today) + '<br>Valid until: ' + pdfFmtDate(validUntil) + '</div>' +
+          '</div>' +
+
+        '</div>' +
+
+        /* verified-by row */
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+          '<span style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.25);">Trusted Supplier Verified By</span>' +
+          '<span style="font-size:8.5px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.14);border-radius:3px;padding:2px 9px;color:rgba(245,240,232,0.4);">Google</span>' +
+          '<span style="font-size:8.5px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.14);border-radius:3px;padding:2px 9px;color:rgba(245,240,232,0.4);">Tripadvisor</span>' +
+          '<span style="font-size:8.5px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.14);border-radius:3px;padding:2px 9px;color:rgba(245,240,232,0.4);">Viator</span>' +
+        '</div>' +
+
+      '</div>' + /* /header */
+
+      /* ── AI BAR ── */
+      '<div style="background:rgba(201,169,110,0.07);border-top:1px solid rgba(201,169,110,0.18);border-bottom:1px solid rgba(201,169,110,0.18);padding:6px 26px;font-size:9.5px;color:rgba(176,141,87,0.7);">&#9432;&nbsp;&nbsp;AI-generated estimate &mdash; valid 10 days. Final pricing confirmed by Ivory Arc Travels team.</div>' +
+
+      /* ── DESTINATION SKYLINE ── */
+      '<div style="height:56px;overflow:hidden;background:linear-gradient(180deg,#1E1A17 0%,#FFFDF9 100%);">' + skyline + '</div>' +
+
+      /* ── MAIN BODY ── */
+      '<div style="background:#FFFDF9;padding:20px 26px 16px;">' +
+
+        /* title row */
+        '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #C9A96E;">' +
+          '<div>' +
+            '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:30px;font-weight:600;color:#1E1A17;line-height:1;">Ivory Arc Travels</div>' +
+            '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-style:italic;font-size:13px;color:#B08D57;margin-top:3px;">Private Curated Journeys Across India</div>' +
+          '</div>' +
+          '<div style="text-align:right;">' +
+            '<div style="font-size:8.5px;letter-spacing:1.2px;text-transform:uppercase;color:#B08D57;background:#FBF6EC;border:1px solid rgba(176,141,87,0.28);border-radius:3px;padding:2px 7px;display:inline-block;margin-bottom:3px;">GST No. ' + IVORY_PDF.gst + '</div><br>' +
+            '<div style="font-size:8.5px;letter-spacing:1.2px;text-transform:uppercase;color:#B08D57;background:#FBF6EC;border:1px solid rgba(176,141,87,0.28);border-radius:3px;padding:2px 7px;display:inline-block;">MSME No. ' + IVORY_PDF.msme + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        /* two-col: info + cost */
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
+
+          leftBlock +
+
+          /* cost breakdown */
+          '<div style="background:#FFFDF9;border:1px solid #E0D5C5;border-radius:10px;overflow:hidden;">' +
+            '<div style="background:linear-gradient(135deg,#1E1A17,#2C251E);padding:11px 15px;">' +
+              '<span style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#C9A96E;font-weight:600;">Cost Breakdown</span>' +
+            '</div>' +
+            '<table style="width:100%;border-collapse:collapse;">' +
+              '<thead><tr>' +
+                '<th style="background:#F5EFE6;padding:7px 14px;text-align:left;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1.5px solid #DDD0BB;font-weight:600;">Item</th>' +
+                '<th style="background:#F5EFE6;padding:7px 14px;text-align:right;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8B6914;border-bottom:1.5px solid #DDD0BB;font-weight:600;">Amount</th>' +
+              '</tr></thead>' +
+              '<tbody>' +
+                costRows +
+                '<tr><td style="padding:8px 14px;border-bottom:1px solid #EDE8DF;font-size:11px;color:#5A8060;">Parking</td>' +
+                    '<td style="padding:8px 14px;border-bottom:1px solid #EDE8DF;text-align:right;font-size:10px;color:#5A8060;font-weight:600;">At Actuals<br><span style="font-size:9px;opacity:0.7;">(receipt provided)</span></td></tr>' +
+                '<tr><td style="padding:9px 14px;border-top:1px dashed #D5CCBE;color:#4A3C2C;font-size:11px;">Subtotal</td>' +
+                    '<td style="padding:9px 14px;border-top:1px dashed #D5CCBE;text-align:right;font-weight:600;color:#5C3D11;">' + $(o.subtotal||0) + '</td></tr>' +
+                '<tr><td style="padding:7px 14px;color:#9A8C7A;font-size:11px;">GST (5%)</td>' +
+                    '<td style="padding:7px 14px;text-align:right;color:#9A8C7A;font-size:11px;">' + $(o.gst||0) + '</td></tr>' +
+              '</tbody>' +
+              '<tfoot><tr>' +
+                '<td style="background:linear-gradient(135deg,#1E1A17,#2C251E);color:#C9A96E;font-family:\'Cormorant Garamond\',Georgia,serif;font-size:14px;font-style:italic;font-weight:600;padding:12px 14px;letter-spacing:0.8px;">Total Estimate</td>' +
+                '<td style="background:linear-gradient(135deg,#1E1A17,#2C251E);color:#C9A96E;font-family:\'Cormorant Garamond\',Georgia,serif;font-size:20px;font-style:italic;font-weight:600;padding:12px 14px;text-align:right;">' + $(o.total||0) + '</td>' +
+              '</tr></tfoot>' +
+            '</table>' +
+            fxNote +
+          '</div>' +
+
+        '</div>' + /* /two-col */
+
+        /* per-person bar */
+        (o.perPerson ? (
+          '<div style="background:linear-gradient(90deg,#FBF6EC,#FFF9F0,#FBF6EC);border:1px solid #D5C9B0;border-radius:8px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+            '<div><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;">Cost Per Person</div>' +
+            '<div style="font-size:10px;color:#9A8C7A;margin-top:2px;">Based on ' + (o.pax||2) + ' traveller' + ((o.pax||2)!==1?'s':'') + '</div></div>' +
+            '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:25px;font-style:italic;color:#B08D57;font-weight:600;">' + $(o.perPerson) + '</div>' +
+          '</div>'
+        ) : '') +
+
+        /* terms + CTA */
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
+
+          /* terms */
+          '<div>' +
+            '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;padding-bottom:6px;margin-bottom:8px;border-bottom:1.5px solid #E0D5C5;">Terms &amp; Conditions</div>' +
+            [
+              ['&#128663;', 'Minimum billing 300 km/day at &#8377;18/km. Driver allowance &#8377;800/day for overnight halts.'],
+              ['&#128739;', 'Toll and parking billed at actuals with receipts provided.'],
+              ['&#128179;', '50% advance to confirm. Balance before tour start. No cash payments accepted.'],
+              ['&#127968;', 'Covers transportation' + (o.hasHotel ? ' and hotel accommodation' : '') + '. Valid 10 days from issue date.'],
+              ['&#9888;',   'This is an indicative estimate — not a confirmed booking.']
+            ].map(function(t) {
+              return '<div style="display:flex;gap:7px;align-items:flex-start;padding:5px 0;border-bottom:1px solid #EDE8DF;">' +
+                '<span style="font-size:12px;flex-shrink:0;">' + t[0] + '</span>' +
+                '<span style="font-size:10.5px;color:#5A4C3A;line-height:1.5;">' + t[1] + '</span>' +
+              '</div>';
+            }).join('') +
+            '<div style="margin-top:11px;padding-top:10px;border-top:1px solid #E0D5C5;">' +
+              '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;margin-bottom:6px;">&#10003; Inclusions</div>' +
+              inclusions.map(function(i) {
+                return '<div style="display:flex;gap:6px;align-items:flex-start;padding:2.5px 0;">' +
+                  '<span style="color:#C9A96E;font-size:9px;margin-top:3px;flex-shrink:0;">&#10022;</span>' +
+                  '<span style="font-size:11px;color:#3A2E22;line-height:1.45;">' + i + '</span></div>';
+              }).join('') +
+            '</div>' +
+            '<div style="margin-top:9px;padding-top:9px;border-top:1px solid #E0D5C5;">' +
+              '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;margin-bottom:6px;">&#10007; Exclusions</div>' +
+              exclusions.map(function(i) {
+                return '<div style="display:flex;gap:6px;align-items:flex-start;padding:2.5px 0;">' +
+                  '<span style="color:#C0A882;font-size:9px;margin-top:3px;flex-shrink:0;">&#8211;</span>' +
+                  '<span style="font-size:11px;color:#7A6A56;line-height:1.45;">' + i + '</span></div>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+
+          /* CTA card */
+          '<div style="background:linear-gradient(160deg,#1E1A17,#16120F);border:1px solid rgba(201,169,110,0.22);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;">' +
+            '<div style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#C9A96E;margin-bottom:7px;font-weight:600;">Reserve Your Journey</div>' +
+            '<div style="font-size:11px;color:rgba(245,240,232,0.45);line-height:1.7;margin-bottom:14px;">Connect with our travel concierge. We will personally curate the final details for you.</div>' +
+            '<a href="' + waUrl + '" style="display:flex;align-items:center;justify-content:center;gap:7px;background:#25D366;color:#fff;border-radius:25px;padding:10px 18px;font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:8px;text-decoration:none;">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.998-1.424A9.95 9.95 0 0011.999 22c5.523 0 10-4.477 10-10S17.522 2 11.999 2z"/></svg>' +
+              'Chat on WhatsApp &rarr;' +
+            '</a>' +
+            '<div style="font-size:8.5px;color:rgba(245,240,232,0.25);line-height:1.6;margin-bottom:14px;">Opens WhatsApp with your estimate details pre-filled.</div>' +
+            '<div style="background:#FFFDF9;padding:5px;border-radius:7px;border:1px solid rgba(201,169,110,0.22);margin-bottom:6px;">' + qrTag + '</div>' +
+            '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,240,232,0.25);">Scan to View Estimate</div>' +
+            '<a href="' + estUrl + '" style="font-size:8.5px;color:rgba(201,169,110,0.35);margin-top:3px;text-decoration:none;">estimator.ivoryarctravels.com</a>' +
+          '</div>' +
+
+        '</div>' + /* /terms+CTA */
+
+        /* cancellation policy */
+        '<div style="background:#FFFBF2;border:1px solid #E0D5C5;border-left:3px solid #C9A96E;border-radius:6px;padding:11px 15px;margin-bottom:12px;font-size:11px;color:#5C4A34;line-height:1.7;">' +
+          '<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B08D57;font-weight:600;margin-bottom:5px;">Cancellation &amp; Refund Policy</div>' +
+          'If any service cannot be delivered due to travel advisories, government restrictions, natural calamities, extreme weather, monument closures, wildlife restrictions, public health emergencies, road blockages, or force majeure events — <strong>Ivory Arc Travels will refund the full cost of the affected service (excluding GST) to the original payment source on the same day of cancellation confirmation.</strong>' +
+        '</div>' +
+
+        /* AI disclaimer */
+        '<div style="background:#F7F2EA;border:1px solid #DDD0BB;border-radius:6px;padding:9px 13px;font-size:10px;color:#8B7A64;line-height:1.65;">' +
+          '<strong style="color:#B08D57;">&#9888; Note:</strong> This is an AI-generated indicative estimate. Final confirmed pricing will be issued by an Ivory Arc Travels representative after a personalised review call. Reference: <strong style="color:#5C3D11;">' + ref + '</strong>' +
+        '</div>' +
+
+      '</div>' + /* /main body */
+
+      /* ── QUOTE ── */
+      '<div style="background:linear-gradient(90deg,#FBF6EC,#FFF9F0,#FBF6EC);border-top:1px solid #DDD0BB;border-bottom:1px solid #DDD0BB;padding:13px 26px;text-align:center;">' +
+        '<div style="font-family:\'Cormorant Garamond\',Georgia,serif;font-style:italic;font-size:13.5px;color:#5C4A34;line-height:1.8;">' +
+          '<span style="font-size:26px;color:#C9A96E;line-height:0;vertical-align:-9px;">&ldquo;</span>' +
+          ' At Ivory Arc Travels, every journey is thoughtfully curated to deliver comfort, elegance, and unforgettable memories. We look forward to hosting you. ' +
+          '<span style="font-size:26px;color:#C9A96E;line-height:0;vertical-align:-9px;">&rdquo;</span>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── FOOTER ── */
+      '<div style="background:linear-gradient(160deg,#1E1A17,#16120F);padding:12px 26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+        '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
+          '<a href="' + IVORY_PDF.insta   + '" style="font-size:9.5px;color:rgba(245,240,232,0.42);">&#128247; @ivoryarctravels</a>' +
+          '<a href="https://wa.me/917455037397" style="font-size:9.5px;color:rgba(245,240,232,0.42);">&#128172; +91 74550 37397</a>' +
+          '<a href="mailto:' + IVORY_PDF.email + '" style="font-size:9.5px;color:rgba(245,240,232,0.42);">&#9993; ' + IVORY_PDF.email + '</a>' +
+          '<a href="' + IVORY_PDF.website + '" style="font-size:9.5px;color:rgba(245,240,232,0.42);">&#127760; ivoryarctravels.com</a>' +
+        '</div>' +
+        '<div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(201,169,110,0.28);text-align:right;line-height:1.8;">MSME Certified &middot; GST Registered<br>Govt. of India Approved Tour Operator</div>' +
+      '</div>' +
+
+      /* ── GOLD BOTTOM RULE ── */
+      '<div style="height:4px;background:linear-gradient(90deg,#8B6914,#C9A96E 40%,#E8D5A8 60%,#C9A96E 80%,#8B6914);"></div>'
+    );
+  }
+
+  /* -- Small helper for info rows -- */
+  function iRow(label, value, bold, large) {
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #EDE8DF;">' +
+      '<span style="color:#7A6A56;font-size:11px;min-width:105px;flex-shrink:0;">' + label + '</span>' +
+      '<span style="font-weight:' + (bold||large?'700':'600') + ';color:' + (large?'#5C3D11':'#2B2825') + ';font-size:' + (large?'13px':'11px') + ';text-align:right;line-height:1.4;">' + value + '</span>' +
+    '</div>';
+  }
+
+  /* ============================================================
+     downloadEstimate — Package / Curated Tours
+  ============================================================ */
   function downloadEstimate() {
     var calc = (typeof calculateTotalEstimate === 'function') ? calculateTotalEstimate() : null;
     if (!calc) { alert('Please complete your tour selection first.'); return; }
-    var refEl = document.getElementById('lead-ref-display');
-    var ref = (refEl && refEl.textContent.trim()) ? refEl.textContent.trim() : iaGenRef();
+
+    var ref = generateEstimateRef();
     var today = new Date();
     var validUntil = new Date(today); validUntil.setDate(validUntil.getDate() + 10);
-    var nameEl = document.getElementById('otp-name-input') || document.getElementById('lead-name');
-    var customerName = nameEl ? nameEl.value.trim() : (typeof otpState !== 'undefined' ? otpState.name : '');
-    var allTours = (typeof DESTINATIONS !== 'undefined') ? (DESTINATIONS.dayTours||[]).concat(DESTINATIONS.multiDay||[]) : [];
-    var destObj = (typeof activeTourId !== 'undefined' && activeTourId) ? allTours.find(function(t){ return t.id===activeTourId; }) : null;
-    var tdates = '';
+
+    var cur   = (typeof activeCurrency !== 'undefined') ? activeCurrency : 'INR';
+    var rates = (typeof fxRates !== 'undefined') ? fxRates : {};
+
+    var allTours = DESTINATIONS.dayTours.concat(DESTINATIONS.multiDay);
+    var destObj  = activeTourId ? allTours.find(function(t){ return t.id===activeTourId; }) : null;
+    var tl = {t1:'1\u20132 People',t2:'3\u20134 People',t3:'5\u20136 People',t4:'7\u201310 People'};
+    var travelDates = '';
     if (typeof tdStart !== 'undefined' && tdStart && typeof tdEnd !== 'undefined' && tdEnd) {
-      tdates = iaFmtDate(tdStart) + ' \u2013 ' + iaFmtDate(tdEnd);
+      travelDates = pdfFmtDate(tdStart) + ' \u2013 ' + pdfFmtDate(tdEnd);
     }
-    var tierLabels = {t1:'1\u20132 People',t2:'3\u20134 People',t3:'5\u20136 People',t4:'7\u201310 People'};
-    var guestsStr = '';
-    if (calc.pax) {
-      guestsStr = calc.pax + ' Traveller' + (calc.pax!==1?'s':'');
-      if (typeof activeTierId !== 'undefined' && activeTierId && tierLabels[activeTierId]) guestsStr += ' (' + tierLabels[activeTierId] + ')';
-    }
-    var accomStr = (typeof hotelTier !== 'undefined' && hotelTier) ? hotelTier.replace('star','-Star Comfort') : '';
-    var opts = {
+    var guestsStr = calc.pax
+      ? calc.pax + ' Traveller' + (calc.pax!==1?'s':'') + (activeTierId && tl[activeTierId] ? ' (' + tl[activeTierId] + ')' : '')
+      : '';
+    var accomStr = (typeof hotelTier !== 'undefined' && hotelTier)
+      ? ({  '3star':'3-Star Comfort', '4star':'4-Star Premium', '5star':'5-Star Luxury' }[hotelTier] || '')
+      : '';
+    var nameVal = (typeof otpState !== 'undefined' && otpState.name) ? otpState.name : '';
+
+    var o = {
       ref: ref, today: today, validUntil: validUntil,
-      estimateType: 'package',
-      packageName: destObj ? destObj.name : '',
-      destinations: destObj ? destObj.name : '',
-      duration: calc.days + ' Days / ' + calc.nights + ' Nights',
-      travelDates: tdates, guests: guestsStr, accommodation: accomStr,
-      lines: calc.lines || [], subtotal: calc.subtotal, gst: calc.gst,
-      total: calc.grandTotal, perPerson: calc.perPerson, pax: calc.pax,
-      hasHotel: calc.hasHotel, customerName: customerName
+      type: 'package',
+      skylineId: activeTourId || 'delhi',
+      packageName:   destObj ? destObj.name : '',
+      destinations:  destObj ? destObj.name : '',
+      duration:      calc.days + ' Days / ' + calc.nights + ' Nights',
+      travelDates:   travelDates,
+      guests:        guestsStr,
+      accommodation: accomStr,
+      lines:      calc.lines   || [],
+      subtotal:   calc.subtotal,
+      gst:        calc.gst,
+      total:      calc.grandTotal,
+      perPerson:  calc.perPerson,
+      pax:        calc.pax,
+      hasHotel:   calc.hasHotel,
+      customerName: nameVal,
+      cur: cur, rates: rates
     };
-    iaBuildQRDataURL(ref, function(qrDataUrl) {
-      opts.qrDataUrl = qrDataUrl;
-      var html = iaBuildEstimateHTML(opts);
-      var win = window.open('','_blank','width=900,height=1200');
-      if (win) { win.document.write(html); win.document.close(); }
-    });
-    if (typeof iaTrack === 'function') iaTrack('estimate_downloaded', { type: 'package', ref: ref });
+
+    if (typeof iaTrack === 'function') iaTrack('estimate_downloaded', { type:'package', ref:ref });
+
+    var html = buildLuxuryEstimateHTML(o);
+    var win = window.open('', '_blank', 'width=1000,height=1200');
+    if (!win) { alert('Please allow popups to download your estimate.'); return; }
+    win.document.write(
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ivory Arc Estimate ' + ref + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">' +
+      '<style>' +
+        '@page{size:A4 portrait;margin:0;}' +
+        '*{box-sizing:border-box;margin:0;padding:0;}' +
+        'body{font-family:"DM Sans",sans-serif;background:#F7F3EC;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+        '.page{width:210mm;min-height:297mm;margin:0 auto;background:#F7F3EC;}' +
+        'a{color:inherit;text-decoration:none;}' +
+        '@media print{body{background:#F7F3EC!important;}}' +
+      '</style>' +
+      '</head><body><div class="page">' + html + '</div>' +
+      '<script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>' +
+      '</body></html>'
+    );
+    win.document.close();
   }
 
+  /* ============================================================
+     downloadCustomEstimate — Bespoke Routes
+  ============================================================ */
   function downloadCustomEstimate() {
     var b = (typeof ciResult !== 'undefined') ? ciResult : null;
     if (!b || b === 'loading' || b === 'error') { alert('Please calculate your route first.'); return; }
-    var ref = iaGenRef();
+
+    var ref = generateEstimateRef();
     var today = new Date();
     var validUntil = new Date(today); validUntil.setDate(validUntil.getDate() + 10);
-    var nameEl = document.getElementById('otp-name-input') || document.getElementById('lead-name');
-    var customerName = nameEl ? nameEl.value.trim() : (typeof otpState !== 'undefined' ? otpState.name : '');
-    var lines = [];
-    lines.push({ label: 'Distance Charge (' + b.billableKm + ' km \u00d7 \u20b918)', amount: b.distCharge });
-    lines.push({ label: 'Toll Charges (estimated)', amount: b.toll });
+
+    var cur   = (typeof activeCurrency !== 'undefined') ? activeCurrency : 'INR';
+    var rates = (typeof fxRates !== 'undefined') ? fxRates : {};
+    var nameVal = (typeof otpState !== 'undefined' && otpState.name) ? otpState.name : '';
+
+    var lines = [
+      { label: 'Distance Charge (' + b.billableKm + ' km \u00d7 \u20b918)', amount: b.distCharge },
+      { label: 'Toll Charges (estimated)', amount: b.toll }
+    ];
     if (b.nightHalt) lines.push({ label: 'Night Halt \u2014 Driver', amount: b.nightCost });
-    if (b.hotelLine) lines.push({ label: b.hotelLine.name, detail: '\u20b9' + b.hotelLine.price.toLocaleString('en-IN') + '/night \u00d7 ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights!==1?'s':''), amount: b.hotelLine.total });
-    var opts = {
-      ref: ref, today: today, validUntil: validUntil,
-      estimateType: 'custom',
-      pickup: b.pickup, drop: b.drop, isTwoWay: b.isTwoWay,
-      googleKm: b.googleKm, effectiveKm: b.effectiveKm, buffer: b.buffer, billableKm: b.billableKm,
-      lines: lines, subtotal: b.subtotal, gst: b.gst, total: b.total,
-      hasHotel: !!b.hotelLine, customerName: customerName
-    };
-    iaBuildQRDataURL(ref, function(qrDataUrl) {
-      opts.qrDataUrl = qrDataUrl;
-      var html = iaBuildEstimateHTML(opts);
-      var win = window.open('','_blank','width=900,height=1200');
-      if (win) { win.document.write(html); win.document.close(); }
+    if (b.hotelLine) lines.push({
+      label:  b.hotelLine.name,
+      detail: '\u20b9' + b.hotelLine.price.toLocaleString('en-IN') + '/night \u00d7 ' + b.hotelLine.nights + ' night' + (b.hotelLine.nights!==1?'s':''),
+      amount: b.hotelLine.total
     });
-    if (typeof iaTrack === 'function') iaTrack('estimate_downloaded', { type: 'custom', ref: ref });
+
+    var dropCity = b.drop ? b.drop.split(',')[0].toLowerCase().trim() : 'delhi';
+    var o = {
+      ref: ref, today: today, validUntil: validUntil,
+      type: 'custom',
+      skylineId: dropCity,
+      pickup: b.pickup, drop: b.drop, isTwoWay: b.isTwoWay,
+      googleKm: b.googleKm, effectiveKm: b.effectiveKm,
+      buffer: b.buffer, billableKm: b.billableKm,
+      lines:    lines,
+      subtotal: b.subtotal,
+      gst:      b.gst,
+      total:    b.total,
+      hasHotel: !!b.hotelLine,
+      customerName: nameVal,
+      cur: cur, rates: rates
+    };
+
+    if (typeof iaTrack === 'function') iaTrack('estimate_downloaded', { type:'custom', ref:ref });
+
+    var html = buildLuxuryEstimateHTML(o);
+    var win = window.open('', '_blank', 'width=1000,height=1200');
+    if (!win) { alert('Please allow popups to download your estimate.'); return; }
+    win.document.write(
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ivory Arc Custom Estimate ' + ref + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">' +
+      '<style>' +
+        '@page{size:A4 portrait;margin:0;}' +
+        '*{box-sizing:border-box;margin:0;padding:0;}' +
+        'body{font-family:"DM Sans",sans-serif;background:#F7F3EC;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+        '.page{width:210mm;min-height:297mm;margin:0 auto;background:#F7F3EC;}' +
+        'a{color:inherit;text-decoration:none;}' +
+        '@media print{body{background:#F7F3EC!important;}}' +
+      '</style>' +
+      '</head><body><div class="page">' + html + '</div>' +
+      '<script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>' +
+      '</body></html>'
+    );
+    win.document.close();
   }
 
   // ── Expose all functions to window for onclick handlers ──────────────────
