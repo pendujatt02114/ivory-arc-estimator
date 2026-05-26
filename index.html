@@ -2476,18 +2476,9 @@ function iaTrack(eventName, params) {
     // SerpAPI google_hotels: q must be JUST the city name (e.g. "Ambala")
     // NOT a sentence like "3 star hotels near Ambala India" — that returns 0 results
     // Star filtering is done client-side by overall_rating
-    function buildCityUrl(t, city, useDirectSerpApi = false) {
-  function buildCityUrl(t, city) {
+function buildCityUrl(t, city) {
   return SERPAPI_PROXY + '?action=hotels' +
     '&city=' + encodeURIComponent(city + ' Hotels') +
-    '&stars=' + t.replace('star','') +
-    '&ci=' + ci +
-    '&co=' + co +
-    '&key=' + SERPAPI_KEY;
-}
-
-  return SERPAPI_PROXY + '?action=hotels' +
-    '&city=' + encodeURIComponent(city) +
     '&stars=' + t.replace('star','') +
     '&ci=' + ci +
     '&co=' + co +
