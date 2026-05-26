@@ -2507,100 +2507,64 @@ function buildCityUrl(t, city) {
     }
 
     // Try each tier in the fallback chain
-    function tryTier(idx) {
-      if (idx >= tiersToTry.length) {
-        // All tiers exhausted
-        if (actualCityName) {
-          // CUSTOM MODE: never show wrong-city hotels — popup only
-          callback('no_results');
-        } else {
-          // REGULAR MODE: curated fallback
-          var fallback = getFallback(destId, tier);
-          callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
-        }
+function tryTier(idx) {
+  if (idx >= tiersToTry.length) {
+    if (actualCityName) {
+      callback('no_results');
+    } else {
+      var fallback = getFallback(destId, tier);
+      callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
+    }
+    return;
+  }
+
+  var t = tiersToTry[idx];
+
+  fetch(buildCityUrl(t, searchCity))
+    .then(function(r) {
+      return r.json();
+    })
+    .then(function(data) {
+      var props = parseProps(data);
+
+      if (props.length) {
+        callback(tagResult(props, t));
         return;
       }
-      var t = tiersToTry[idx];
 
-      // Stage 1: search by city name
-  const callbackName = 'hotelCallback_' + Date.now();
+      if (lat && lng) {
+        return fetch(buildLatLngUrl(t))
+          .then(function(r2) {
+            return r2.json();
+          })
+          .then(function(data2) {
+            var props2 = parseProps(data2);
 
-window[callbackName] = function(data) {
-  try {
-    delete window[callbackName];
-    document.body.removeChild(script);
+            if (props2.length) {
+              callback(tagResult(props2, t));
+              return;
+            }
 
-    var props = parseProps(data);
-
-    if (props.length) {
-      callback(tagResult(props, t));
-      return;
-    }
-
-    // Stage 2: 30km GPS radius
-    if (lat && lng) {
-      return fetch(buildLatLngUrl(t))
-        .then(function(r2) { return r2.json(); })
-        .then(function(data2) {
-          var props2 = parseProps(data2);
-
-          if (props2.length) {
-            callback(tagResult(props2, t));
-            return;
-          }
-
-          tryTier(idx + 1);
-        });
-    }
-
-    tryTier(idx + 1);
-
-  } catch (err) {
-    console.error(err);
-    tryTier(idx + 1);
-  }
-};
-
-const script = document.createElement('script');
-
-script.src =
-  buildCityUrl(t, searchCity) +
-  '&callback=' + callbackName;
-
-script.onerror = function() {
-  delete window[callbackName];
-  tryTier(idx + 1);
-};
-
-document.body.appendChild(script);
-
-          // Stage 2: 30km GPS radius (if coordinates available)
-          if (lat && lng) {
-            return fetch(buildLatLngUrl(t))
-              .then(function(r2) { return r2.json(); })
-              .then(function(data2) {
-                var props2 = parseProps(data2);
-                if (props2.length) { callback(tagResult(props2, t)); return; }
-                tryTier(idx + 1);
-              })
-              .catch(function() { tryTier(idx + 1); });
-          } else {
             tryTier(idx + 1);
-          }
-        })
-        .catch(function() {
-          if (actualCityName) {
-            // Custom mode: API error → popup, not wrong-city hotels
-            callback('no_results');
-          } else {
-            // Regular mode: API error → curated fallback
-            callback(getFallback(destId, tier).length ? tagResult(getFallback(destId, tier), tier) : 'no_results');
-          }
-        });
-    }
+          })
+          .catch(function() {
+            tryTier(idx + 1);
+          });
+      } else {
+        tryTier(idx + 1);
+      }
+    })
+    .catch(function() {
+      if (actualCityName) {
+        callback('no_results');
+      } else {
+        var fallback = getFallback(destId, tier);
+        callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
+      }
+    });
+}
 
-    tryTier(0);
-  }
+tryTier(0);
 
   function getFallback(destId, tier) {
     const dest = HOTEL_FALLBACK[destId] || HOTEL_FALLBACK['delhi'];
