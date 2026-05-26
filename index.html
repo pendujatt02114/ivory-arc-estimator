@@ -2120,6 +2120,7 @@ function iaTrack(eventName, params) {
             </div>`).join('')}
         </div>`;
 
+      const activeCity = multiCityNote[tour.id];
       if (activeCity) {
         const tier = multiCityTier[activeCity];
         const results = multiCityResults[activeCity];
@@ -2476,14 +2477,11 @@ function iaTrack(eventName, params) {
     // SerpAPI google_hotels: q must be JUST the city name (e.g. "Ambala")
     // NOT a sentence like "3 star hotels near Ambala India" — that returns 0 results
     // Star filtering is done client-side by overall_rating
-function buildCityUrl(t, city) {
-  return SERPAPI_PROXY + '?action=hotels' +
-    '&city=' + encodeURIComponent(city + ' Hotels') +
-    '&stars=' + t.replace('star','') +
-    '&ci=' + ci +
-    '&co=' + co +
-    '&key=' + SERPAPI_KEY;
-}
+    function buildCityUrl(t, city) {
+      return SERPAPI_PROXY + '?action=hotels' +
+        '&city=' + encodeURIComponent(city + ' Hotels') +
+        '&stars=' + t.replace('star','') + '&ci=' + ci + '&co=' + co + '&key=' + SERPAPI_KEY;
+    }
 
     function buildLatLngUrl(t) {
       return SERPAPI_PROXY + '?action=hotels' +
@@ -2507,70 +2505,60 @@ function buildCityUrl(t, city) {
     }
 
     // Try each tier in the fallback chain
-function tryTier(idx) {
-  if (idx >= tiersToTry.length) {
-    if (actualCityName) {
-      callback('no_results');
-    } else {
-      var fallback = getFallback(destId, tier);
-      callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
-    }
-    return;
-  }
-
-  var t = tiersToTry[idx];
-
-  fetch(buildCityUrl(t, searchCity))
-    .then(function(r) {
-      return r.json();
-    })
-    .then(function(data) {
-      var props = parseProps(data);
-
-      if (props.length) {
-        callback(tagResult(props, t));
+    function tryTier(idx) {
+      if (idx >= tiersToTry.length) {
+        // All tiers exhausted
+        if (actualCityName) {
+          // CUSTOM MODE: never show wrong-city hotels — popup only
+          callback('no_results');
+        } else {
+          // REGULAR MODE: curated fallback
+          var fallback = getFallback(destId, tier);
+          callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
+        }
         return;
       }
+      var t = tiersToTry[idx];
 
-      if (lat && lng) {
-        return fetch(buildLatLngUrl(t))
-          .then(function(r2) {
-            return r2.json();
-          })
-          .then(function(data2) {
-            var props2 = parseProps(data2);
+      // Stage 1: search by city name
+      fetch(buildCityUrl(t, searchCity))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var props = parseProps(data);
+          if (props.length) { callback(tagResult(props, t)); return; }
 
-            if (props2.length) {
-              callback(tagResult(props2, t));
-              return;
-            }
-
+          // Stage 2: 30km GPS radius (if coordinates available)
+          if (lat && lng) {
+            return fetch(buildLatLngUrl(t))
+              .then(function(r2) { return r2.json(); })
+              .then(function(data2) {
+                var props2 = parseProps(data2);
+                if (props2.length) { callback(tagResult(props2, t)); return; }
+                tryTier(idx + 1);
+              })
+              .catch(function() { tryTier(idx + 1); });
+          } else {
             tryTier(idx + 1);
-          })
-          .catch(function() {
-            tryTier(idx + 1);
-          });
-      } else {
-        tryTier(idx + 1);
-      }
-    })
-    .catch(function() {
-      if (actualCityName) {
-        callback('no_results');
-      } else {
-        var fallback = getFallback(destId, tier);
-        callback(fallback.length ? tagResult(fallback, tier) : 'no_results');
-      }
-    });
-}
+          }
+        })
+        .catch(function() {
+          if (actualCityName) {
+            // Custom mode: API error → popup, not wrong-city hotels
+            callback('no_results');
+          } else {
+            // Regular mode: API error → curated fallback
+            callback(getFallback(destId, tier).length ? tagResult(getFallback(destId, tier), tier) : 'no_results');
+          }
+        });
+    }
 
-tryTier(0);
+    tryTier(0);
+  }
 
   function getFallback(destId, tier) {
     const dest = HOTEL_FALLBACK[destId] || HOTEL_FALLBACK['delhi'];
     return (dest[tier] || dest['4star'] || []);
   }
-}
   // ── Event handlers ────────────────────────────────────────────────────────
   function selectTour(id) {
     if (id && id !== activeTourId) { iaTrack('destination_selected', { destination: id }); }
@@ -3828,6 +3816,6 @@ tryTier(0);
       if (popup) popup.style.display = 'flex';
     }
     window.showOOSPopup = showOOSPopup;
-  </script>
+     </script>
 </body>
 </html>
