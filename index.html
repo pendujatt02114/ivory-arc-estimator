@@ -2120,8 +2120,6 @@ function iaTrack(eventName, params) {
             </div>`).join('')}
         </div>`;
 
-      const useDirectSerpApi =
-  !PRESET_HUBS.includes((activeCity || '').trim());
       if (activeCity) {
         const tier = multiCityTier[activeCity];
         const results = multiCityResults[activeCity];
@@ -2534,7 +2532,13 @@ function iaTrack(eventName, params) {
       var t = tiersToTry[idx];
 
       // Stage 1: search by city name
-      fetch(buildCityUrl(t, searchCity, useDirectSerpApi))
+      fetch(
+  buildCityUrl(
+    t,
+    searchCity,
+    !PRESET_HUBS.includes((searchCity || '').trim())
+  )
+)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var props = parseProps(data);
