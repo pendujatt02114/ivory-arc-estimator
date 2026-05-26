@@ -2532,11 +2532,11 @@ function iaTrack(eventName, params) {
       var t = tiersToTry[idx];
 
       // Stage 1: search by city name
-      fetch(
+  fetch(
   buildCityUrl(
     t,
     searchCity,
-    tour.type === 'custom'
+    !!actualCityName
   )
 )
         .then(function(r) { return r.json(); })
