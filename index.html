@@ -2532,16 +2532,56 @@ function iaTrack(eventName, params) {
       var t = tiersToTry[idx];
 
       // Stage 1: search by city name
-  fetch(
-  buildCityUrl(
-    t,
-    searchCity
-  )
-)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          var props = parseProps(data);
-          if (props.length) { callback(tagResult(props, t)); return; }
+  const callbackName = 'hotelCallback_' + Date.now();
+
+window[callbackName] = function(data) {
+  try {
+    delete window[callbackName];
+    document.body.removeChild(script);
+
+    var props = parseProps(data);
+
+    if (props.length) {
+      callback(tagResult(props, t));
+      return;
+    }
+
+    // Stage 2: 30km GPS radius
+    if (lat && lng) {
+      return fetch(buildLatLngUrl(t))
+        .then(function(r2) { return r2.json(); })
+        .then(function(data2) {
+          var props2 = parseProps(data2);
+
+          if (props2.length) {
+            callback(tagResult(props2, t));
+            return;
+          }
+
+          tryTier(idx + 1);
+        });
+    }
+
+    tryTier(idx + 1);
+
+  } catch (err) {
+    console.error(err);
+    tryTier(idx + 1);
+  }
+};
+
+const script = document.createElement('script');
+
+script.src =
+  buildCityUrl(t, searchCity) +
+  '&callback=' + callbackName;
+
+script.onerror = function() {
+  delete window[callbackName];
+  tryTier(idx + 1);
+};
+
+document.body.appendChild(script);
 
           // Stage 2: 30km GPS radius (if coordinates available)
           if (lat && lng) {
