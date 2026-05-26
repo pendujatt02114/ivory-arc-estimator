@@ -2536,7 +2536,7 @@ function iaTrack(eventName, params) {
   buildCityUrl(
     t,
     searchCity,
-    !PRESET_HUBS.includes((searchCity || '').trim())
+    tour.type === 'custom'
   )
 )
         .then(function(r) { return r.json(); })
