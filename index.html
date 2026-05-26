@@ -2120,7 +2120,8 @@ function iaTrack(eventName, params) {
             </div>`).join('')}
         </div>`;
 
-      const activeCity = multiCityNote[tour.id];
+      const useDirectSerpApi =
+  !PRESET_HUBS.includes((activeCity || '').trim());
       if (activeCity) {
         const tier = multiCityTier[activeCity];
         const results = multiCityResults[activeCity];
@@ -2477,11 +2478,23 @@ function iaTrack(eventName, params) {
     // SerpAPI google_hotels: q must be JUST the city name (e.g. "Ambala")
     // NOT a sentence like "3 star hotels near Ambala India" — that returns 0 results
     // Star filtering is done client-side by overall_rating
-    function buildCityUrl(t, city) {
-      return SERPAPI_PROXY + '?action=hotels' +
-        '&city=' + encodeURIComponent(city) +
-        '&stars=' + t.replace('star','') + '&ci=' + ci + '&co=' + co + '&key=' + SERPAPI_KEY;
-    }
+    function buildCityUrl(t, city, useDirectSerpApi = false) {
+  if (useDirectSerpApi) {
+    return 'https://serpapi.com/search.json?engine=google_hotels' +
+      '&q=' + encodeURIComponent(city) +
+      '&check_in_date=' + ci +
+      '&check_out_date=' + co +
+      '&currency=INR&gl=in&hl=en' +
+      '&api_key=' + SERPAPI_KEY;
+  }
+
+  return SERPAPI_PROXY + '?action=hotels' +
+    '&city=' + encodeURIComponent(city) +
+    '&stars=' + t.replace('star','') +
+    '&ci=' + ci +
+    '&co=' + co +
+    '&key=' + SERPAPI_KEY;
+}
 
     function buildLatLngUrl(t) {
       return SERPAPI_PROXY + '?action=hotels' +
@@ -2521,7 +2534,7 @@ function iaTrack(eventName, params) {
       var t = tiersToTry[idx];
 
       // Stage 1: search by city name
-      fetch(buildCityUrl(t, searchCity))
+      fetch(buildCityUrl(t, searchCity, useDirectSerpApi))
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var props = parseProps(data);
