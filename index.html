@@ -2570,6 +2570,7 @@ tryTier(0);
     const dest = HOTEL_FALLBACK[destId] || HOTEL_FALLBACK['delhi'];
     return (dest[tier] || dest['4star'] || []);
   }
+}
   // ── Event handlers ────────────────────────────────────────────────────────
   function selectTour(id) {
     if (id && id !== activeTourId) { iaTrack('destination_selected', { destination: id }); }
