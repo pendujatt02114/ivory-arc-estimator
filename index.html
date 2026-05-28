@@ -3,497 +3,948 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ivory Arc Travels — Journey Estimator</title>
+<title>Ivory Arc Travels — Plan Your Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 <style>
+/* ═══════════════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --black:#0a0a0a;--black2:#111;--black3:#181818;
-  --ivory:#f5f0e8;--ivory2:#e8e0d0;
-  --gold:#c9a84c;--gold2:#e2c06e;--gold3:#a0783a;
-  --gold-bg:rgba(201,168,76,0.08);--gold-border:rgba(201,168,76,0.28);
-  --green:#5a9e72;--green-bg:rgba(90,158,114,0.1);
-  --text-muted:rgba(245,240,232,0.42);--text-mid:rgba(245,240,232,0.68);
-  --border:rgba(201,168,76,0.18);--border2:rgba(245,240,232,0.09);
+  --blk:#09090b; --blk2:#111113; --blk3:#18181b; --blk4:#1f1f23;
+  --ivory:#f5f0e8; --ivory2:#e8e0d0; --ivory3:#d4c9b5;
+  --gold:#c9a84c; --gold2:#e2c06e; --gold3:#a0783a; --gold4:#f0d48a;
+  --gold-bg:rgba(201,168,76,0.07); --gold-bg2:rgba(201,168,76,0.13);
+  --gold-bd:rgba(201,168,76,0.25); --gold-bd2:rgba(201,168,76,0.45);
+  --green:#4d9e72; --green-bg:rgba(77,158,114,0.1); --green-bd:rgba(77,158,114,0.3);
+  --red-bg:rgba(200,80,80,0.08); --red-bd:rgba(200,80,80,0.3);
+  --muted:rgba(245,240,232,0.38); --mid:rgba(245,240,232,0.65);
+  --bd:rgba(245,240,232,0.08); --bd2:rgba(245,240,232,0.14);
+  --radius:14px; --radius-sm:9px; --radius-pill:30px;
+  --shadow:0 8px 32px rgba(0,0,0,0.55);
+  --trans:.22s ease;
 }
 html{scroll-behavior:smooth}
-body{background:var(--black3);color:var(--ivory);font-family:'Lato',sans-serif;font-weight:300;min-height:100vh;padding-bottom:84px;overflow-x:hidden;}
+body{
+  background:var(--blk3); color:var(--ivory);
+  font-family:'Lato',sans-serif; font-weight:300;
+  min-height:100vh; overflow-x:hidden;
+  padding-bottom:80px;
+}
+img{display:block;max-width:100%;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
 
-/* HEADER */
-header{background:var(--black);padding:16px 0 14px;}
-.header-inner{display:flex;align-items:center;width:100%;padding:0 5%;}
-.logo-block{width:30%;flex-shrink:0;display:flex;align-items:center;}
-.logo-block img{max-height:88px;width:auto;max-width:100%;object-fit:contain;display:block;}
-.hspacer{width:10%;flex-shrink:0;}
-.info-block{width:60%;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
-.operating-since{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:13px;letter-spacing:0.2em;color:var(--ivory);text-transform:uppercase;}
-.trusted-label{font-family:'Cinzel',serif;font-weight:400;font-size:11px;letter-spacing:0.22em;color:var(--ivory);text-transform:uppercase;opacity:0.8;}
-.partner-logos{display:flex;align-items:center;gap:10px;}
-.logo-pill{background:#000;border-radius:5px;display:flex;align-items:center;justify-content:center;padding:2px 6px;height:32px;}
-.logo-pill img{height:26px;width:auto;object-fit:contain;display:block;mix-blend-mode:screen;}
-.cert-strip{font-family:'Cinzel',serif;font-weight:500;font-size:10.5px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;white-space:nowrap;}
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+#hdr{
+  position:sticky; top:0; z-index:500;
+  background:rgba(9,9,11,0.94);
+  backdrop-filter:blur(18px) saturate(1.4);
+  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border-bottom:1px solid rgba(201,168,76,0.1);
+}
+.hdr-inner{
+  display:flex; align-items:center;
+  min-height:68px; padding:0 32px; gap:14px;
+}
+.hdr-logo img{height:40px;width:auto;object-fit:contain;}
+.hdr-sep{flex:1;}
+.hdr-trust{display:flex;align-items:center;gap:14px;}
+.hdr-trust-lbl{
+  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.26em;
+  color:var(--muted); text-transform:uppercase; white-space:nowrap;
+}
+.hdr-vline{width:1px;height:13px;background:var(--bd2);}
+.trust-logos{display:flex;align-items:center;gap:18px;}
+.tlogo{
+  opacity:.68; filter:grayscale(100%) brightness(1.8);
+  transition:opacity var(--trans),filter var(--trans);
+}
+.tlogo:hover{opacity:1;filter:grayscale(0%) brightness(1);}
+.tlogo img{height:15px;width:auto;object-fit:contain;}
+.tlogo.tg img{height:17px;}
+.hdr-cert{
+  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.2em;
+  color:var(--gold); text-transform:uppercase; opacity:.8; white-space:nowrap;
+}
 
-/* STEP BAR */
-#step-bar{position:sticky;top:0;z-index:300;background:rgba(10,10,10,0.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:9px 20px 0;}
-.step-bar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.step-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:var(--ivory);text-transform:uppercase;}
-.step-count{font-family:'Lato',sans-serif;font-size:11px;color:var(--gold);letter-spacing:0.1em;}
-.progress-track{height:2px;background:rgba(245,240,232,0.08);border-radius:2px;overflow:hidden;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold2));border-radius:2px;transition:width 0.5s ease;width:12.5%;}
+/* Mobile header */
+@media(max-width:680px){
+  .hdr-inner{
+    flex-direction:column; min-height:54px;
+    padding:9px 16px 8px; gap:6px;
+  }
+  .hdr-sep,.hdr-cert,.hdr-vline{display:none;}
+  .hdr-logo img{height:34px;}
+  .hdr-trust{flex-direction:row;gap:10px;justify-content:center;}
+  .hdr-trust-lbl{font-size:7px;}
+  .trust-logos{gap:12px;}
+  .tlogo img{height:12px;}
+  .tlogo.tg img{height:14px;}
+}
 
-/* LAYOUT */
-.estimator{max-width:800px;margin:0 auto;padding:36px 20px 50px;}
-.sec-label{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:0.85;}
-.sec-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:26px;letter-spacing:0.04em;color:var(--ivory);margin-bottom:22px;line-height:1.25;}
-.sec-block{opacity:0;transform:translateY(16px);transition:opacity 0.4s ease,transform 0.4s ease;pointer-events:none;}
-.sec-block.visible{opacity:1;transform:none;pointer-events:all;}
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:36px 0;display:none;}
-.divider.show{display:block;}
+/* ═══════════════════════════════════════════════════════
+   STICKY STEP BAR
+═══════════════════════════════════════════════════════ */
+#step-bar{
+  position:sticky; top:68px; z-index:490;
+  background:rgba(9,9,11,0.96); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--bd); padding:8px 24px 0;
+}
+@media(max-width:680px){#step-bar{top:54px;padding:7px 16px 0;}}
+.sb-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.sb-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.22em;color:var(--ivory);text-transform:uppercase;}
+.sb-step{font-size:10px;color:var(--gold);letter-spacing:.08em;}
+.sb-track{height:2px;background:rgba(245,240,232,0.07);border-radius:2px;overflow:hidden;}
+.sb-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold2),var(--gold4));border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;}
 
-/* TOUR TYPE PILLS */
+/* ═══════════════════════════════════════════════════════
+   NORTH INDIA POSITIONING LINE
+═══════════════════════════════════════════════════════ */
+.position-line{
+  max-width:780px; margin:0 auto; padding:22px 20px 0;
+  text-align:center;
+}
+.position-line p{
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:14px; color:var(--muted); letter-spacing:.04em; line-height:1.7;
+}
+.position-line span{color:var(--gold);opacity:.9;}
+
+/* ═══════════════════════════════════════════════════════
+   ESTIMATOR WRAPPER
+═══════════════════════════════════════════════════════ */
+.estimator{max-width:780px;margin:0 auto;padding:28px 20px 50px;}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION BLOCKS — progressive reveal
+═══════════════════════════════════════════════════════ */
+.sec{
+  opacity:0; transform:translateY(18px);
+  transition:opacity .45s ease,transform .45s ease;
+  pointer-events:none; margin-bottom:0;
+}
+.sec.on{opacity:1;transform:none;pointer-events:all;}
+
+/* Collapsed state (accordion) */
+.sec-collapsed{
+  display:none; background:var(--blk2);
+  border:1px solid var(--bd); border-radius:var(--radius);
+  padding:14px 18px; margin-bottom:0;
+  cursor:pointer; transition:border-color var(--trans);
+}
+.sec-collapsed:hover{border-color:var(--gold-bd);}
+.sec-collapsed.on{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.sc-label{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;}
+.sc-summary{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--ivory2);flex:1;padding:0 12px;}
+.sc-edit{font-size:10px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap;}
+.sc-tick{color:var(--gold);font-size:14px;flex-shrink:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-bd),transparent);margin:28px 0;display:none;}
+.divider.on{display:block;}
+
+/* Section headings */
+.sec-label-txt{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:.85;}
+.sec-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:26px;letter-spacing:.03em;color:var(--ivory);margin-bottom:6px;line-height:1.25;}
+.sec-sub{font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.6;letter-spacing:.02em;}
+
+/* ═══════════════════════════════════════════════════════
+   TOUR TYPE PILLS
+═══════════════════════════════════════════════════════ */
 .tpills{display:flex;gap:10px;flex-wrap:wrap;}
-.tpill{display:inline-flex;align-items:center;gap:9px;padding:12px 24px;border-radius:30px;border:1px solid var(--border2);background:var(--black2);font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:0.18em;color:var(--text-mid);text-transform:uppercase;cursor:pointer;transition:all 0.22s;white-space:nowrap;}
-.tpill:hover{border-color:var(--gold-border);color:var(--ivory);}
-.tpill.sel{border-color:var(--gold);background:var(--gold-bg);color:var(--gold2);box-shadow:0 0 0 1px var(--gold),0 4px 18px rgba(201,168,76,0.12);}
-.tpill-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;}
-.tpill.sel .tpill-dot{background:var(--gold);border-color:var(--gold);}
+.tpill{
+  display:inline-flex; align-items:center; gap:9px;
+  padding:12px 22px; border-radius:var(--radius-pill);
+  border:1px solid var(--bd); background:var(--blk2);
+  font-family:'Cinzel',serif; font-size:10px; letter-spacing:.18em;
+  color:var(--mid); text-transform:uppercase;
+  cursor:pointer; transition:all var(--trans); white-space:nowrap;
+}
+.tpill:hover{border-color:var(--gold-bd);color:var(--ivory);}
+.tpill.on{
+  border-color:var(--gold); background:var(--gold-bg2); color:var(--gold2);
+  box-shadow:0 0 0 1px var(--gold),0 4px 20px rgba(201,168,76,0.14);
+}
+.tpill-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;transition:all var(--trans);}
+.tpill.on .tpill-dot{background:var(--gold);border-color:var(--gold);}
+@media(max-width:480px){.tpills{flex-direction:column;}.tpill{justify-content:center;}}
 
-/* DATE BLOCK */
-.date-block{background:var(--black2);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;}
-.date-row{display:flex;gap:16px;flex-wrap:wrap;}
-.date-field{flex:1;min-width:190px;}
-.d-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.28em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;display:block;}
-.d-input{width:100%;background:var(--black3);border:1px solid var(--border2);border-radius:9px;padding:12px 16px;color:var(--ivory);font-family:'Lato',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;color-scheme:dark;}
-.d-input:focus{border-color:rgba(201,168,76,0.5);}
-.d-micro{font-size:11.5px;color:var(--text-muted);margin-top:11px;font-style:italic;}
-.d-confirm{display:none;align-items:center;gap:8px;margin-top:13px;padding:10px 14px;border-radius:9px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.22);}
-.d-confirm.show{display:flex;}
-.d-tick{font-size:14px;color:var(--gold);}
-.d-txt{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.18em;color:var(--gold2);text-transform:uppercase;}
+/* ═══════════════════════════════════════════════════════
+   DATE BLOCK
+═══════════════════════════════════════════════════════ */
+.date-block{background:var(--blk2);border:1px solid var(--bd);border-radius:var(--radius);padding:22px;}
+.date-row{display:flex;gap:14px;flex-wrap:wrap;}
+.date-field{flex:1;min-width:180px;}
+.d-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;display:block;}
+.d-inp{
+  width:100%; background:var(--blk3); border:1px solid var(--bd);
+  border-radius:var(--radius-sm); padding:12px 14px;
+  color:var(--ivory); font-size:13px; outline:none;
+  transition:border-color var(--trans); color-scheme:dark;
+}
+.d-inp:focus{border-color:var(--gold-bd2);}
+.d-micro{font-size:11px;color:var(--muted);margin-top:10px;font-style:italic;letter-spacing:.03em;}
+.d-confirm{
+  display:none; align-items:center; gap:9px;
+  margin-top:12px; padding:10px 14px;
+  border-radius:var(--radius-sm);
+  background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.2);
+}
+.d-confirm.on{display:flex;}
+.d-ctick{color:var(--gold);font-size:14px;}
+.d-ctxt{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:.16em;color:var(--gold2);text-transform:uppercase;}
 
-/* CARD SCROLLER */
-.swipe-hint{font-size:11px;color:var(--text-muted);letter-spacing:0.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.swipe-hint::before{content:'↔';color:var(--gold);font-size:13px;}
-.cards-scroller{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+/* ═══════════════════════════════════════════════════════
+   DESTINATION CARD SCROLLER
+═══════════════════════════════════════════════════════ */
+.swipe-hint{
+  font-size:10.5px; color:var(--muted); letter-spacing:.08em;
+  margin-bottom:12px; display:flex; align-items:center; gap:6px;
+}
+.swipe-hint::before{content:'↔';color:var(--gold);font-size:12px;}
+.cards-scroller{
+  display:flex; gap:13px; overflow-x:auto;
+  padding-bottom:14px; scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
 .cards-scroller::-webkit-scrollbar{display:none;}
-.dest-card{min-width:190px;max-width:190px;border-radius:13px;overflow:hidden;background:var(--black2);border:1px solid var(--border2);cursor:pointer;position:relative;flex-shrink:0;scroll-snap-align:start;transition:border-color .22s,box-shadow .22s,transform .18s;}
-.dest-card:hover{border-color:rgba(201,168,76,.35);transform:translateY(-2px);}
-.dest-card.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 6px 22px rgba(201,168,76,.14);}
-.dest-card-imgw{overflow:hidden;height:115px;}
-.dest-card-img{width:100%;height:115px;object-fit:cover;display:block;transition:transform .32s;}
-.dest-card:hover .dest-card-img{transform:scale(1.05);}
-.dest-card-body{padding:12px 13px 14px;}
-.dest-card-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:15px;letter-spacing:.03em;color:var(--ivory);margin-bottom:4px;line-height:1.25;}
-.dest-card-days{font-size:10px;color:var(--gold);letter-spacing:.12em;margin-bottom:5px;font-family:'Cinzel',serif;}
-.dest-card-tags{font-size:11px;color:var(--text-muted);line-height:1.45;}
-.dest-card-chk{position:absolute;top:9px;right:9px;width:22px;height:22px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.4);transition:opacity .18s,transform .18s;}
-.dest-card.sel .dest-card-chk{opacity:1;transform:scale(1);}
-.dest-card-chk svg{width:11px;height:11px;stroke:#0a0a0a;stroke-width:2.5;fill:none;}
 
-/* EXPERIENCES PANEL */
-.exp-panel{margin-top:16px;background:var(--black2);border:1px solid var(--border);border-radius:13px;overflow:hidden;max-height:0;opacity:0;transition:max-height .45s ease,opacity .35s ease;}
-.exp-panel.open{max-height:700px;opacity:1;}
+.dcard{
+  min-width:185px; max-width:185px; border-radius:var(--radius);
+  overflow:hidden; background:var(--blk2); border:1px solid var(--bd);
+  cursor:pointer; position:relative; flex-shrink:0; scroll-snap-align:start;
+  transition:border-color var(--trans),box-shadow var(--trans),transform .18s;
+}
+.dcard:hover{border-color:rgba(201,168,76,.32);transform:translateY(-2px);}
+.dcard.on{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold),0 6px 24px rgba(201,168,76,.15);
+}
+.dcard-imgw{overflow:hidden;height:112px;position:relative;}
+.dcard-img{width:100%;height:112px;object-fit:cover;transition:transform .35s;}
+.dcard:hover .dcard-img{transform:scale(1.06);}
+.dcard-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(9,9,11,0.7));
+}
+.dcard-body{padding:11px 12px 13px;}
+.dcard-name{
+  font-family:'Cormorant Garamond',serif; font-weight:500;
+  font-size:14.5px; letter-spacing:.03em; color:var(--ivory);
+  margin-bottom:3px; line-height:1.25;
+}
+.dcard-days{font-size:9.5px;color:var(--gold);letter-spacing:.14em;margin-bottom:4px;font-family:'Cinzel',serif;}
+.dcard-tags{font-size:10.5px;color:var(--muted);line-height:1.45;}
+.dcard-chk{
+  position:absolute; top:8px; right:8px;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--gold); display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(.4) rotate(-45deg);
+  transition:opacity .2s,transform .2s;
+}
+.dcard.on .dcard-chk{opacity:1;transform:scale(1) rotate(0deg);}
+.dcard-chk svg{width:11px;height:11px;stroke:#09090b;stroke-width:2.5;fill:none;}
+
+/* ═══════════════════════════════════════════════════════
+   EXPERIENCES ACCORDION PANEL
+═══════════════════════════════════════════════════════ */
+.exp-panel{
+  margin-top:14px; background:var(--blk2); border:1px solid var(--gold-bd);
+  border-radius:var(--radius); overflow:hidden;
+  max-height:0; opacity:0;
+  transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .35s ease;
+}
+.exp-panel.on{max-height:900px;opacity:1;}
 .exp-inner{padding:20px 18px;}
-.exp-sec-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:11px;}
+.exp-sec-ttl{
+  font-family:'Cinzel',serif; font-size:8.5px; letter-spacing:.3em;
+  color:var(--gold); text-transform:uppercase; margin-bottom:11px;
+}
 .exp-sub{margin-bottom:18px;}
 .exp-sub:last-child{margin-bottom:0;}
-.exp-sub-lbl{font-size:10.5px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border2);}
-.chips-row{display:flex;flex-wrap:wrap;gap:8px;}
-.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .18s;white-space:nowrap;user-select:none;}
-.chip.inc{border:1px solid rgba(245,240,232,.22);color:var(--ivory);background:rgba(245,240,232,.05);}
-.chip.add{border:1px solid var(--border);color:var(--text-mid);background:transparent;}
-.chip.add:hover{border-color:rgba(201,168,76,.5);color:var(--ivory);}
-.chip.add.on{border-color:var(--gold);background:rgba(201,168,76,.1);color:var(--gold2);}
+.exp-sub-lbl{
+  font-size:10px; color:var(--muted); letter-spacing:.1em;
+  text-transform:uppercase; margin-bottom:9px; padding-bottom:6px;
+  border-bottom:1px solid var(--bd);
+}
+.chips-row{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 12px; border-radius:18px; font-size:11.5px;
+  cursor:pointer; transition:all .18s; white-space:nowrap; user-select:none;
+}
+.chip.inc{border:1px solid rgba(245,240,232,.2);color:var(--ivory2);background:rgba(245,240,232,.04);}
+.chip.add{border:1px solid var(--gold-bd);color:var(--mid);background:transparent;}
+.chip.add:hover{border-color:var(--gold-bd2);color:var(--ivory);}
+.chip.add.on{border-color:var(--gold);background:var(--gold-bg2);color:var(--gold2);}
+.view-more-btn{
+  margin-top:10px; font-size:10.5px; color:var(--muted); cursor:pointer;
+  display:inline-flex; align-items:center; gap:5px; letter-spacing:.06em;
+  transition:color var(--trans);
+}
+.view-more-btn:hover{color:var(--gold);}
 
-/* STEPPER */
-.stepper-block{background:var(--black2);border:1px solid var(--border2);border-radius:14px;padding:20px 24px;}
-.stepper-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border2);}
-.stepper-row:last-child{border-bottom:none;padding-bottom:0;}
-.stepper-row:first-child{padding-top:0;}
-.stepper-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);letter-spacing:.03em;}
-.stepper-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.stepper-ctrl{display:flex;align-items:center;}
-.s-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;}
-.s-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
-.s-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ivory);width:44px;text-align:center;}
-.senior-note{margin-top:12px;padding:12px 16px;border-radius:9px;border:1px solid var(--gold-border);background:var(--gold-bg);font-size:11.5px;color:var(--ivory2);font-style:italic;display:none;}
-.senior-note.show{display:block;}
-
-/* STAY CARDS */
-.stay-cards{display:flex;gap:12px;flex-wrap:wrap;}
-.stay-card{flex:1;min-width:155px;border-radius:12px;padding:20px 16px;border:1px solid var(--border2);background:var(--black2);cursor:pointer;position:relative;transition:all .22s;text-align:center;}
-.stay-card:hover{border-color:var(--gold-border);}
-.stay-card.sel{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold),0 4px 20px rgba(201,168,76,.12);}
-.stay-stars{font-size:13px;color:var(--gold);letter-spacing:.08em;margin-bottom:8px;}
-.stay-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:18px;color:var(--ivory);margin-bottom:5px;}
-.stay-desc{font-size:11px;color:var(--text-muted);line-height:1.45;}
-.stay-chk{position:absolute;top:10px;right:12px;font-size:13px;color:var(--gold);opacity:0;transition:opacity .18s;}
-.stay-card.sel .stay-chk{opacity:1;}
-
-/* HOTEL CARDS */
-.hotel-city-block{margin-bottom:26px;}
-.hotel-city-label{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border2);}
-.nights-stepper{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 16px;background:var(--black3);border-radius:10px;border:1px solid var(--border2);}
-.ns-label{font-size:12px;color:var(--text-mid);}
-.ns-ctrl{display:flex;align-items:center;}
-.ns-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--gold);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;}
-.ns-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
-.ns-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ivory);width:36px;text-align:center;}
-.hotel-card{display:flex;gap:14px;align-items:flex-start;background:var(--black2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .22s;}
-.hotel-card:hover{border-color:var(--gold-border);}
-.hotel-card.sel{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold);}
-.hotel-card-img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--black3);}
-.hotel-card-content{flex:1;}
-.hotel-card-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:15px;color:var(--ivory);margin-bottom:3px;}
-.hotel-card-meta{font-size:11px;color:var(--gold);letter-spacing:.06em;margin-bottom:4px;}
-.hotel-card-note{font-size:11px;color:var(--text-muted);line-height:1.4;margin-bottom:8px;}
-.hotel-select-btn{padding:5px 13px;border-radius:14px;border:1px solid var(--gold-border);background:transparent;color:var(--gold);font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .18s;}
-.hotel-select-btn:hover{background:var(--gold-bg);}
-.hotel-card.sel .hotel-select-btn{background:var(--gold);color:var(--black);border-color:var(--gold);}
-.hotel-upgrade-title{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.25em;color:var(--text-muted);text-transform:uppercase;margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border2);}
-.hotel-skip{text-align:center;margin-top:4px;margin-bottom:16px;}
-.hotel-skip a{font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
-.hotel-skip a:hover{color:var(--ivory2);}
-
-/* INTERESTS */
-.interest-chips{display:flex;flex-wrap:wrap;gap:10px;}
-.int-chip{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:24px;border:1px solid var(--border2);background:var(--black2);color:var(--text-mid);font-size:13px;cursor:pointer;transition:all .22s;user-select:none;}
-.int-chip:hover{border-color:var(--gold-border);color:var(--ivory);}
-.int-chip.on{border-color:var(--gold);background:var(--gold-bg);color:var(--gold2);box-shadow:0 0 8px rgba(201,168,76,.2);}
-.int-chip.on::after{content:' ✓';font-size:11px;}
-.int-icon{font-size:15px;}
-
-/* NOTES */
-.notes-area{width:100%;background:var(--black2);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;color:var(--ivory);font-family:'Lato',sans-serif;font-size:13px;font-weight:300;line-height:1.65;resize:vertical;min-height:110px;outline:none;transition:border-color .2s;}
-.notes-area::placeholder{color:var(--text-muted);font-style:italic;}
-.notes-area:focus{border-color:rgba(201,168,76,.45);}
-
-/* SMART PREVIEW */
-.preview-card{background:var(--black2);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
-.preview-header{padding:22px 22px 18px;border-bottom:1px solid var(--border2);}
-.prev-header-lbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
-.prev-route{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ivory);letter-spacing:.04em;line-height:1.3;}
-.preview-body{padding:20px 22px;}
-.prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
-.prev-stat{background:var(--black3);border-radius:10px;padding:14px 16px;}
-.prev-stat-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
-.prev-stat-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ivory);font-weight:500;}
-.prev-stat-sub{font-size:10.5px;color:var(--text-muted);margin-top:3px;}
-.prev-cities{}
-.prev-city-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border2);}
-.prev-city-row:last-child{border-bottom:none;}
-.prev-city-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ivory);}
-.prev-city-hotel{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.prev-city-nights{font-size:11px;color:var(--gold);letter-spacing:.1em;font-family:'Cinzel',serif;}
-.prev-note{margin-top:16px;padding:14px 16px;border-radius:10px;background:var(--gold-bg);border:1px solid var(--gold-border);font-size:12px;color:var(--ivory2);font-style:italic;line-height:1.65;}
-.dist-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:14px;font-size:11px;margin-top:10px;}
-.dist-badge.ok{border:1px solid rgba(90,158,114,.35);background:var(--green-bg);color:#7ec89a;}
-.dist-badge.warn{border:1px solid var(--gold-border);background:var(--gold-bg);color:var(--gold2);}
-
-/* CUSTOM BUILDER */
-.custom-wrap{background:var(--black2);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-height:0;opacity:0;transition:max-height .55s ease,opacity .4s ease;}
-.custom-wrap.open{max-height:1600px;opacity:1;}
-.builder-inner{padding:26px 22px;}
-.field-grp{margin-bottom:22px;}
-.field-grp:last-child{margin-bottom:0;}
-.f-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;display:block;}
+/* ═══════════════════════════════════════════════════════
+   CUSTOM BUILDER
+═══════════════════════════════════════════════════════ */
+.builder-wrap{
+  background:var(--blk2); border:1px solid var(--bd);
+  border-radius:var(--radius); overflow:hidden;
+  max-height:0; opacity:0;
+  transition:max-height .55s ease,opacity .4s ease;
+}
+.builder-wrap.on{max-height:1800px;opacity:1;}
+.builder-inner{padding:24px 20px;}
+.fgrp{margin-bottom:20px;}
+.fgrp:last-child{margin-bottom:0;}
+.f-lbl{
+  font-family:'Cinzel',serif; font-size:8.5px; letter-spacing:.28em;
+  color:var(--gold); text-transform:uppercase; margin-bottom:9px; display:block;
+}
 .places-wrap{position:relative;}
-.places-ico{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--gold);opacity:.65;font-size:15px;pointer-events:none;z-index:1;}
-.places-inp{width:100%;background:var(--black3);border:1px solid var(--border2);border-radius:10px;padding:13px 16px 13px 42px;color:var(--ivory);font-family:'Lato',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
-.places-inp::placeholder{color:var(--text-muted);}
-.places-inp:focus{border-color:rgba(201,168,76,.45);}
-.dest-chip-row{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px;}
-.dc{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:24px;border:1px solid var(--border2);background:var(--black3);color:var(--text-mid);font-size:13px;cursor:pointer;transition:all .2s;}
-.dc:hover{border-color:var(--gold-border);color:var(--ivory);}
-.dc.on{border-color:var(--gold);background:rgba(201,168,76,.09);color:var(--gold2);}
-@keyframes chipPop{0%{box-shadow:0 0 0 0 rgba(201,168,76,.5);}70%{box-shadow:0 0 0 9px rgba(201,168,76,0);}100%{box-shadow:0 0 0 0 rgba(201,168,76,0);}}
-.dc.pop{animation:chipPop .45s ease;}
-.route-wrap{margin-top:20px;background:var(--black3);border:1px solid var(--border);border-radius:13px;padding:18px 20px;display:none;}
-.route-wrap.show{display:block;}
-.route-lbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:11px;}
+.places-ico{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color:var(--gold); opacity:.6; font-size:14px; pointer-events:none; z-index:1;
+}
+.places-inp{
+  width:100%; background:var(--blk3); border:1px solid var(--bd);
+  border-radius:var(--radius-sm); padding:12px 14px 12px 40px;
+  color:var(--ivory); font-size:13px; outline:none;
+  transition:border-color var(--trans);
+}
+.places-inp::placeholder{color:var(--muted);}
+.places-inp:focus{border-color:var(--gold-bd2);}
+
+/* City chips */
+.city-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.cc{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 15px; border-radius:var(--radius-pill);
+  border:1px solid var(--bd); background:var(--blk3);
+  color:var(--mid); font-size:12.5px; cursor:pointer; transition:all .2s;
+}
+.cc:hover{border-color:var(--gold-bd);color:var(--ivory);}
+.cc.on{border-color:var(--gold);background:var(--gold-bg2);color:var(--gold2);box-shadow:0 0 10px rgba(201,168,76,.15);}
+@keyframes cpop{0%{box-shadow:0 0 0 0 rgba(201,168,76,.5);}70%{box-shadow:0 0 0 10px rgba(201,168,76,0);}100%{box-shadow:0 0 0 0 rgba(201,168,76,0);}}
+.cc.pop{animation:cpop .45s ease;}
+
+/* Route strip */
+.route-wrap{
+  margin-top:18px; background:var(--blk3); border:1px solid var(--gold-bd);
+  border-radius:var(--radius); padding:16px 18px; display:none;
+}
+.route-wrap.on{display:block;}
+.route-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
 .route-strip{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
 .route-strip::-webkit-scrollbar{display:none;}
-@keyframes cityIn{from{opacity:0;transform:scale(.65);}to{opacity:1;transform:scale(1);}}
-.r-city{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);white-space:nowrap;animation:cityIn .32s cubic-bezier(.34,1.56,.64,1) both;}
-.r-arr{color:var(--gold);font-size:13px;margin:0 7px;opacity:.65;}
-.route-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border2);}
-.rbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:14px;font-size:11px;}
-.rbadge.ok{border:1px solid rgba(90,158,114,.35);background:var(--green-bg);color:#7ec89a;}
-.rbadge.warn{border:1px solid var(--gold-border);background:var(--gold-bg);color:var(--gold2);}
-.rbadge.n{border:1px solid var(--border2);background:transparent;color:var(--text-mid);}
-.concierge-box{margin-top:14px;padding:15px 18px;border-radius:10px;border:1px solid var(--gold-border);background:var(--gold-bg);font-size:12.5px;color:var(--ivory2);line-height:1.7;font-style:italic;display:none;}
-.concierge-box.show{display:block;}
+@keyframes cin{from{opacity:0;transform:scale(.6) translateY(4px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.r-city{
+  font-family:'Cormorant Garamond',serif; font-weight:500;
+  font-size:17px; color:var(--ivory); white-space:nowrap;
+  animation:cin .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+.r-arr{
+  color:var(--gold); font-size:13px; margin:0 7px; opacity:.6;
+  animation:cin .28s ease both;
+}
+.route-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px solid var(--bd);}
+.rbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:12px;font-size:10.5px;}
+.rbadge.ok{border:1px solid var(--green-bd);background:var(--green-bg);color:#6ec898;}
+.rbadge.warn{border:1px solid var(--gold-bd);background:var(--gold-bg);color:var(--gold2);}
+.rbadge.info{border:1px solid var(--bd2);background:transparent;color:var(--mid);}
+.concierge-box{
+  margin-top:13px; padding:14px 16px; border-radius:var(--radius-sm);
+  border:1px solid var(--gold-bd); background:var(--gold-bg);
+  font-size:12px; color:var(--ivory2); line-height:1.72; font-style:italic;
+  display:none;
+}
+.concierge-box.on{display:block;}
 
-/* PAC DROPDOWN */
-.pac-container{background:var(--black2)!important;border:1px solid var(--gold-border)!important;border-radius:10px!important;margin-top:4px!important;font-family:'Lato',sans-serif!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important;}
-.pac-item{padding:10px 16px!important;border-top:1px solid var(--border2)!important;cursor:pointer!important;color:var(--text-mid)!important;font-size:13px!important;}
-.pac-item:hover{background:rgba(201,168,76,.07)!important;}
+/* PAC dropdown dark override */
+.pac-container{
+  background:var(--blk2)!important; border:1px solid var(--gold-bd)!important;
+  border-radius:10px!important; margin-top:3px!important;
+  font-family:'Lato',sans-serif!important; box-shadow:var(--shadow)!important;
+  overflow:hidden!important;
+}
+.pac-item{padding:9px 15px!important;border-top:1px solid var(--bd)!important;cursor:pointer!important;color:var(--mid)!important;font-size:12.5px!important;}
+.pac-item:hover{background:var(--gold-bg)!important;}
 .pac-item-query{color:var(--ivory)!important;}
 .pac-icon{display:none!important;}
 .pac-matched{color:var(--gold)!important;font-weight:700!important;}
 
-/* ESTIMATE BAR */
-#est-bar{position:fixed;bottom:0;left:0;right:0;z-index:400;background:rgba(9,9,9,.97);backdrop-filter:blur(18px);border-top:1px solid var(--border);height:64px;display:flex;align-items:center;padding:0 22px;justify-content:space-between;gap:14px;}
-.est-left{display:flex;flex-direction:column;gap:2px;}
-.est-micro{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.26em;color:var(--text-muted);text-transform:uppercase;}
-.est-range{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:21px;letter-spacing:.03em;color:var(--gold2);transition:all .3s;}
-.view-btn{padding:11px 22px;border-radius:26px;background:var(--gold);color:var(--black);font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s,transform .15s;}
+/* ═══════════════════════════════════════════════════════
+   STEPPERS — TRAVELLERS
+═══════════════════════════════════════════════════════ */
+.stepper-block{background:var(--blk2);border:1px solid var(--bd);border-radius:var(--radius);padding:4px 20px;}
+.stepper-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid var(--bd);
+}
+.stepper-row:last-child{border-bottom:none;}
+.st-info{}
+.st-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);letter-spacing:.02em;}
+.st-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.st-ctrl{display:flex;align-items:center;}
+.st-btn{
+  width:34px;height:34px;border-radius:50%;
+  border:1px solid var(--gold-bd); background:transparent;
+  color:var(--gold); font-size:18px; display:flex;
+  align-items:center;justify-content:center;
+  transition:all var(--trans); flex-shrink:0;
+}
+.st-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
+.st-val{
+  font-family:'Cormorant Garamond',serif; font-size:22px;
+  font-weight:500; color:var(--ivory); width:42px; text-align:center;
+}
+.senior-note{
+  margin-top:10px; padding:11px 15px; border-radius:var(--radius-sm);
+  border:1px solid var(--gold-bd); background:var(--gold-bg);
+  font-size:11.5px; color:var(--ivory2); font-style:italic; display:none;
+}
+.senior-note.on{display:block;}
+
+/* ═══════════════════════════════════════════════════════
+   STAY STYLE CARDS
+═══════════════════════════════════════════════════════ */
+.stay-cards{display:flex;gap:11px;flex-wrap:wrap;}
+.stay-card{
+  flex:1; min-width:150px; border-radius:var(--radius);
+  padding:18px 14px; border:1px solid var(--bd);
+  background:var(--blk2); cursor:pointer; position:relative;
+  transition:all var(--trans); text-align:center;
+}
+.stay-card:hover{border-color:var(--gold-bd);}
+.stay-card.on{
+  border-color:var(--gold); background:var(--gold-bg2);
+  box-shadow:0 0 0 1px var(--gold),0 4px 22px rgba(201,168,76,.13);
+}
+.stay-stars{font-size:12px;color:var(--gold);letter-spacing:.1em;margin-bottom:7px;}
+.stay-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);margin-bottom:4px;}
+.stay-desc{font-size:10.5px;color:var(--muted);line-height:1.45;}
+.stay-chk{position:absolute;top:9px;right:11px;font-size:12px;color:var(--gold);opacity:0;transition:opacity var(--trans);}
+.stay-card.on .stay-chk{opacity:1;}
+
+/* ═══════════════════════════════════════════════════════
+   HOTEL SECTION
+═══════════════════════════════════════════════════════ */
+.hotel-section{margin-top:24px;display:none;}
+.hotel-section.on{display:block;}
+.hotel-city-block{margin-bottom:28px;}
+.hotel-city-block:last-child{margin-bottom:0;}
+.hcb-header{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:11px; padding-bottom:9px; border-bottom:1px solid var(--bd);
+}
+.hcb-city{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;}
+.nights-ctrl{display:flex;align-items:center;gap:0;}
+.nights-lbl{font-size:10.5px;color:var(--mid);margin-right:10px;}
+.ns-btn{
+  width:28px;height:28px;border-radius:50%;border:1px solid var(--gold-bd);
+  background:transparent;color:var(--gold);font-size:15px;
+  display:flex;align-items:center;justify-content:center;transition:all var(--trans);
+}
+.ns-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
+.ns-val{
+  font-family:'Cormorant Garamond',serif;font-size:17px;
+  color:var(--ivory);width:32px;text-align:center;
+}
+.hotel-card{
+  display:flex; gap:13px; align-items:flex-start;
+  background:var(--blk2); border:1px solid var(--bd);
+  border-radius:var(--radius); padding:13px; margin-bottom:9px;
+  cursor:pointer; transition:all var(--trans);
+}
+.hotel-card:last-of-type{margin-bottom:0;}
+.hotel-card:hover{border-color:var(--gold-bd);}
+.hotel-card.on{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold);}
+.hotel-img{
+  width:68px;height:68px;border-radius:8px;
+  object-fit:cover;flex-shrink:0;background:var(--blk3);
+}
+.hotel-content{flex:1;}
+.hotel-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:14.5px;color:var(--ivory);margin-bottom:3px;}
+.hotel-meta{font-size:10.5px;color:var(--gold);letter-spacing:.05em;margin-bottom:3px;}
+.hotel-note{font-size:10.5px;color:var(--muted);line-height:1.4;margin-bottom:8px;}
+.hotel-sel-btn{
+  padding:4px 12px; border-radius:12px;
+  border:1px solid var(--gold-bd); background:transparent;
+  color:var(--gold); font-family:'Cinzel',serif;
+  font-size:8px; letter-spacing:.18em; text-transform:uppercase;
+  transition:all var(--trans);
+}
+.hotel-sel-btn:hover{background:var(--gold-bg);}
+.hotel-card.on .hotel-sel-btn{background:var(--gold);color:var(--blk);border-color:var(--gold);}
+.hotel-upgrade-lbl{
+  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.25em;
+  color:var(--muted); text-transform:uppercase;
+  margin:12px 0 9px; padding-top:12px; border-top:1px solid var(--bd);
+}
+.hotel-skip{text-align:right;margin-top:6px;}
+.hotel-skip a{font-size:10.5px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color var(--trans);}
+.hotel-skip a:hover{color:var(--ivory2);}
+
+/* ═══════════════════════════════════════════════════════
+   INTERESTS
+═══════════════════════════════════════════════════════ */
+.int-chips{display:flex;flex-wrap:wrap;gap:9px;}
+.int-chip{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 15px; border-radius:var(--radius-pill);
+  border:1px solid var(--bd); background:var(--blk2);
+  color:var(--mid); font-size:12.5px; cursor:pointer;
+  transition:all .22s; user-select:none;
+}
+.int-chip:hover{border-color:var(--gold-bd);color:var(--ivory);}
+.int-chip.on{
+  border-color:var(--gold); background:var(--gold-bg2); color:var(--gold2);
+  box-shadow:0 0 12px rgba(201,168,76,.18);
+}
+.int-chip.on::after{content:' ✓';font-size:10px;color:var(--gold);}
+.int-ico{font-size:14px;}
+
+/* ═══════════════════════════════════════════════════════
+   NOTES
+═══════════════════════════════════════════════════════ */
+.notes-area{
+  width:100%; background:var(--blk2); border:1px solid var(--bd);
+  border-radius:var(--radius); padding:15px 17px;
+  color:var(--ivory); font-size:13px; font-weight:300;
+  line-height:1.7; resize:vertical; min-height:105px;
+  outline:none; transition:border-color var(--trans);
+}
+.notes-area::placeholder{color:var(--muted);font-style:italic;}
+.notes-area:focus{border-color:var(--gold-bd2);}
+
+/* ═══════════════════════════════════════════════════════
+   SMART PREVIEW CARD
+═══════════════════════════════════════════════════════ */
+.preview-card{
+  background:var(--blk2); border:1px solid var(--gold-bd);
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:0 4px 32px rgba(0,0,0,0.4);
+}
+.prev-hdr{
+  padding:20px 22px 16px;
+  background:linear-gradient(135deg,rgba(201,168,76,0.08),transparent);
+  border-bottom:1px solid var(--bd);
+}
+.prev-hdr-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:7px;}
+.prev-route-txt{
+  font-family:'Cormorant Garamond',serif; font-size:22px;
+  font-style:italic; color:var(--ivory); letter-spacing:.04em; line-height:1.3;
+}
+.prev-body{padding:18px 22px;}
+.prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.prev-stat{background:var(--blk3);border-radius:10px;padding:13px 15px;}
+.prev-stat-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
+.prev-stat-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ivory);font-weight:500;}
+.prev-stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.prev-cities{}
+.prev-city-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid var(--bd);
+}
+.prev-city-row:last-child{border-bottom:none;}
+.prev-city-name{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--ivory);}
+.prev-city-hotel{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.prev-city-nights{font-size:10px;color:var(--gold);letter-spacing:.12em;font-family:'Cinzel',serif;white-space:nowrap;}
+.prev-note{
+  margin-top:14px; padding:13px 15px; border-radius:var(--radius-sm);
+  background:var(--gold-bg); border:1px solid var(--gold-bd);
+  font-size:11.5px; color:var(--ivory2); font-style:italic; line-height:1.65; display:none;
+}
+.dist-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:12px;font-size:10.5px;margin-top:9px;
+}
+.dist-badge.ok{border:1px solid var(--green-bd);background:var(--green-bg);color:#6ec898;}
+.dist-badge.warn{border:1px solid var(--gold-bd);background:var(--gold-bg);color:var(--gold2);}
+
+/* ═══════════════════════════════════════════════════════
+   FLOATING ESTIMATE BAR
+═══════════════════════════════════════════════════════ */
+#est-bar{
+  position:fixed; bottom:0; left:0; right:0; z-index:600;
+  background:rgba(9,9,11,0.97); backdrop-filter:blur(20px);
+  border-top:1px solid var(--gold-bd); height:64px;
+  display:flex; align-items:center; padding:0 22px;
+  justify-content:space-between; gap:14px;
+}
+.est-left{display:flex;flex-direction:column;gap:1px;}
+.est-micro{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:.26em;color:var(--muted);text-transform:uppercase;}
+.est-range{
+  font-family:'Cormorant Garamond',serif; font-weight:500;
+  font-size:21px; letter-spacing:.03em; color:var(--gold2);
+  transition:all .3s;
+}
+.view-btn{
+  padding:11px 21px; border-radius:var(--radius-pill);
+  background:var(--gold); color:var(--blk);
+  font-family:'Cinzel',serif; font-size:10px; letter-spacing:.2em;
+  text-transform:uppercase; border:none;
+  white-space:nowrap; flex-shrink:0;
+  transition:background var(--trans),transform .15s;
+}
 .view-btn:hover{background:var(--gold2);transform:scale(1.02);}
+.view-btn:active{transform:scale(.97);}
 
-/* JOURNEY SHEET */
-#j-bd{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:600;opacity:0;pointer-events:none;transition:opacity .3s;}
-#j-bd.open{opacity:1;pointer-events:all;}
-#j-sheet{position:fixed;bottom:0;left:0;right:0;z-index:700;background:var(--black2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;max-height:78vh;overflow-y:auto;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);padding-bottom:env(safe-area-inset-bottom,20px);}
-#j-sheet.open{transform:translateY(0);}
-.j-inner{padding:24px 22px;}
-.j-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.j-title{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:23px;letter-spacing:.04em;}
-.j-close{width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--text-muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;}
-.j-close:hover{border-color:var(--gold);color:var(--gold);}
-.j-route-disp{font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--gold2);margin-bottom:14px;letter-spacing:.04em;}
-.j-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
-.j-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-mid);}
-.j-meta-item span{color:var(--ivory);}
-.j-sec-title{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
-.j-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);font-size:13px;color:var(--text-mid);}
-.j-item:last-child{border-bottom:none;}
-.j-tick{color:var(--gold);font-size:13px;}
+/* ═══════════════════════════════════════════════════════
+   JOURNEY SUMMARY SHEET
+═══════════════════════════════════════════════════════ */
+#jbd{
+  position:fixed;inset:0;background:rgba(0,0,0,0.72);
+  z-index:700;opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#jbd.on{opacity:1;pointer-events:all;}
+#jsheet{
+  position:fixed; bottom:0; left:0; right:0; z-index:800;
+  background:var(--blk2); border-top:1px solid var(--gold-bd);
+  border-radius:20px 20px 0 0; max-height:78vh; overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .42s cubic-bezier(.4,0,.2,1);
+  padding-bottom:env(safe-area-inset-bottom,20px);
+}
+#jsheet.on{transform:translateY(0);}
+.js-inner{padding:22px 22px;}
+.js-handle{width:36px;height:4px;border-radius:2px;background:var(--bd2);margin:0 auto 18px;}
+.js-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.js-title{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:22px;letter-spacing:.04em;}
+.js-close{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--bd);background:transparent;
+  color:var(--muted);font-size:14px;display:flex;
+  align-items:center;justify-content:center;transition:all var(--trans);
+}
+.js-close:hover{border-color:var(--gold);color:var(--gold);}
+.js-route{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--gold2);margin-bottom:13px;letter-spacing:.04em;}
+.js-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.js-meta-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mid);}
+.js-meta-item span{color:var(--ivory);}
+.js-sec-ttl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:11px;}
+.js-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:12.5px;color:var(--mid);}
+.js-item:last-child{border-bottom:none;}
+.js-tick{color:var(--gold);font-size:12px;}
 
-@media(max-width:620px){
-  .header-inner{flex-direction:column;align-items:center;padding:12px 5%;gap:12px;}
-  .hspacer{display:none;}
-  .logo-block,.info-block{width:100%;justify-content:center;align-items:center;}
-  .cert-strip{font-size:8.5px;letter-spacing:.11em;text-align:center;white-space:normal;}
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media(max-width:520px){
   .tpills{flex-direction:column;}
-  .date-row,.stay-cards,.prev-grid{flex-direction:column;}
+  .tpill{justify-content:center;}
+  .stay-cards{flex-direction:column;}
+  .date-row{flex-direction:column;}
   .prev-grid{grid-template-columns:1fr;}
-  .estimator{padding:24px 14px 50px;}
+  .estimator{padding:20px 14px 50px;}
+  .sec-title{font-size:22px;}
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div class="header-inner">
-    <div class="logo-block"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc Travels"/></div>
-    <div class="hspacer"></div>
-    <div class="info-block">
-      <span class="operating-since">Operating since 2019</span>
-      <span class="trusted-label">Trusted &amp; Verified By</span>
-      <div class="partner-logos">
-        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.54.26-AM.png" alt="Google"/></div>
-        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.56.00-AM.png" alt="TripAdvisor"/></div>
-        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.57.24-AM.png" alt="Viator"/></div>
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════ -->
+<div id="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-logo">
+      <img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc Travels"/>
+    </div>
+    <div class="hdr-sep"></div>
+    <div class="hdr-trust">
+      <span class="hdr-trust-lbl">Trusted &amp; Verified By</span>
+      <div class="hdr-vline"></div>
+      <div class="trust-logos">
+        <div class="tlogo tg">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google"/>
+        </div>
+        <div class="tlogo">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tripadvisor_logo.svg/2560px-Tripadvisor_logo.svg.png" alt="TripAdvisor"/>
+        </div>
+        <div class="tlogo">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Viator_logo.svg/2560px-Viator_logo.svg.png" alt="Viator"/>
+        </div>
       </div>
-      <span class="cert-strip">GST Registered &nbsp;·&nbsp; MSME Certified &nbsp;·&nbsp; Govt. of India Recognised</span>
+      <div class="hdr-vline"></div>
+      <span class="hdr-cert">GST · MSME · Govt. of India Recognised</span>
     </div>
   </div>
-</header>
+</div>
 
 <!-- STEP BAR -->
 <div id="step-bar">
-  <div class="step-bar-row">
-    <span class="step-title" id="step-title-txt">Plan Your Journey</span>
-    <span class="step-count" id="step-count-txt">Step 1 of 8</span>
+  <div class="sb-row">
+    <span class="sb-title" id="sb-title">Plan Your Journey</span>
+    <span class="sb-step" id="sb-step">Step 1 of 8</span>
   </div>
-  <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+  <div class="sb-track"><div class="sb-fill" id="sb-fill"></div></div>
 </div>
 
-<!-- ESTIMATOR -->
+<!-- POSITIONING LINE -->
+<div class="position-line">
+  <p>Our <span>chauffeur-curated journeys</span> are designed around the most rewarding and comfortable overland routes across North India — private, personalised, and built entirely around you.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     ESTIMATOR
+══════════════════════════════════════════════════════ -->
 <div class="estimator">
 
-<!-- S0: TOUR TYPE -->
-<div class="sec-block visible" id="s0">
-  <div class="sec-label">Step 1</div>
+<!-- ── S0: JOURNEY TYPE ── -->
+<div class="sec on" id="s0">
+  <div class="sec-label-txt">Step 1</div>
   <div class="sec-title">What kind of journey are you planning?</div>
+  <div class="sec-sub">Every journey is private and chauffeur-driven. Choose the format that suits you best.</div>
   <div class="tpills">
     <div class="tpill" id="pill-day"    onclick="selType('day')">   <span class="tpill-dot"></span>Single Day Tour</div>
     <div class="tpill" id="pill-multi"  onclick="selType('multi')"> <span class="tpill-dot"></span>Multi-Day Journey</div>
     <div class="tpill" id="pill-custom" onclick="selType('custom')"><span class="tpill-dot"></span>Build My Custom Itinerary</div>
   </div>
 </div>
+<!-- Collapsed summary for s0 -->
+<div class="sec-collapsed" id="sc0" onclick="editSec(0)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc0-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d01"></div>
 
-<!-- S1: DATES -->
-<div class="sec-block" id="s1">
-  <div class="sec-label">Step 2</div>
+<!-- ── S1: DATES ── -->
+<div class="sec" id="s1">
+  <div class="sec-label-txt">Step 2</div>
   <div class="sec-title" id="s1-title">When would you like to travel?</div>
   <div class="date-block">
     <div class="date-row">
       <div class="date-field">
-        <label class="d-label" id="d-start-lbl">Travel Date</label>
-        <input class="d-input" type="date" id="d-start" onchange="onDate()"/>
+        <label class="d-lbl" id="d-start-lbl">Travel Date</label>
+        <input class="d-inp" type="date" id="d-start" onchange="onDate()"/>
       </div>
       <div class="date-field" id="d-end-wrap" style="display:none">
-        <label class="d-label">End Date</label>
-        <input class="d-input" type="date" id="d-end" onchange="onDate()"/>
+        <label class="d-lbl">End Date</label>
+        <input class="d-inp" type="date" id="d-end" onchange="onDate()"/>
       </div>
     </div>
     <div class="d-micro" id="d-micro">No return date required for this experience.</div>
-    <div class="d-confirm" id="d-confirm">
-      <span class="d-tick">✔</span>
-      <span class="d-txt" id="d-confirm-txt"></span>
+    <div class="d-confirm" id="d-conf">
+      <span class="d-ctick">✔</span>
+      <span class="d-ctxt" id="d-conf-txt"></span>
     </div>
   </div>
 </div>
+<div class="sec-collapsed" id="sc1" onclick="editSec(1)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc1-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d12"></div>
 
-<!-- S2: TOUR SELECTION -->
-<div class="sec-block" id="s2">
-  <div class="sec-label">Step 3</div>
+<!-- ── S2: TOUR / DESTINATION SELECTION ── -->
+<div class="sec" id="s2">
+  <div class="sec-label-txt">Step 3</div>
   <div class="sec-title" id="s2-title">Choose your experience</div>
 
-  <!-- DAY TOURS (6) -->
+  <!-- DAY TOURS — 6 cards -->
   <div id="day-sec" style="display:none">
     <div class="swipe-hint">Swipe to explore all day experiences</div>
     <div class="cards-scroller">
-      <div class="dest-card" id="card-agra"      onclick="selCard('agra')">     <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg" alt="Agra"/></div><div class="dest-card-body"><div class="dest-card-name">Agra &amp; the Taj Mahal</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">The wonder that needs no introduction.</div></div></div>
-      <div class="dest-card" id="card-jaipur"    onclick="selCard('jaipur')">   <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg" alt="Jaipur"/></div><div class="dest-card-body"><div class="dest-card-name">Jaipur — The Pink City</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">Palaces, forts and bazaars in full colour.</div></div></div>
-      <div class="dest-card" id="card-rishikesh" onclick="selCard('rishikesh')"><div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg" alt="Rishikesh"/></div><div class="dest-card-body"><div class="dest-card-name">Rishikesh &amp; Haridwar</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">Where the Himalayas meet the holy Ganges.</div></div></div>
-      <div class="dest-card" id="card-amritsar"  onclick="selCard('amritsar')"> <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg" alt="Amritsar"/></div><div class="dest-card-body"><div class="dest-card-name">Amritsar &amp; Golden Temple</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">India's most breathtaking spiritual landmark.</div></div></div>
-      <div class="dest-card" id="card-mathura"   onclick="selCard('mathura')">  <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg" alt="Mathura"/></div><div class="dest-card-body"><div class="dest-card-name">Mathura &amp; Vrindavan</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">The sacred birthplace of Lord Krishna.</div></div></div>
-      <div class="dest-card" id="card-corbett-d" onclick="selCard('corbett-d')"><div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg" alt="Jim Corbett"/></div><div class="dest-card-body"><div class="dest-card-name">Jim Corbett</div><div class="dest-card-days">Day Tour</div><div class="dest-card-tags">Tigers, forests and the wild North India.</div></div></div>
+      <div class="dcard" id="card-agra"      onclick="selCard('agra')">     <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg" alt="Agra"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Agra &amp; the Taj Mahal</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">The wonder that needs no introduction.</div></div></div>
+      <div class="dcard" id="card-jaipur"    onclick="selCard('jaipur')">   <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg" alt="Jaipur"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Jaipur — The Pink City</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Palaces, forts and bazaars in full colour.</div></div></div>
+      <div class="dcard" id="card-rishikesh" onclick="selCard('rishikesh')"><div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg" alt="Rishikesh"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Rishikesh &amp; Haridwar</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Where the Himalayas meet the holy Ganges.</div></div></div>
+      <div class="dcard" id="card-amritsar"  onclick="selCard('amritsar')"> <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg" alt="Amritsar"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Amritsar &amp; Golden Temple</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">India's most breathtaking spiritual landmark.</div></div></div>
+      <div class="dcard" id="card-mathura"   onclick="selCard('mathura')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg" alt="Mathura"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Mathura &amp; Vrindavan</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">The sacred birthplace of Lord Krishna.</div></div></div>
+      <div class="dcard" id="card-delhi"     onclick="selCard('delhi')">    <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Delhi"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Delhi Heritage Day</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Red Fort, Humayun's Tomb &amp; Old Delhi.</div></div></div>
     </div>
     <div class="exp-panel" id="exp-day"></div>
   </div>
 
-  <!-- MULTI-DAY TOURS (4) -->
+  <!-- MULTI-DAY TOURS — 4 cards -->
   <div id="multi-sec" style="display:none">
     <div class="swipe-hint">Swipe to explore all journeys</div>
     <div class="cards-scroller">
-      <div class="dest-card" id="card-golden"   onclick="selCard('golden')">  <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Golden Triangle"/></div><div class="dest-card-body"><div class="dest-card-name">The Golden Triangle</div><div class="dest-card-days">5 Days · 4 Nights</div><div class="dest-card-tags">Three cities. One unforgettable journey.</div></div></div>
-      <div class="dest-card" id="card-varanasi" onclick="selCard('varanasi')"><div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg" alt="Varanasi"/></div><div class="dest-card-body"><div class="dest-card-name">Varanasi — Soul of India</div><div class="dest-card-days">3 Days · 2 Nights</div><div class="dest-card-tags">Where the Ganges carries every prayer.</div></div></div>
-      <div class="dest-card" id="card-shimla"   onclick="selCard('shimla')">  <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg" alt="Shimla Manali"/></div><div class="dest-card-body"><div class="dest-card-name">Shimla &amp; Manali</div><div class="dest-card-days">6 Days · 5 Nights</div><div class="dest-card-tags">The Himalayan escape from the plains.</div></div></div>
-      <div class="dest-card" id="card-corbett"  onclick="selCard('corbett')"> <div class="dest-card-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dest-card-imgw"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg" alt="Jim Corbett"/></div><div class="dest-card-body"><div class="dest-card-name">Jim Corbett National Park</div><div class="dest-card-days">3 Days · 2 Nights</div><div class="dest-card-tags">Tigers, forests and the wild North India.</div></div></div>
+      <div class="dcard" id="card-golden"   onclick="selCard('golden')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Golden Triangle"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">The Golden Triangle</div><div class="dcard-days">5 Days · 4 Nights</div><div class="dcard-tags">Three cities. One unforgettable journey.</div></div></div>
+      <div class="dcard" id="card-varanasi" onclick="selCard('varanasi')"><div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg" alt="Varanasi"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Varanasi — Soul of India</div><div class="dcard-days">3 Days · 2 Nights</div><div class="dcard-tags">Where the Ganges carries every prayer.</div></div></div>
+      <div class="dcard" id="card-shimla"   onclick="selCard('shimla')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg" alt="Shimla Manali"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Shimla &amp; Manali</div><div class="dcard-days">6 Days · 5 Nights</div><div class="dcard-tags">The Himalayan escape from the plains.</div></div></div>
+      <div class="dcard" id="card-corbett"  onclick="selCard('corbett')"> <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg" alt="Jim Corbett"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Jim Corbett National Park</div><div class="dcard-days">3 Days · 2 Nights</div><div class="dcard-tags">Tigers, forests and wild North India.</div></div></div>
     </div>
     <div class="exp-panel" id="exp-multi"></div>
   </div>
 
-  <!-- CUSTOM -->
+  <!-- CUSTOM BUILDER -->
   <div id="custom-sec" style="display:none">
-    <div class="custom-wrap" id="custom-wrap">
+    <div class="builder-wrap" id="builder-wrap">
       <div class="builder-inner">
-        <div class="field-grp">
-          <label class="f-label">Your journey starts from</label>
-          <div class="places-wrap"><span class="places-ico">✈</span><input class="places-inp" id="inp-pickup" type="text" placeholder="City, airport or hotel you're arriving into…"/></div>
-        </div>
-        <div class="field-grp">
-          <label class="f-label">Where would you like to go?</label>
-          <div class="dest-chip-row" id="dest-chips">
-            <div class="dc" data-city="Delhi"     onclick="togCity(this)">🏛 Delhi</div>
-            <div class="dc" data-city="Agra"      onclick="togCity(this)">🕌 Agra</div>
-            <div class="dc" data-city="Jaipur"    onclick="togCity(this)">🏰 Jaipur</div>
-            <div class="dc" data-city="Rishikesh" onclick="togCity(this)">🙏 Rishikesh</div>
-            <div class="dc" data-city="Varanasi"  onclick="togCity(this)">🪔 Varanasi</div>
-            <div class="dc" data-city="Amritsar"  onclick="togCity(this)">⭐ Amritsar</div>
+
+        <div class="fgrp">
+          <label class="f-lbl">Journey Begins From</label>
+          <div class="places-wrap">
+            <span class="places-ico">✈</span>
+            <input class="places-inp" id="inp-pickup" type="text" placeholder="City, airport or hotel you're arriving into…"/>
           </div>
-          <div class="places-wrap"><span class="places-ico">🔍</span><input class="places-inp" id="inp-dest1" type="text" placeholder="Something else on your mind? Search a city…"/></div>
         </div>
-        <div class="field-grp">
-          <label class="f-label">Add another destination</label>
-          <div class="places-wrap"><span class="places-ico">📍</span><input class="places-inp" id="inp-dest2" type="text" placeholder="Add one more destination to your route…"/></div>
+
+        <div class="fgrp">
+          <label class="f-lbl">Where would you like to go?</label>
+          <div class="city-chips" id="city-chips">
+            <div class="cc" data-city="Delhi"    onclick="togCity(this)">🏛 Delhi</div>
+            <div class="cc" data-city="Agra"     onclick="togCity(this)">🕌 Agra</div>
+            <div class="cc" data-city="Jaipur"   onclick="togCity(this)">🏰 Jaipur</div>
+            <div class="cc" data-city="Rishikesh" onclick="togCity(this)">🙏 Rishikesh</div>
+            <div class="cc" data-city="Varanasi" onclick="togCity(this)">🪔 Varanasi</div>
+            <div class="cc" data-city="Amritsar" onclick="togCity(this)">⭐ Amritsar</div>
+          </div>
+          <div class="places-wrap">
+            <span class="places-ico">🔍</span>
+            <input class="places-inp" id="inp-dest1" type="text" placeholder="Something else on your mind? Search a city or region…"/>
+          </div>
         </div>
-        <div class="field-grp">
-          <label class="f-label">Your drop / departure location</label>
-          <div class="places-wrap"><span class="places-ico">🏁</span><input class="places-inp" id="inp-drop" type="text" placeholder="Hotel, airport or city you're departing from…"/></div>
+
+        <div class="fgrp">
+          <label class="f-lbl">Add another destination</label>
+          <div class="places-wrap">
+            <span class="places-ico">📍</span>
+            <input class="places-inp" id="inp-dest2" type="text" placeholder="Add one more destination to your route…"/>
+          </div>
         </div>
+
+        <div class="fgrp">
+          <label class="f-lbl">Journey Ends At</label>
+          <div class="places-wrap">
+            <span class="places-ico">🏁</span>
+            <input class="places-inp" id="inp-drop" type="text" placeholder="Hotel, airport or city you're departing from…"/>
+          </div>
+        </div>
+
         <div class="route-wrap" id="route-wrap">
           <div class="route-lbl">Your Route</div>
           <div class="route-strip" id="route-strip"></div>
           <div class="route-badges" id="route-badges"></div>
-          <div class="concierge-box" id="concierge-box">✦ &nbsp;This journey spans an extended route across North India. Our concierge team will personally review your selections, recommend the most comfortable sequence, and where relevant suggest seamless internal flight connections — so every transition feels effortless, never exhausting. We'll be in touch to craft the perfect version of this journey for you.</div>
+          <div class="concierge-box" id="concierge-box">✦ &nbsp;This journey spans an extended route across North India. Our concierge team will personally review your selections, suggest the most comfortable sequence, and where relevant recommend seamless internal flight connections — so every transition feels effortless rather than exhausting. We'll be in touch to craft the perfect version of this journey for you.</div>
         </div>
+
       </div>
     </div>
   </div>
 </div>
+<div class="sec-collapsed" id="sc2" onclick="editSec(2)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc2-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d23"></div>
 
-<!-- S3: WHO'S TRAVELLING -->
-<div class="sec-block" id="s3">
-  <div class="sec-label">Step 4</div>
+<!-- ── S3: WHO'S TRAVELLING ── -->
+<div class="sec" id="s3">
+  <div class="sec-label-txt">Step 4</div>
   <div class="sec-title">Who's travelling?</div>
   <div class="stepper-block">
     <div class="stepper-row">
-      <div><div class="stepper-name">Adults</div><div class="stepper-sub">Age 18 and above</div></div>
-      <div class="stepper-ctrl"><button class="s-btn" onclick="stepAdj('adults',-1)">−</button><div class="s-val" id="val-adults">2</div><button class="s-btn" onclick="stepAdj('adults',1)">+</button></div>
+      <div class="st-info"><div class="st-name">Adults</div><div class="st-sub">Age 18 and above</div></div>
+      <div class="st-ctrl"><button class="st-btn" onclick="adj('adults',-1)">−</button><div class="st-val" id="v-adults">2</div><button class="st-btn" onclick="adj('adults',1)">+</button></div>
     </div>
     <div class="stepper-row">
-      <div><div class="stepper-name">Children</div><div class="stepper-sub">Age 2 – 17</div></div>
-      <div class="stepper-ctrl"><button class="s-btn" onclick="stepAdj('children',-1)">−</button><div class="s-val" id="val-children">0</div><button class="s-btn" onclick="stepAdj('children',1)">+</button></div>
+      <div class="st-info"><div class="st-name">Children</div><div class="st-sub">Age 2 – 17</div></div>
+      <div class="st-ctrl"><button class="st-btn" onclick="adj('children',-1)">−</button><div class="st-val" id="v-children">0</div><button class="st-btn" onclick="adj('children',1)">+</button></div>
     </div>
     <div class="stepper-row">
-      <div><div class="stepper-name">Seniors</div><div class="stepper-sub">Age 60 and above</div></div>
-      <div class="stepper-ctrl"><button class="s-btn" onclick="stepAdj('seniors',-1)">−</button><div class="s-val" id="val-seniors">0</div><button class="s-btn" onclick="stepAdj('seniors',1)">+</button></div>
+      <div class="st-info"><div class="st-name">Seniors</div><div class="st-sub">Age 60 and above</div></div>
+      <div class="st-ctrl"><button class="st-btn" onclick="adj('seniors',-1)">−</button><div class="st-val" id="v-seniors">0</div><button class="st-btn" onclick="adj('seniors',1)">+</button></div>
     </div>
   </div>
   <div class="senior-note" id="senior-note">🌿 &nbsp;Comfort-focused routing will be prioritised — gentler pace, ground-floor rooms where possible, and rest stops built into every transfer.</div>
 </div>
+<div class="sec-collapsed" id="sc3" onclick="editSec(3)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc3-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d34"></div>
 
-<!-- S4: STAY STYLE -->
-<div class="sec-block" id="s4">
-  <div class="sec-label">Step 5</div>
+<!-- ── S4: STAY STYLE + HOTELS ── -->
+<div class="sec" id="s4">
+  <div class="sec-label-txt">Step 5</div>
   <div class="sec-title">What's your preferred stay style?</div>
   <div class="stay-cards">
     <div class="stay-card" id="stay-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, characterful boutiques and high-rated guesthouses</div></div>
-    <div class="stay-card" id="stay-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels and boutique properties with elevated comfort and service</div></div>
-    <div class="stay-card" id="stay-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses in North India, exclusively curated</div></div>
+    <div class="stay-card" id="stay-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels and boutique properties with elevated comfort</div></div>
+    <div class="stay-card" id="stay-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses in North India</div></div>
   </div>
-  <div id="hotel-section" style="display:none;margin-top:28px;">
-    <div class="sec-label" style="margin-bottom:14px;">Suggested Stays for Your Route</div>
+  <div class="hotel-section" id="hotel-section">
+    <div class="sec-label-txt" style="margin-top:22px;margin-bottom:14px;">Suggested Stays for Your Route</div>
     <div id="hotel-cities-wrap"></div>
   </div>
 </div>
+<div class="sec-collapsed" id="sc4" onclick="editSec(4)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc4-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d45"></div>
 
-<!-- S5: INTERESTS -->
-<div class="sec-block" id="s5">
-  <div class="sec-label">Step 6</div>
+<!-- ── S5: SPECIAL INTERESTS ── -->
+<div class="sec" id="s5">
+  <div class="sec-label-txt">Step 6</div>
   <div class="sec-title">What draws you most?</div>
-  <div class="interest-chips">
-    <div class="int-chip" onclick="togInt(this)" data-int="Spiritual">  <span class="int-icon">🕌</span>Spiritual</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Heritage">   <span class="int-icon">🏛</span>Heritage</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Food">       <span class="int-icon">🍛</span>Food</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Photography"><span class="int-icon">📸</span>Photography</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Wellness">   <span class="int-icon">🧘</span>Wellness</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Nature">     <span class="int-icon">⛰</span>Nature</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Architecture"><span class="int-icon">🏰</span>Architecture</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Luxury">     <span class="int-icon">🥂</span>Luxury</div>
+  <div class="sec-sub">Select all that resonate — we'll curate your experiences accordingly.</div>
+  <div class="int-chips">
+    <div class="int-chip" onclick="togInt(this)" data-int="Spiritual">  <span class="int-ico">🕌</span>Spiritual</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Heritage">   <span class="int-ico">🏛</span>Heritage</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Food">       <span class="int-ico">🍛</span>Food &amp; Culture</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Photography"><span class="int-ico">📸</span>Photography</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Wellness">   <span class="int-ico">🧘</span>Wellness</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Nature">     <span class="int-ico">⛰</span>Nature</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Architecture"><span class="int-ico">🏰</span>Architecture</div>
+    <div class="int-chip" onclick="togInt(this)" data-int="Luxury">     <span class="int-ico">🥂</span>Luxury</div>
   </div>
 </div>
+<div class="sec-collapsed" id="sc5" onclick="editSec(5)">
+  <span class="sc-tick">✔</span>
+  <div class="sc-summary" id="sc5-txt">—</div>
+  <span class="sc-edit">Edit</span>
+</div>
+
 <div class="divider" id="d56"></div>
 
-<!-- S6: NOTES -->
-<div class="sec-block" id="s6">
-  <div class="sec-label">Step 7</div>
+<!-- ── S6: FLEXIBLE NOTES ── -->
+<div class="sec" id="s6">
+  <div class="sec-label-txt">Step 7</div>
   <div class="sec-title">Anything else we should know?</div>
-  <textarea class="notes-area" id="journey-notes" placeholder="We are looking for a slower-paced journey with spiritual experiences, boutique stays and comfortable driving durations. We have two elderly parents joining us and would prefer avoiding long steps where possible…" rows="5" oninput="onNotes()"></textarea>
+  <div class="sec-sub">Share your pace preference, special occasions, mobility needs, or anything that matters to you. Our concierge reads every word.</div>
+  <textarea class="notes-area" id="journey-notes" rows="5"
+    placeholder="We are looking for a slower-paced journey with spiritual experiences, boutique stays and comfortable driving durations. We have two elderly parents joining us and would prefer avoiding long steps and stairs where possible…"
+    oninput="onNotes()"></textarea>
 </div>
+
 <div class="divider" id="d67"></div>
 
-<!-- S7: SMART PREVIEW -->
-<div class="sec-block" id="s7">
-  <div class="sec-label">Step 8</div>
-  <div class="sec-title">Your Journey at a Glance</div>
+<!-- ── S7: SMART JOURNEY PREVIEW ── -->
+<div class="sec" id="s7">
+  <div class="sec-label-txt">Step 8 · Your Journey at a Glance</div>
+  <div class="sec-title">Here's what we've built for you</div>
   <div class="preview-card">
-    <div class="preview-header">
-      <div class="prev-header-lbl">Estimated Route</div>
-      <div class="prev-route" id="prev-route">—</div>
+    <div class="prev-hdr">
+      <div class="prev-hdr-lbl">Estimated Route</div>
+      <div class="prev-route-txt" id="prev-route">—</div>
       <div id="prev-dist-badge"></div>
     </div>
-    <div class="preview-body">
+    <div class="prev-body">
       <div class="prev-grid">
         <div class="prev-stat"><div class="prev-stat-lbl">Journey Duration</div><div class="prev-stat-val" id="prev-dur">—</div><div class="prev-stat-sub" id="prev-dur-sub"></div></div>
         <div class="prev-stat"><div class="prev-stat-lbl">Driving Coverage</div><div class="prev-stat-val" id="prev-km">—</div><div class="prev-stat-sub">Private AC vehicle throughout</div></div>
         <div class="prev-stat"><div class="prev-stat-lbl">Travellers</div><div class="prev-stat-val" id="prev-pax">2 Adults</div><div class="prev-stat-sub" id="prev-pax-sub"></div></div>
-        <div class="prev-stat"><div class="prev-stat-lbl">Stay Preference</div><div class="prev-stat-val" id="prev-stay">—</div><div class="prev-stat-sub">Private chauffeur included</div></div>
+        <div class="prev-stat"><div class="prev-stat-lbl">Stay Preference</div><div class="prev-stat-val" id="prev-stay">—</div><div class="prev-stat-sub">Curated by Ivory Arc</div></div>
       </div>
       <div id="prev-cities" class="prev-cities"></div>
-      <div class="prev-note" id="prev-note" style="display:none"></div>
+      <div class="prev-note" id="prev-note"></div>
     </div>
   </div>
 </div>
@@ -502,357 +953,659 @@ header{background:var(--black);padding:16px 0 14px;}
 
 <!-- ESTIMATE BAR -->
 <div id="est-bar">
-  <div class="est-left"><span class="est-micro">Estimated Range</span><span class="est-range" id="est-range">Select your journey</span></div>
+  <div class="est-left">
+    <span class="est-micro">Estimated Range</span>
+    <span class="est-range" id="est-range">Select your journey</span>
+  </div>
   <button class="view-btn" onclick="openSheet()">View Journey</button>
 </div>
 
 <!-- JOURNEY SHEET -->
-<div id="j-bd" onclick="closeSheet()"></div>
-<div id="j-sheet">
-  <div class="j-inner">
-    <div class="j-top"><div class="j-title">Your Journey</div><button class="j-close" onclick="closeSheet()">✕</button></div>
-    <div class="j-route-disp" id="j-route">—</div>
-    <div class="j-meta">
-      <div class="j-meta-item">📅 <span id="j-days">—</span></div>
-      <div class="j-meta-item">👥 <span id="j-pax">2 Adults</span></div>
+<div id="jbd" onclick="closeSheet()"></div>
+<div id="jsheet">
+  <div class="js-inner">
+    <div class="js-handle"></div>
+    <div class="js-top">
+      <div class="js-title">Your Journey</div>
+      <button class="js-close" onclick="closeSheet()">✕</button>
     </div>
-    <div class="j-sec-title">Always Included</div>
-    <div class="j-item"><span class="j-tick">✔</span>Private Chauffeur &amp; AC Vehicle</div>
-    <div class="j-item"><span class="j-tick">✔</span>4★ Handpicked Stays (Multi-Day)</div>
-    <div class="j-item"><span class="j-tick">✔</span>Airport Pickup &amp; Drop</div>
-    <div class="j-item"><span class="j-tick">✔</span>Dedicated Travel Manager</div>
-    <div class="j-item"><span class="j-tick">✔</span>Monument Entries (Included Sites)</div>
-    <div id="j-int-wrap" style="display:none;margin-top:16px;"><div class="j-sec-title">Your Interests</div><div id="j-int-list"></div></div>
-    <div id="j-add-wrap" style="display:none;margin-top:16px;"><div class="j-sec-title">Add-ons Selected</div><div id="j-add-list"></div></div>
+    <div class="js-route" id="js-route">—</div>
+    <div class="js-meta">
+      <div class="js-meta-item">📅 <span id="js-days">—</span></div>
+      <div class="js-meta-item">👥 <span id="js-pax">2 Adults</span></div>
+    </div>
+    <div class="js-sec-ttl">Always Included</div>
+    <div class="js-item"><span class="js-tick">✔</span>Private Chauffeur &amp; AC Vehicle</div>
+    <div class="js-item"><span class="js-tick">✔</span>4★ Handpicked Stays (Multi-Day)</div>
+    <div class="js-item"><span class="js-tick">✔</span>Airport Pickup &amp; Drop</div>
+    <div class="js-item"><span class="js-tick">✔</span>Dedicated Travel Manager</div>
+    <div class="js-item"><span class="js-tick">✔</span>All Monument Entries (Included Sites)</div>
+    <div id="js-int-wrap" style="display:none;margin-top:16px;"><div class="js-sec-ttl">Your Interests</div><div id="js-int-list"></div></div>
+    <div id="js-add-wrap" style="display:none;margin-top:16px;"><div class="js-sec-ttl">Add-ons Selected</div><div id="js-add-list"></div></div>
   </div>
 </div>
 
 <script>
-// ── TOUR DATA ──
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
 const TOURS = {
-  agra:      {t:'day',  name:'Agra & the Taj Mahal',      days:'Day Tour',         route:'Agra',                   km:null, nights:[], base:[18000,28000],  inc:['Taj Mahal','Agra Fort'],                                                           add:[{id:'sunrise-taj',l:'Sunrise Taj'},{id:'vip-entry',l:'VIP Entry'},{id:'baby-taj',l:'Baby Taj'},{id:'heritage-walk',l:'Heritage Walk'},{id:'photographer',l:'Photographer'},{id:'mughal-dinner',l:'Mughal Dinner'}]},
-  jaipur:    {t:'day',  name:'Jaipur — The Pink City',    days:'Day Tour',         route:'Jaipur',                 km:null, nights:[], base:[16000,24000],  inc:['City Palace','Hawa Mahal','Jantar Mantar'],                                         add:[{id:'amber',l:'Amber Fort'},{id:'balloon',l:'Balloon Sunrise'},{id:'royal-dinner',l:'Royal Dinner'},{id:'block-print',l:'Block Printing'},{id:'turban',l:'Turban Tying'}]},
-  rishikesh: {t:'day',  name:'Rishikesh & Haridwar',      days:'Day Tour',         route:'Rishikesh & Haridwar',   km:null, nights:[], base:[14000,22000],  inc:['Laxman Jhula','Har Ki Pauri','Ganga Aarti'],                                        add:[{id:'rafting',l:'River Rafting'},{id:'bungee',l:'Bungee Jumping'},{id:'yoga',l:'Yoga Session'},{id:'ganga-seat',l:'Ganga Aarti Seating'}]},
-  amritsar:  {t:'day',  name:'Amritsar & Golden Temple',  days:'Day Tour',         route:'Amritsar',               km:null, nights:[], base:[14000,22000],  inc:['Golden Temple','Jallianwala Bagh','Wagah Border'],                                  add:[{id:'wagah-vip',l:'Wagah VIP Access'},{id:'food-walk',l:'Food Walk'},{id:'turban',l:'Turban Tying'},{id:'partition',l:'Partition Museum'}]},
-  mathura:   {t:'day',  name:'Mathura & Vrindavan',       days:'Day Tour',         route:'Mathura & Vrindavan',    km:null, nights:[], base:[12000,20000],  inc:['Janmabhoomi','Dwarkadhish','Banke Bihari'],                                         add:[{id:'iskcon',l:'ISKCON Visit'},{id:'boat-ride',l:'Boat Ride'},{id:'flower',l:'Flower Ceremony'},{id:'puja-kit',l:'Puja Kit'}]},
-  'corbett-d':{t:'day', name:'Jim Corbett',               days:'Day Tour',         route:'Jim Corbett',            km:null, nights:[], base:[16000,26000],  inc:['Dhikala Safari','Nature Walk'],                                                     add:[{id:'elephant',l:'Elephant Safari'},{id:'birdwatch',l:'Birdwatching'},{id:'photo-tour',l:'Photography Tour'}]},
-  golden:    {t:'multi',name:'The Golden Triangle',       days:'5 Days / 4 Nights',route:'Delhi → Agra → Jaipur', km:780,  nights:[{city:'Delhi',n:1,min:1},{city:'Agra',n:1,min:1},{city:'Jaipur',n:2,min:1}], base:[120000,165000], inc:['Red Fort','Humayun Tomb','Taj Mahal','Agra Fort','Amber Fort','City Palace','Hawa Mahal'], add:[{id:'balloon',l:'Balloon Sunrise'},{id:'sunrise-taj',l:'Sunrise Taj'},{id:'royal-dinner',l:'Royal Dinner'},{id:'old-delhi',l:'Old Delhi Walk'},{id:'rickshaw',l:'Rickshaw Ride'},{id:'photographer',l:'Photographer'}]},
-  varanasi:  {t:'multi',name:'Varanasi — Soul of India',  days:'3 Days / 2 Nights',route:'Varanasi',               km:820,  nights:[{city:'Varanasi',n:2,min:2}],                                                   base:[55000,80000],   inc:['Dasaswamedh Ghat','Manikarnika Ghat','Kashi Vishwanath Temple'],                   add:[{id:'boat-dawn',l:'Dawn Boat Experience'},{id:'silk',l:'Silk Workshop'},{id:'aarti-seat',l:'Ganga Aarti Seating'},{id:'blessing',l:'Blessing Ceremony'},{id:'overnight',l:'Overnight Ganges Experience'}]},
-  shimla:    {t:'multi',name:'Shimla & Manali',           days:'6 Days / 5 Nights',route:'Shimla → Manali',        km:570,  nights:[{city:'Shimla',n:2,min:1},{city:'Manali',n:3,min:2}],                           base:[110000,155000], inc:['Mall Road Shimla','Solang Valley','Hadimba Temple','Rohtang Pass (seasonal)'],   add:[{id:'paragliding',l:'Paragliding'},{id:'snow',l:'Snow Sports'},{id:'spa',l:'Himalayan Spa'},{id:'camping',l:'Mountain Camping'},{id:'home-meal',l:'Local Home Meal'}]},
-  corbett:   {t:'multi',name:'Jim Corbett National Park', days:'3 Days / 2 Nights',route:'Jim Corbett',            km:260,  nights:[{city:'Jim Corbett',n:2,min:2}],                                                base:[65000,95000],   inc:['Dhikala Safari','Nature Walk','Forest Jeep Safari'],                              add:[{id:'bijrani',l:'Bijrani Safari'},{id:'elephant',l:'Elephant Safari'},{id:'night-safari',l:'Night Safari'},{id:'birdwatch',l:'Birdwatching'},{id:'camp-stay',l:'Camp Stay'}]},
+  agra:     {t:'day',  name:'Agra & the Taj Mahal',      days:'Day Tour',          route:'Agra',                   km:null, nights:[], base:[18000,28000],
+    inc:['Taj Mahal','Agra Fort'],
+    add:[{id:'sunrise-taj',l:'Sunrise Taj'},{id:'vip-entry',l:'VIP Entry'},{id:'baby-taj',l:'Baby Taj'},{id:'heritage-walk',l:'Heritage Walk'},{id:'photographer',l:'Photographer'},{id:'mughal-dinner',l:'Mughal Dinner'},{id:'petha',l:'Petha Making'},{id:'tonga',l:'Tonga Ride'}]},
+  jaipur:   {t:'day',  name:'Jaipur — The Pink City',    days:'Day Tour',          route:'Jaipur',                 km:null, nights:[], base:[16000,24000],
+    inc:['City Palace','Hawa Mahal','Jantar Mantar'],
+    add:[{id:'amber',l:'Amber Fort'},{id:'balloon',l:'Balloon Sunrise'},{id:'royal-dinner',l:'Royal Dinner'},{id:'block-print',l:'Block Printing'},{id:'turban',l:'Turban Tying'},{id:'camel',l:'Camel Ride'},{id:'jewellery',l:'Jewellery Walk'}]},
+  rishikesh:{t:'day',  name:'Rishikesh & Haridwar',      days:'Day Tour',          route:'Rishikesh & Haridwar',   km:null, nights:[], base:[14000,22000],
+    inc:['Laxman Jhula','Har Ki Pauri','Ganga Aarti'],
+    add:[{id:'rafting',l:'River Rafting G1–3'},{id:'rafting4',l:'Rafting G4'},{id:'bungee',l:'Bungee Jumping'},{id:'yoga',l:'Yoga Session'},{id:'ganga-seat',l:'Ganga Aarti Seating'},{id:'camping',l:'Riverside Camping'},{id:'neelkanth',l:'Neelkanth Temple'}]},
+  amritsar: {t:'day',  name:'Amritsar & Golden Temple',  days:'Day Tour',          route:'Amritsar',               km:null, nights:[], base:[14000,22000],
+    inc:['Golden Temple','Jallianwala Bagh','Wagah Border'],
+    add:[{id:'wagah-vip',l:'Wagah VIP Access'},{id:'food-walk',l:'Food Walk'},{id:'turban',l:'Turban Tying'},{id:'partition',l:'Partition Museum'},{id:'langar',l:'Langar Experience'},{id:'gobindgarh',l:'Gobindgarh Fort'}]},
+  mathura:  {t:'day',  name:'Mathura & Vrindavan',       days:'Day Tour',          route:'Mathura & Vrindavan',    km:null, nights:[], base:[12000,20000],
+    inc:['Janmabhoomi','Dwarkadhish','Banke Bihari'],
+    add:[{id:'iskcon',l:'ISKCON Visit'},{id:'boat-ride',l:'Boat Ride'},{id:'flower',l:'Flower Ceremony'},{id:'puja-kit',l:'Puja Kit'},{id:'erickshaw',l:'E-Rickshaw Tour'},{id:'holi',l:'Holi Colour Experience'}]},
+  delhi:    {t:'day',  name:'Delhi Heritage Day',        days:'Day Tour',          route:'Delhi',                  km:null, nights:[], base:[12000,18000],
+    inc:["Red Fort","Humayun's Tomb",'India Gate'],
+    add:[{id:'old-delhi',l:'Old Delhi Walk'},{id:'rickshaw',l:'Rickshaw Ride'},{id:'food-walk',l:'Food Walk'},{id:'photographer',l:'Photographer'},{id:'dilli-haat',l:'Dilli Haat'},{id:'qutub',l:'Qutub Minar'},{id:'akshardham',l:'Akshardham Temple'}]},
+  golden:   {t:'multi',name:'The Golden Triangle',       days:'5 Days / 4 Nights', route:'Delhi → Agra → Jaipur', km:780,
+    nights:[{city:'Delhi',n:1,min:1},{city:'Agra',n:1,min:1},{city:'Jaipur',n:2,min:1}], base:[120000,165000],
+    inc:['Red Fort','Humayun Tomb','Taj Mahal','Agra Fort','Amber Fort','City Palace','Hawa Mahal'],
+    add:[{id:'balloon',l:'Balloon Sunrise'},{id:'sunrise-taj',l:'Sunrise Taj'},{id:'royal-dinner',l:'Royal Dinner'},{id:'old-delhi',l:'Old Delhi Walk'},{id:'rickshaw',l:'Rickshaw Ride'},{id:'photographer',l:'Photographer'},{id:'vip-entry',l:'VIP Taj Entry'},{id:'mughal-dinner',l:'Mughal Dinner'}]},
+  varanasi: {t:'multi',name:'Varanasi — Soul of India',  days:'3 Days / 2 Nights', route:'Varanasi',               km:820,
+    nights:[{city:'Varanasi',n:2,min:2}], base:[55000,80000],
+    inc:['Dasaswamedh Ghat','Manikarnika Ghat','Kashi Vishwanath Temple'],
+    add:[{id:'boat-dawn',l:'Dawn Boat Experience'},{id:'silk',l:'Silk Workshop'},{id:'aarti-seat',l:'Ganga Aarti Seating'},{id:'blessing',l:'Blessing Ceremony'},{id:'cooking',l:'Cooking Class'},{id:'pind-daan',l:'Pind Daan Ritual'},{id:'overnight',l:'Overnight Ganges Experience'},{id:'photo-tour',l:'Photography Tour'}]},
+  shimla:   {t:'multi',name:'Shimla & Manali',           days:'6 Days / 5 Nights', route:'Shimla → Manali',        km:570,
+    nights:[{city:'Shimla',n:2,min:1},{city:'Manali',n:3,min:2}], base:[110000,155000],
+    inc:['Mall Road Shimla','Solang Valley','Hadimba Temple','Rohtang Pass (seasonal)'],
+    add:[{id:'paragliding',l:'Paragliding'},{id:'snow',l:'Snow Sports'},{id:'spa',l:'Himalayan Spa'},{id:'camping',l:'Mountain Camping'},{id:'biking',l:'Mountain Biking'},{id:'home-meal',l:'Local Home Meal'}]},
+  corbett:  {t:'multi',name:'Jim Corbett National Park', days:'3 Days / 2 Nights', route:'Jim Corbett',            km:260,
+    nights:[{city:'Jim Corbett',n:2,min:2}], base:[65000,95000],
+    inc:['Dhikala Safari','Nature Walk','Forest Jeep Safari'],
+    add:[{id:'bijrani',l:'Bijrani Safari'},{id:'elephant',l:'Elephant Safari'},{id:'night-safari',l:'Night Safari'},{id:'birdwatch',l:'Birdwatching'},{id:'fishing',l:'Fishing'},{id:'camp-stay',l:'Luxury Camp Stay'},{id:'photo-tour',l:'Wildlife Photography Tour'}]},
 };
 
 const HOTELS = {
-  Delhi:{3:[{name:'The Lutyens Bungalow',meta:'★★★ · New Delhi',note:'A beloved heritage bungalow in the diplomatic enclave',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},{name:'Bloomrooms @ New Delhi',meta:'★★★ · Janpath',note:'Design-forward boutique in the heart of Connaught Place',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],4:[{name:'The Imperial New Delhi',meta:'★★★★ · Janpath',note:'A 1936 landmark beloved by discerning travellers worldwide',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},{name:'Claridges Hotel',meta:'★★★★ · Dr APJ Abdul Kalam Road',note:'Colonial charm and impeccable service in Lutyens Delhi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],5:[{name:'The Oberoi New Delhi',meta:'★★★★★ · Dr Zakir Hussain Marg',note:'Uninterrupted views of Humayun\'s Tomb — an icon of refinement',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},{name:'ITC Maurya',meta:'★★★★★ · Sardar Patel Marg',note:'The preferred address of heads of state visiting India',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}]},
-  Agra:{3:[{name:'Crystal Sarovar Premiere',meta:'★★★ · Taj Nagri',note:'Clean, comfortable and well-positioned near the Taj',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],4:[{name:'Courtyard by Marriott Agra',meta:'★★★★ · Fatehabad Road',note:'Polished comfort steps from the Taj precinct',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},{name:'Radisson Hotel Agra',meta:'★★★★ · Taj East Gate',note:'Elegant rooms with partial Taj views at sunrise',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],5:[{name:'The Oberoi Amarvilas',meta:'★★★★★ · Taj East Gate Road',note:'Every room faces the Taj Mahal — the world\'s most coveted view',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},{name:'Taj Hotel & Convention Centre Agra',meta:'★★★★★ · Fatehabad Road',note:'The heritage address for luxury travellers in Agra',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}]},
-  Jaipur:{3:[{name:'Alsisar Haveli',meta:'★★★ · Sansar Chandra Road',note:'A 1892 noble mansion turned intimate heritage hotel',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],4:[{name:'Samode Haveli',meta:'★★★★ · Old City',note:'One of Jaipur\'s most beautiful painted havelis',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},{name:'ITC Rajputana',meta:'★★★★ · Palace Road',note:'Rajasthani grandeur with refined ITC hospitality',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],5:[{name:'Rambagh Palace',meta:'★★★★★ · Bhawani Singh Road',note:'Once the residence of the Maharaja of Jaipur — pure royalty',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},{name:'Jai Mahal Palace',meta:'★★★★★ · Jacob Road',note:'A Taj property within a 250-year-old palace and 18-acre gardens',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}]},
-  Varanasi:{3:[{name:'Hotel Surya',meta:'★★★ · The Mall',note:'Classic Varanasi stay with warm service and rooftop Ganga views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],4:[{name:'BrijRama Palace',meta:'★★★★ · Darbhanga Ghat',note:'A 250-year-old palace perched directly on the Ganges',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'},{name:'Ramada Plaza Varanasi',meta:'★★★★ · The Mall Road',note:'Contemporary comfort with attentive service near the ghats',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],5:[{name:'Taj Ganges',meta:'★★★★★ · Nadesar Palace Grounds',note:'Set in 40 acres of landscaped gardens — the finest address in Varanasi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}]},
-  Shimla:{3:[{name:'Hotel Willow Banks',meta:'★★★ · Shimla',note:'Heritage property with valley views and colonial character',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],4:[{name:'Woodville Palace Hotel',meta:'★★★★ · Himachal Pradesh',note:'Former home of Rana of Jubbal — grand Himalayan heritage',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],5:[{name:'Wildflower Hall',meta:'★★★★★ · Mashobra, 8,250 ft',note:'Oberoi\'s most romantic mountain retreat — cedar forests and snow peaks',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]},
-  Manali:{3:[{name:'Holiday Inn Manali',meta:'★★★ · The Mall, Manali',note:'Comfortable base with mountain views and Mall access',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],4:[{name:'Span Resort & Spa',meta:'★★★★ · Kullu-Manali Highway',note:'Riverside luxury in the Beas Valley with an award-winning spa',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],5:[{name:'The Himalayan',meta:'★★★★★ · Duff Dunbar Estate',note:'Nestled in a colonial estate above Manali with panoramic Kullu Valley views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]},
-  'Jim Corbett':{3:[{name:'Corbett Riverside Resort',meta:'★★★ · Dhela',note:'Peaceful riverside retreat inside the buffer zone',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],4:[{name:'Solluna Resort',meta:'★★★★ · Dhikala Road',note:'Premium jungle lodge with naturalist-led safaris',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],5:[{name:'The Riverview Retreat',meta:'★★★★★ · Ramnagar',note:'Luxury tented camp on the Kosi River — intimate and extraordinary',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}]},
+  Delhi:{
+    3:[{name:'The Lutyens Bungalow',meta:'★★★ · Diplomatic Enclave',note:'A beloved heritage bungalow set in lush gardens',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
+       {name:'Bloomrooms @ Janpath',meta:'★★★ · Connaught Place',note:'Design-forward boutique in the heart of New Delhi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],
+    4:[{name:'The Imperial New Delhi',meta:'★★★★ · Janpath',note:'A 1936 landmark beloved by discerning travellers worldwide',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
+       {name:'Claridges Hotel',meta:'★★★★ · Lutyens Delhi',note:'Colonial charm and impeccable service since 1950',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],
+    5:[{name:'The Oberoi New Delhi',meta:'★★★★★ · Dr Zakir Hussain Marg',note:"Uninterrupted views of Humayun's Tomb — an icon of refinement",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
+       {name:'ITC Maurya',meta:'★★★★★ · Sardar Patel Marg',note:'The preferred address of heads of state visiting India',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}]
+  },
+  Agra:{
+    3:[{name:'Crystal Sarovar Premiere',meta:'★★★ · Taj Nagri',note:'Clean, comfortable and well-positioned near the Taj',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],
+    4:[{name:'Courtyard by Marriott Agra',meta:'★★★★ · Fatehabad Road',note:'Polished comfort steps from the Taj precinct',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},
+       {name:'Radisson Hotel Agra',meta:'★★★★ · Taj East Gate',note:'Elegant rooms with partial Taj views at sunrise',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],
+    5:[{name:'The Oberoi Amarvilas',meta:'★★★★★ · Taj East Gate Road',note:"Every room faces the Taj Mahal — the world's most coveted view",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},
+       {name:'Taj Hotel & Convention Centre',meta:'★★★★★ · Fatehabad Road',note:'The heritage address for luxury travellers in Agra',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}]
+  },
+  Jaipur:{
+    3:[{name:'Alsisar Haveli',meta:'★★★ · Sansar Chandra Road',note:'An 1892 noble mansion turned intimate heritage hotel',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],
+    4:[{name:'Samode Haveli',meta:'★★★★ · Old City',note:"One of Jaipur's most beautiful painted havelis",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},
+       {name:'ITC Rajputana',meta:'★★★★ · Palace Road',note:'Rajasthani grandeur with refined ITC hospitality',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],
+    5:[{name:'Rambagh Palace',meta:'★★★★★ · Bhawani Singh Road',note:'Once the residence of the Maharaja of Jaipur — pure royalty',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},
+       {name:'Jai Mahal Palace',meta:'★★★★★ · Jacob Road',note:'A Taj property within a 250-year-old palace and 18-acre gardens',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}]
+  },
+  Varanasi:{
+    3:[{name:'Hotel Surya',meta:'★★★ · The Mall',note:'Classic Varanasi stay with warm service and rooftop Ganga views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],
+    4:[{name:'BrijRama Palace',meta:'★★★★ · Darbhanga Ghat',note:'A 250-year-old palace perched directly on the Ganges',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'},
+       {name:'Ramada Plaza Varanasi',meta:'★★★★ · The Mall Road',note:'Contemporary comfort with attentive service near the ghats',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],
+    5:[{name:'Taj Ganges',meta:'★★★★★ · Nadesar Palace Grounds',note:'Set in 40 acres of landscaped gardens — the finest address in Varanasi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}]
+  },
+  Shimla:{
+    3:[{name:'Hotel Willow Banks',meta:'★★★ · Shimla',note:'Heritage property with valley views and colonial character',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
+    4:[{name:'Woodville Palace Hotel',meta:'★★★★ · Himachal Pradesh',note:'Former home of the Rana of Jubbal — grand Himalayan heritage',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
+    5:[{name:'Wildflower Hall',meta:'★★★★★ · Mashobra, 8,250 ft',note:"Oberoi's most romantic mountain retreat — cedar forests and snow peaks",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]
+  },
+  Manali:{
+    3:[{name:'Holiday Inn Manali',meta:'★★★ · The Mall',note:'Comfortable base with mountain views and Mall Road access',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
+    4:[{name:'Span Resort & Spa',meta:'★★★★ · Kullu-Manali Highway',note:'Riverside luxury in the Beas Valley with an award-winning spa',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
+    5:[{name:'The Himalayan',meta:'★★★★★ · Duff Dunbar Estate',note:'Colonial estate above Manali with panoramic Kullu Valley views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]
+  },
+  'Jim Corbett':{
+    3:[{name:'Corbett Riverside Resort',meta:'★★★ · Dhela',note:'Peaceful riverside retreat inside the buffer zone',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],
+    4:[{name:'Solluna Resort',meta:'★★★★ · Dhikala Road',note:'Premium jungle lodge with naturalist-led safaris',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],
+    5:[{name:'The Riverview Retreat',meta:'★★★★★ · Ramnagar',note:'Luxury tented camp on the Kosi River — intimate and extraordinary',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}]
+  }
 };
 
-const STAY_COST = {3:{lo:4000,hi:7000},4:{lo:8000,hi:14000},5:{lo:18000,hi:35000}};
-const CITY_LL = {'Delhi':{lat:28.6139,lng:77.2090},'Agra':{lat:27.1767,lng:78.0081},'Jaipur':{lat:26.9124,lng:75.7873},'Rishikesh':{lat:30.0869,lng:78.2676},'Varanasi':{lat:25.3176,lng:82.9739},'Amritsar':{lat:31.6340,lng:74.8723}};
+const STAY_COST={3:{lo:4000,hi:7000},4:{lo:8000,hi:14000},5:{lo:18000,hi:35000}};
+const CITY_LL={'Delhi':{lat:28.6139,lng:77.209},'Agra':{lat:27.1767,lng:78.0081},'Jaipur':{lat:26.9124,lng:75.7873},'Rishikesh':{lat:30.0869,lng:78.2676},'Varanasi':{lat:25.3176,lng:82.9739},'Amritsar':{lat:31.634,lng:74.8723}};
 
-// ── STATE ──
-let tourType=null,selTour=null,selAddons=new Set(),addonTotal=0,baseRange=[0,0];
-let travellers={adults:2,children:0,seniors:0};
-let stayStyle=null,interests=new Set();
-let nightsState={},hotelSel={},selCities=[];
-let mapsLoaded=false,distSvc=null;
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let TYPE=null, TOUR=null, addons=new Set(), addonTotal=0, base=[0,0];
+let pax={adults:2,children:0,seniors:0};
+let stayStyle=null, interests=new Set();
+let nights={}, hotelSel={}, cities=[];
+let mapsOk=false, distSvc=null;
+const SECS=['s0','s1','s2','s3','s4','s5','s6','s7'];
+const DIVS=['d01','d12','d23','d34','d45','d56','d67'];
 
-// ── HELPERS ──
-function showDiv(id){document.getElementById(id).classList.add('show');}
-function revealSec(id){const el=document.getElementById(id);el.classList.add('visible');setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),150);}
-function setStep(n,t){document.getElementById('step-count-txt').textContent='Step '+n+' of 8';document.getElementById('step-title-txt').textContent=t;document.getElementById('prog-fill').style.width=(n/8*100)+'%';}
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+function show(id){const e=$(id);if(e)e.classList.add('on');}
+function hide(id){const e=$(id);if(e)e.classList.remove('on');}
+function el(id){return $(id);}
 function fmt(v){return v>=100000?'₹'+(v/100000).toFixed(1)+'L':'₹'+(v/1000).toFixed(0)+'K';}
-function paxLabel(){let p=[];if(travellers.adults)p.push(travellers.adults+' Adult'+(travellers.adults>1?'s':''));if(travellers.children)p.push(travellers.children+' Child'+(travellers.children>1?'ren':''));if(travellers.seniors)p.push(travellers.seniors+' Senior'+(travellers.seniors>1?'s':''));return p.join(', ')||'—';}
+function paxStr(){
+  let p=[];
+  if(pax.adults)p.push(pax.adults+' Adult'+(pax.adults>1?'s':''));
+  if(pax.children)p.push(pax.children+' Child'+(pax.children>1?'ren':''));
+  if(pax.seniors)p.push(pax.seniors+' Senior'+(pax.seniors>1?'s':''));
+  return p.join(', ')||'—';
+}
+function totalNights(){return Object.values(nights).reduce((a,b)=>a+b,0);}
 
-function recalc(){
-  if(!baseRange[0]&&tourType!=='custom'){document.getElementById('est-range').textContent='Select your journey';return;}
-  let sLo=0,sHi=0;
-  if(stayStyle){const sc=STAY_COST[stayStyle];const tn=Object.values(nightsState).reduce((a,b)=>a+b,0);if(tn){sLo=sc.lo*tn;sHi=sc.hi*tn;}}
-  const pax=travellers.adults+travellers.children+Math.ceil(travellers.seniors*1.1);
-  const mul=pax<=2?1:1+(pax-2)*0.38;
-  const lo=Math.round((baseRange[0]+addonTotal+sLo)*mul);
-  const hi=Math.round((baseRange[1]+addonTotal+sHi)*mul);
-  document.getElementById('est-range').textContent=fmt(lo)+' – '+fmt(hi);
-  document.getElementById('j-pax').textContent=paxLabel();
-  updatePreview();
+/* ═══════════════════════════════════════════
+   STEP BAR
+═══════════════════════════════════════════ */
+function setStep(n,title){
+  $('sb-step').textContent='Step '+n+' of 8';
+  $('sb-title').textContent=title;
+  $('sb-fill').style.width=(n/8*100)+'%';
 }
 
-// ── TOUR TYPE ──
-function selType(t){
-  tourType=t;
-  ['day','multi','custom'].forEach(x=>document.getElementById('pill-'+x).classList.toggle('sel',x===t));
-  const ew=document.getElementById('d-end-wrap'),mi=document.getElementById('d-micro'),sl=document.getElementById('d-start-lbl'),st=document.getElementById('s1-title');
-  document.getElementById('d-start').value='';document.getElementById('d-end').value='';document.getElementById('d-confirm').classList.remove('show');
-  if(t==='day'){ew.style.display='none';mi.style.display='block';sl.textContent='Travel Date';st.textContent='When would you like to visit?';setStep(2,'Select Your Date');}
-  else{ew.style.display='block';mi.style.display='none';sl.textContent='Start Date';st.textContent='Select your preferred travel dates';setStep(2,'Select Your Dates');}
-  showDiv('d01');revealSec('s1');
-}
-
-// ── DATES ──
-function onDate(){
-  const sv=document.getElementById('d-start').value,ev=document.getElementById('d-end').value;
-  const conf=document.getElementById('d-confirm'),txt=document.getElementById('d-confirm-txt');
-  if(tourType==='day'){
-    if(!sv)return;
-    const d=new Date(sv);txt.textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    conf.classList.add('show');revealStep3();
-  } else {
-    if(!sv||!ev)return;
-    const s=new Date(sv),e=new Date(ev);
-    if(e<=s){txt.textContent='End date must be after start date';conf.classList.add('show');return;}
-    const nights=Math.round((e-s)/86400000),days=nights+1;
-    txt.textContent=days+' Day'+(days>1?'s':'')+' / '+nights+' Night'+(nights>1?'s':'')+' Selected';
-    conf.classList.add('show');revealStep3();
+/* ═══════════════════════════════════════════
+   SECTION PROGRESSION — accordion collapse
+═══════════════════════════════════════════ */
+function revealSec(id,scrollTo){
+  const e=$(id);
+  if(!e||e.classList.contains('on'))return;
+  e.classList.add('on');
+  if(scrollTo!==false){
+    setTimeout(()=>e.scrollIntoView({behavior:'smooth',block:'start'}),160);
   }
 }
 
-function revealStep3(){
-  showDiv('d12');
-  document.getElementById('day-sec').style.display   =tourType==='day'   ?'block':'none';
-  document.getElementById('multi-sec').style.display =tourType==='multi' ?'block':'none';
-  document.getElementById('custom-sec').style.display=tourType==='custom'?'block':'none';
-  if(tourType==='custom')setTimeout(()=>document.getElementById('custom-wrap').classList.add('open'),80);
-  document.getElementById('s2-title').textContent=tourType==='day'?'Choose your day experience':tourType==='multi'?'Choose your journey':'Build your custom route';
-  setStep(3,'Choose Your Experience');revealSec('s2');
+function collapseSec(secId,scId,summaryTxt){
+  hide(secId);
+  const sc=$(scId);
+  if(sc){
+    sc.classList.add('on');
+    const st=$(scId+'-txt');
+    if(st)st.textContent=summaryTxt;
+  }
 }
 
-// ── CARD SELECT ──
+function editSec(idx){
+  // Re-open the section, hide the collapsed version
+  const secId=SECS[idx];
+  const scId='sc'+idx;
+  hide(scId);
+  revealSec(secId,true);
+}
+
+function showDiv(id){show(id);}
+
+/* ═══════════════════════════════════════════
+   S0: TOUR TYPE
+═══════════════════════════════════════════ */
+function selType(t){
+  TYPE=t;
+  ['day','multi','custom'].forEach(x=>
+    $('pill-'+x).classList.toggle('on',x===t)
+  );
+  // Configure date UI
+  const endW=$('d-end-wrap'), micro=$('d-micro');
+  $('d-start').value='';
+  if($('d-end'))$('d-end').value='';
+  hide('d-conf');
+  if(t==='day'){
+    endW.style.display='none';
+    micro.style.display='block';
+    $('d-start-lbl').textContent='Travel Date';
+    $('s1-title').textContent='When would you like to visit?';
+  } else {
+    endW.style.display='block';
+    micro.style.display='none';
+    $('d-start-lbl').textContent='Start Date';
+    $('s1-title').textContent='Select your preferred travel dates';
+  }
+  // Collapse s0, show summary
+  const names={day:'Single Day Tour',multi:'Multi-Day Journey',custom:'Build Custom Itinerary'};
+  collapseSec('s0','sc0',names[t]);
+  showDiv('d01');
+  revealSec('s1');
+  setStep(2,'Select Your Dates');
+}
+
+/* ═══════════════════════════════════════════
+   S1: DATES
+═══════════════════════════════════════════ */
+function onDate(){
+  const sv=$('d-start').value;
+  const ev=$('d-end')?$('d-end').value:'';
+  const conf=$('d-conf'), txt=$('d-conf-txt');
+  if(TYPE==='day'){
+    if(!sv)return;
+    const d=new Date(sv);
+    txt.textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    show('d-conf');
+    afterDates(sv,'Day Tour');
+  } else {
+    if(!sv||!ev)return;
+    const s=new Date(sv), e=new Date(ev);
+    if(e<=s){txt.textContent='End date must be after start date';show('d-conf');return;}
+    const n=Math.round((e-s)/86400000), d=n+1;
+    txt.textContent=d+' Day'+(d>1?'s':'')+' / '+n+' Night'+(n>1?'s':'')+' Selected';
+    show('d-conf');
+    afterDates(sv,txt.textContent);
+  }
+}
+
+function afterDates(sv,summary){
+  collapseSec('s1','sc1',summary);
+  showDiv('d12');
+  // Show correct sub-section
+  $('day-sec').style.display   =TYPE==='day'   ?'block':'none';
+  $('multi-sec').style.display =TYPE==='multi' ?'block':'none';
+  $('custom-sec').style.display=TYPE==='custom'?'block':'none';
+  if(TYPE==='custom')setTimeout(()=>$('builder-wrap').classList.add('on'),80);
+  $('s2-title').textContent=TYPE==='day'?'Choose your day experience':TYPE==='multi'?'Choose your journey':'Build your custom route';
+  revealSec('s2');
+  setStep(3,'Choose Your Experience');
+}
+
+/* ═══════════════════════════════════════════
+   S2A: DESTINATION CARD SELECTION
+═══════════════════════════════════════════ */
 function selCard(key){
   const data=TOURS[key];if(!data)return;
-  if(selTour&&selTour!==key){const p=document.getElementById('card-'+selTour);if(p)p.classList.remove('sel');}
-  document.getElementById('card-'+key).classList.add('sel');
-  selTour=key;selAddons.clear();addonTotal=0;baseRange=data.base;
-  nightsState={};data.nights.forEach(c=>{nightsState[c.city]=c.n;});
+  if(TOUR&&TOUR!==key){const p=$('card-'+TOUR);if(p)p.classList.remove('on');}
+  $('card-'+key).classList.add('on');
+  TOUR=key; addons.clear(); addonTotal=0; base=data.base;
+  nights={};
+  data.nights.forEach(c=>{ nights[c.city]=c.n; });
   recalc();
-  document.getElementById('j-route').textContent=data.route;
-  document.getElementById('j-days').textContent=data.days;
+  $('js-route').textContent=data.route;
+  $('js-days').textContent=data.days;
   renderExp(data);
   setStep(4,'Personalise Your Experience');
-  showDiv('d23');revealSec('s3');
+  // after picking card, show travellers
+  collapseSec('s2','sc2',data.name+' · '+data.days);
+  showDiv('d23');
+  revealSec('s3');
+  setStep(4,"Who's Travelling?");
 }
 
 function renderExp(data){
   const pid=data.t==='day'?'exp-day':'exp-multi';
-  const panel=document.getElementById(pid);
+  const panel=$(pid);
+  const MAX_VISIBLE=5;
   let h='<div class="exp-inner">';
-  if(data.inc&&data.inc.length){h+='<div class="exp-sub"><div class="exp-sec-title">Included in Your Tour</div><div class="exp-sub-lbl">Part of every booking</div><div class="chips-row">';data.inc.forEach(l=>{h+='<div class="chip inc"><span>✓</span>'+l+'</div>';});h+='</div></div>';}
-  if(data.add&&data.add.length){h+='<div class="exp-sub" style="margin-top:16px"><div class="exp-sec-title">Enhance Your Experience</div><div class="exp-sub-lbl">Tap to add — estimate updates automatically</div><div class="chips-row">';data.add.forEach(a=>{h+='<div class="chip add" data-id="'+a.id+'" onclick="togAddon(this,\''+a.l+'\')">'+a.l+'</div>';});h+='</div></div>';}
-  h+='</div>';panel.innerHTML=h;panel.classList.add('open');
+  if(data.inc&&data.inc.length){
+    h+='<div class="exp-sub"><div class="exp-sec-ttl">Included in Your Tour</div><div class="exp-sub-lbl">Part of every booking — no extra cost</div><div class="chips-row">';
+    data.inc.forEach(l=>{ h+='<div class="chip inc"><span>✓</span>'+l+'</div>'; });
+    h+='</div></div>';
+  }
+  if(data.add&&data.add.length){
+    h+='<div class="exp-sub" style="margin-top:16px"><div class="exp-sec-ttl">Enhance Your Experience</div><div class="exp-sub-lbl">Tap to add — estimate updates automatically</div><div class="chips-row" id="add-chips-'+pid+'">';
+    data.add.slice(0,MAX_VISIBLE).forEach(a=>{
+      h+='<div class="chip add" data-id="'+a.id+'" onclick="togAddon(this,\''+a.l+'\')">'+a.l+'</div>';
+    });
+    h+='</div>';
+    if(data.add.length>MAX_VISIBLE){
+      h+='<div class="view-more-btn" onclick="showMoreAddons(\''+pid+'\',\''+key+'\')" id="vmb-'+pid+'">↓ View '+(data.add.length-MAX_VISIBLE)+' more experiences</div>';
+      h+='<div id="more-chips-'+pid+'" style="display:none"><div class="chips-row" style="margin-top:7px">';
+      data.add.slice(MAX_VISIBLE).forEach(a=>{
+        h+='<div class="chip add" data-id="'+a.id+'" onclick="togAddon(this,\''+a.l+'\')">'+a.l+'</div>';
+      });
+      h+='</div></div>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  panel.innerHTML=h;
+  panel.classList.add('on');
   setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),120);
+}
+
+function showMoreAddons(pid,key){
+  const more=$('more-chips-'+pid);
+  const btn=$('vmb-'+pid);
+  if(more){more.style.display='block';}
+  if(btn){btn.style.display='none';}
 }
 
 function togAddon(chip,label){
   const id=chip.getAttribute('data-id');
-  if(selAddons.has(id)){selAddons.delete(id);addonTotal=Math.max(0,addonTotal-3500);chip.classList.remove('on');chip.textContent=label;}
-  else{selAddons.add(id);addonTotal+=3500;chip.classList.add('on');chip.textContent='✓ '+label;}
+  if(addons.has(id)){addons.delete(id);addonTotal=Math.max(0,addonTotal-3500);chip.classList.remove('on');chip.textContent=label;}
+  else{addons.add(id);addonTotal+=3500;chip.classList.add('on');chip.textContent='✓ '+label;}
   recalc();
-  const w=document.getElementById('j-add-wrap'),l=document.getElementById('j-add-list');
-  if(!selAddons.size){w.style.display='none';}else{w.style.display='block';l.innerHTML=[...selAddons].map(id=>'<div class="j-item"><span class="j-tick">✓</span>'+id+'</div>').join('');}
+  const w=$('js-add-wrap'),l=$('js-add-list');
+  if(!addons.size){w.style.display='none';}
+  else{w.style.display='block';l.innerHTML=[...addons].map(id=>'<div class="js-item"><span class="js-tick">✓</span>'+id+'</div>').join('');}
 }
 
-// ── STEPPERS ──
-function stepAdj(who,delta){
+/* ═══════════════════════════════════════════
+   S3: TRAVELLERS
+═══════════════════════════════════════════ */
+function adj(who,delta){
   const mins={adults:1,children:0,seniors:0};
-  travellers[who]=Math.max(mins[who],travellers[who]+delta);
-  document.getElementById('val-'+who).textContent=travellers[who];
-  const sn=document.getElementById('senior-note');
-  travellers.seniors>0?sn.classList.add('show'):sn.classList.remove('show');
+  pax[who]=Math.max(mins[who],pax[who]+delta);
+  $('v-'+who).textContent=pax[who];
+  pax.seniors>0?show('senior-note'):hide('senior-note');
+  $('js-pax').textContent=paxStr();
+  $('prev-pax').textContent=(pax.adults+pax.children+pax.seniors)+' Travellers';
+  $('prev-pax-sub').textContent=paxStr();
   recalc();
-  if(!document.getElementById('s4').classList.contains('visible')){showDiv('d34');revealSec('s4');setStep(5,'Preferred Stay Style');}
+  if(!$('s4').classList.contains('on')){
+    collapseSec('s3','sc3',paxStr());
+    showDiv('d34');revealSec('s4');setStep(5,'Preferred Stay Style');
+  }
 }
 
-// ── STAY STYLE ──
+/* ═══════════════════════════════════════════
+   S4: STAY STYLE + HOTELS
+═══════════════════════════════════════════ */
 function selStay(stars){
   stayStyle=stars;
-  [3,4,5].forEach(s=>document.getElementById('stay-'+s).classList.toggle('sel',s===stars));
-  const names={3:'Boutique Comfort (3★)',4:'Premium Stay (4★)',5:'Luxury Collection (5★)'};
-  document.getElementById('prev-stay').textContent=names[stars];
+  [3,4,5].forEach(s=>$('stay-'+s).classList.toggle('on',s===stars));
+  const snames={3:'Boutique Comfort (3★)',4:'Premium Stay (4★)',5:'Luxury Collection (5★)'};
+  $('prev-stay').textContent=snames[stars];
   recalc();
-  const hs=document.getElementById('hotel-section');
-  const isDay=tourType==='day';
-  if(!isDay){hs.style.display='block';renderHotels();}else{hs.style.display='none';}
-  if(!document.getElementById('s5').classList.contains('visible')){showDiv('d45');revealSec('s5');setStep(6,'Your Interests');}
+  const hs=$('hotel-section');
+  if(TYPE==='day'){ hs.classList.remove('on'); }
+  else { hs.classList.add('on'); renderHotels(); }
+  if(!$('s5').classList.contains('on')){
+    collapseSec('s4','sc4',snames[stars]);
+    showDiv('d45');revealSec('s5');setStep(6,'Your Interests');
+  }
 }
 
 function renderHotels(){
-  const wrap=document.getElementById('hotel-cities-wrap');wrap.innerHTML='';
-  let cities=[];
-  if(tourType==='multi'&&selTour&&TOURS[selTour]){
-    cities=TOURS[selTour].nights.map(n=>n.city);
-    TOURS[selTour].nights.forEach(n=>{if(!nightsState[n.city])nightsState[n.city]=n.n;});
-  }else if(tourType==='custom'){
-    cities=selCities.filter(Boolean);
-    cities.forEach(c=>{if(!nightsState[c])nightsState[c]=2;});
+  const wrap=$('hotel-cities-wrap'); wrap.innerHTML='';
+  let cityList=[];
+  if(TYPE==='multi'&&TOUR&&TOURS[TOUR]){
+    cityList=TOURS[TOUR].nights.map(n=>n.city);
+    TOURS[TOUR].nights.forEach(n=>{ if(!nights[n.city])nights[n.city]=n.n; });
+  } else if(TYPE==='custom'){
+    cityList=cities.filter(Boolean);
+    cityList.forEach(c=>{ if(!nights[c])nights[c]=2; });
   }
-  if(!cities.length)return;
-  cities.forEach(city=>{
-    const ch=HOTELS[city];if(!ch)return;
+  if(!cityList.length)return;
+  cityList.forEach(city=>{
+    const ch=HOTELS[city]||HOTELS['Jim Corbett']||null;
+    if(!ch)return;
     const primary=ch[stayStyle]||ch[4]||ch[3]||[];
     const upgrade=stayStyle<5?(ch[stayStyle+1]||[]).slice(0,2):[];
-    const tourND=selTour&&TOURS[selTour]?TOURS[selTour].nights.find(n=>n.city===city):null;
-    const minN=tourND?tourND.min:1;
-    const curN=nightsState[city]||minN;
+    const tourN=TOURS[TOUR]?TOURS[TOUR].nights.find(n=>n.city===city):null;
+    const minN=tourN?tourN.min:1;
+    const curN=nights[city]||minN;
     const cid=city.replace(/\s/g,'_');
     let h='<div class="hotel-city-block">';
-    h+='<div class="hotel-city-label">'+city+'</div>';
-    h+='<div class="nights-stepper"><span class="ns-label">Nights in '+city+'</span><div class="ns-ctrl"><button class="ns-btn" onclick="adjN(\''+city+'\','+(-1)+','+minN+')">−</button><div class="ns-val" id="ns-'+cid+'">'+curN+'</div><button class="ns-btn" onclick="adjN(\''+city+'\',1,'+minN+')">+</button></div></div>';
+    h+='<div class="hcb-header">';
+    h+='<div class="hcb-city">'+city+'</div>';
+    h+='<div class="nights-ctrl"><span class="nights-lbl">Nights</span>';
+    h+='<button class="ns-btn" onclick="adjN(\''+city+'\','+(-1)+','+minN+')">−</button>';
+    h+='<div class="ns-val" id="ns-'+cid+'">'+curN+'</div>';
+    h+='<button class="ns-btn" onclick="adjN(\''+city+'\',1,'+minN+')">+</button>';
+    h+='</div></div>';
     primary.forEach((hh,i)=>{
       const hid=city+'-'+i;
-      h+='<div class="hotel-card" id="hcard-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,'\\\'')+ '\',\''+hid+'\')">'
-       +'<img class="hotel-card-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
-       +'<div class="hotel-card-content"><div class="hotel-card-name">'+hh.name+'</div><div class="hotel-card-meta">'+hh.meta+'</div><div class="hotel-card-note">'+hh.note+'</div>'
-       +'<button class="hotel-select-btn">Select Stay</button></div></div>';
+      h+='<div class="hotel-card" id="hc-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,"\\'")+ '\',\''+hid+'\','+hh.name.replace(/'/g,"\\'")+'")'
+       +'>'
+       +'<img class="hotel-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
+       +'<div class="hotel-content"><div class="hotel-name">'+hh.name+'</div><div class="hotel-meta">'+hh.meta+'</div><div class="hotel-note">'+hh.note+'</div>'
+       +'<button class="hotel-sel-btn">Select Stay</button></div></div>';
     });
     if(upgrade.length){
-      h+='<div class="hotel-upgrade-title">Upgrade Options</div>';
+      h+='<div class="hotel-upgrade-lbl">Upgrade Options</div>';
       upgrade.forEach((hh,i)=>{
         const hid=city+'-up-'+i;
-        h+='<div class="hotel-card" id="hcard-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,'\\\'')+ '\',\''+hid+'\')">'
-         +'<img class="hotel-card-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
-         +'<div class="hotel-card-content"><div class="hotel-card-name">'+hh.name+'</div><div class="hotel-card-meta">'+hh.meta+'</div><div class="hotel-card-note">'+hh.note+'</div>'
-         +'<button class="hotel-select-btn">Select Stay</button></div></div>';
+        h+='<div class="hotel-card" id="hc-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,"\\'")+ '\',\''+hid+'\',\''+hh.name.replace(/'/g,"\\'")+'\',true)">'
+         +'<img class="hotel-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
+         +'<div class="hotel-content"><div class="hotel-name">'+hh.name+'</div><div class="hotel-meta">'+hh.meta+'</div><div class="hotel-note">'+hh.note+'</div>'
+         +'<button class="hotel-sel-btn">Select Stay</button></div></div>';
       });
     }
-    h+='<div class="hotel-skip"><a onclick="skipHotel(\''+city+'\')">Skip for now — use estimated average</a></div>';
+    h+='<div class="hotel-skip"><a onclick="skipHotel(\''+city+'\')">Skip — use estimated average</a></div>';
     h+='</div>';
     wrap.innerHTML+=h;
   });
 }
 
 function selHotel(city,name,cardId){
-  document.querySelectorAll('[id^="hcard-'+city+'"]').forEach(c=>c.classList.remove('sel'));
-  const el=document.getElementById('hcard-'+cardId);if(el)el.classList.add('sel');
-  hotelSel[city]=name;recalc();
+  document.querySelectorAll('[id^="hc-'+city.replace(/\s/g,'_')+'"]').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('[id^="hc-'+city+'"]').forEach(c=>c.classList.remove('on'));
+  const el=$('hc-'+cardId);if(el)el.classList.add('on');
+  hotelSel[city]=name;
+  recalc();updatePreview();
 }
 function skipHotel(city){delete hotelSel[city];updatePreview();}
 
 function adjN(city,delta,min){
-  nightsState[city]=Math.max(min,(nightsState[city]||min)+delta);
-  const el=document.getElementById('ns-'+city.replace(/\s/g,'_'));
-  if(el)el.textContent=nightsState[city];
-  const tn=Object.values(nightsState).reduce((a,b)=>a+b,0);
-  document.getElementById('j-days').textContent=(tn+1)+' Days / '+tn+' Nights';
-  recalc();
+  nights[city]=Math.max(min,(nights[city]||min)+delta);
+  const el=$('ns-'+city.replace(/\s/g,'_'));
+  if(el)el.textContent=nights[city];
+  const tn=totalNights();
+  $('js-days').textContent=(tn+1)+' Days / '+tn+' Nights';
+  recalc();updatePreview();
 }
 
-// ── INTERESTS ──
+/* ═══════════════════════════════════════════
+   S5: INTERESTS
+═══════════════════════════════════════════ */
 function togInt(chip){
   const v=chip.getAttribute('data-int');
   chip.classList.toggle('on');
   chip.classList.contains('on')?interests.add(v):interests.delete(v);
-  const w=document.getElementById('j-int-wrap'),l=document.getElementById('j-int-list');
-  interests.size?(w.style.display='block',l.innerHTML=[...interests].map(x=>'<div class="j-item"><span class="j-tick">✦</span>'+x+'</div>').join('')):(w.style.display='none');
-  if(!document.getElementById('s6').classList.contains('visible')){showDiv('d56');revealSec('s6');setStep(7,'Any Special Requests?');}
+  const w=$('js-int-wrap'),l=$('js-int-list');
+  interests.size?(w.style.display='block',l.innerHTML=[...interests].map(x=>'<div class="js-item"><span class="js-tick">✦</span>'+x+'</div>').join('')):(w.style.display='none');
+  if(!$('s6').classList.contains('on')){
+    collapseSec('s5','sc5',[...interests].join(' · ')||'—');
+    showDiv('d56');revealSec('s6');setStep(7,'Any Special Requests?');
+  }
 }
 
-// ── NOTES → PREVIEW ──
+/* ═══════════════════════════════════════════
+   S6: NOTES → PREVIEW
+═══════════════════════════════════════════ */
 function onNotes(){
-  if(!document.getElementById('s7').classList.contains('visible')){showDiv('d67');revealSec('s7');setStep(8,'Journey Preview');}
+  if(!$('s7').classList.contains('on')){
+    showDiv('d67');revealSec('s7');setStep(8,'Your Journey at a Glance');
+    updatePreview();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SMART PREVIEW
+═══════════════════════════════════════════ */
+function updatePreview(){
+  if(!$('s7').classList.contains('on'))return;
+  let route='—',dur='—',km='—',durSub='';
+  if(TYPE==='custom'){
+    route=cities.length?cities.join(' → '):'Your custom route';
+    const tn=totalNights()||cities.length*2;
+    dur=(tn+1)+' Days'; durSub='/ '+tn+' Nights'; km='See route below';
+  } else if(TOUR){
+    const d=TOURS[TOUR];
+    route=d.route;
+    const tn=totalNights();
+    const dy=tn>0?tn+1:parseInt(d.days)||1;
+    dur=dy+' Day'+(dy>1?'s':''); durSub=tn>0?'/ '+tn+' Night'+(tn>1?'s':''):'';
+    km=d.km?'~'+d.km+' km':'—';
+  }
+  $('prev-route').textContent=route;
+  $('prev-dur').textContent=dur;
+  $('prev-dur-sub').textContent=durSub;
+  $('prev-km').textContent=km;
+  $('prev-pax').textContent=(pax.adults+pax.children+pax.seniors)+' Travellers';
+  $('prev-pax-sub').textContent=paxStr();
+  let cityList=[];
+  if(TYPE==='multi'&&TOUR)cityList=TOURS[TOUR].nights.map(n=>n.city);
+  else if(TYPE==='custom')cityList=cities.filter(Boolean);
+  const ce=$('prev-cities');
+  if(cityList.length){
+    ce.innerHTML=cityList.map(c=>
+      '<div class="prev-city-row">'
+      +'<div><div class="prev-city-name">'+c+'</div>'
+      +'<div class="prev-city-hotel">'+(hotelSel[c]||'Hotel TBC — based on stay preference')+'</div></div>'
+      +'<div class="prev-city-nights">'+(nights[c]||1)+' Night'+((nights[c]||1)>1?'s':'')+'</div>'
+      +'</div>'
+    ).join('');
+  } else { ce.innerHTML=''; }
+  // dist badge for preset tours
+  const be=$('prev-dist-badge');
+  if(TOUR&&TOURS[TOUR]&&TOURS[TOUR].km!==null){
+    const kmv=TOURS[TOUR].km;
+    be.innerHTML='<div class="dist-badge '+(kmv<1000?'ok':'warn')+'">'+(kmv<1000?'✔ Comfortable overland route · ~'+kmv+' km':'✦ Extended route — concierge will optimise')+'</div>';
+  } else {be.innerHTML='';}
+  // interests note
+  const ni=$('prev-note');
+  if(interests.size){ni.style.display='block';ni.textContent='Your journey will be curated around: '+[...interests].join(' · ')+'.';}
+  else {ni.style.display='none';}
+}
+
+/* ═══════════════════════════════════════════
+   ESTIMATE CALCULATION
+═══════════════════════════════════════════ */
+function recalc(){
+  const erEl=$('est-range');
+  if(!base[0]&&TYPE!=='custom'){erEl.textContent='Select your journey';return;}
+  let sLo=0,sHi=0;
+  if(stayStyle&&TYPE!=='day'){
+    const sc=STAY_COST[stayStyle];
+    const tn=totalNights();
+    if(tn){sLo=sc.lo*tn;sHi=sc.hi*tn;}
+  }
+  const p=pax.adults+pax.children+Math.ceil(pax.seniors*1.1);
+  const mul=p<=2?1:1+(p-2)*0.38;
+  const lo=Math.round((base[0]+addonTotal+sLo)*mul);
+  const hi=Math.round((base[1]+addonTotal+sHi)*mul);
+  // If hotel specifically selected, tighten range
+  const hotelCount=Object.keys(hotelSel).length;
+  if(hotelCount>0){
+    erEl.textContent='Starting from '+fmt(lo);
+  } else {
+    erEl.textContent=fmt(lo)+' – '+fmt(hi);
+  }
   updatePreview();
 }
 
-// ── SMART PREVIEW ──
-function updatePreview(){
-  if(!document.getElementById('s7').classList.contains('visible'))return;
-  let route='—',dur='—',km='—',durSub='';
-  if(tourType==='custom'){
-    route=selCities.length?selCities.join(' → '):'Your custom route';
-    const tn=Object.values(nightsState).reduce((a,b)=>a+b,0)||selCities.length*2;
-    dur=(tn+1)+' Days';durSub='/ '+tn+' Nights';km='Calculating…';
-  }else if(selTour){
-    const d=TOURS[selTour];
-    route=d.route;
-    const tn=Object.values(nightsState).reduce((a,b)=>a+b,0);
-    const days=tn>0?tn+1:parseInt(d.days)||1;
-    dur=days+' Day'+(days>1?'s':'');durSub=tn>0?'/ '+tn+' Night'+(tn>1?'s':''):'';
-    km=d.km?'~'+d.km+' km':'—';
-  }
-  document.getElementById('prev-route').textContent=route;
-  document.getElementById('prev-dur').textContent=dur;
-  document.getElementById('prev-dur-sub').textContent=durSub;
-  document.getElementById('prev-km').textContent=km;
-  document.getElementById('prev-pax').textContent=(travellers.adults+travellers.children+travellers.seniors)+' Travellers';
-  document.getElementById('prev-pax-sub').textContent=paxLabel();
-  let cities=[];
-  if(tourType==='multi'&&selTour)cities=TOURS[selTour].nights.map(n=>n.city);
-  else if(tourType==='custom')cities=selCities.filter(Boolean);
-  const ce=document.getElementById('prev-cities');
-  if(cities.length){ce.innerHTML=cities.map(c=>'<div class="prev-city-row"><div><div class="prev-city-name">'+c+'</div><div class="prev-city-hotel">'+(hotelSel[c]||'Hotel TBC (based on stay preference)')+'</div></div><div class="prev-city-nights">'+(nightsState[c]||1)+' Night'+((nightsState[c]||1)>1?'s':'')+'</div></div>').join('');}else{ce.innerHTML='';}
-  const be=document.getElementById('prev-dist-badge');
-  if(selTour&&TOURS[selTour]&&TOURS[selTour].km!==null){const km2=TOURS[selTour].km;be.innerHTML='<div class="dist-badge '+(km2<1000?'ok':'warn')+'">'+(km2<1000?'✔ Comfortable overland route · ~'+km2+' km':'✦ Extended route — concierge will optimise')+'</div>';}else{be.innerHTML='';}
-  const ni=document.getElementById('prev-note');
-  if(interests.size){ni.style.display='block';ni.textContent='Your journey will be curated around: '+[...interests].join(' · ')+'.';}else{ni.style.display='none';}
-}
-
-// ── CUSTOM BUILDER ──
+/* ═══════════════════════════════════════════
+   CUSTOM ROUTE BUILDER
+═══════════════════════════════════════════ */
 function togCity(chip){
   const city=chip.getAttribute('data-city');
-  chip.classList.toggle('on');chip.classList.add('pop');setTimeout(()=>chip.classList.remove('pop'),500);
-  chip.classList.contains('on')?(selCities.includes(city)||selCities.push(city)):(selCities=selCities.filter(c=>c!==city));
+  chip.classList.toggle('on');
+  chip.classList.add('pop');
+  setTimeout(()=>chip.classList.remove('pop'),500);
+  chip.classList.contains('on')?(cities.includes(city)||cities.push(city)):(cities=cities.filter(c=>c!==city));
   renderRoute();updateCustomEst();
 }
-function addCity(city){if(city&&!selCities.includes(city)){selCities.push(city);renderRoute();updateCustomEst();}}
+function addCity(city){
+  if(city&&!cities.includes(city)){cities.push(city);renderRoute();updateCustomEst();}
+}
 
 function renderRoute(){
-  const wrap=document.getElementById('route-wrap'),strip=document.getElementById('route-strip'),badges=document.getElementById('route-badges'),conc=document.getElementById('concierge-box');
-  if(!selCities.length){wrap.classList.remove('show');return;}
-  wrap.classList.add('show');
+  const wrap=$('route-wrap'),strip=$('route-strip'),badges=$('route-badges'),conc=$('concierge-box');
+  if(!cities.length){wrap.classList.remove('on');return;}
+  wrap.classList.add('on');
+  // Progressive append
   const existing=[...strip.querySelectorAll('.r-city')].map(e=>e.textContent);
-  const removed=existing.filter(c=>!selCities.includes(c));
-  if(removed.length){strip.innerHTML='';selCities.forEach((c,i)=>{if(i>0){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}const s=document.createElement('span');s.className='r-city';s.textContent=c;strip.appendChild(s);});}
-  else{selCities.filter(c=>!existing.includes(c)).forEach(city=>{if(strip.children.length){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}const s=document.createElement('span');s.className='r-city';s.textContent=city;strip.appendChild(s);});}
-  if(selCities.length>=2){mapsLoaded&&distSvc?runDistMatrix(selCities,badges,conc):runHaversine(selCities,badges,conc);}
-  else{badges.innerHTML='';conc.classList.remove('show');}
+  const removed=existing.filter(c=>!cities.includes(c));
+  if(removed.length){
+    strip.innerHTML='';
+    cities.forEach((c,i)=>{
+      if(i>0){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}
+      const s=document.createElement('span');s.className='r-city';s.textContent=c;s.style.animationDelay=(i*0.06)+'s';strip.appendChild(s);
+    });
+  } else {
+    cities.filter(c=>!existing.includes(c)).forEach(city=>{
+      if(strip.children.length){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}
+      const s=document.createElement('span');s.className='r-city';s.textContent=city;strip.appendChild(s);
+    });
+  }
+  if(cities.length>=2){
+    mapsOk&&distSvc?runDistMatrix(cities,badges,conc):runHaversine(cities,badges,conc);
+  } else {badges.innerHTML='';conc.classList.remove('on');}
 }
 
 function updateCustomEst(){
-  const n=selCities.length;
-  if(!n){document.getElementById('est-range').textContent='Add destinations to estimate';return;}
-  baseRange=[n*38000,n*58000];recalc();
-  document.getElementById('j-route').textContent=selCities.join(' → ');
-  const tn=selCities.reduce((a,c)=>(nightsState[c]||2)+a,0);
-  document.getElementById('j-days').textContent=(tn+1)+' Days / '+tn+' Nights (approx)';
-  if(!document.getElementById('s3').classList.contains('visible')){showDiv('d23');revealSec('s3');setStep(4,'Who\'s Travelling?');}
+  const n=cities.length;
+  if(!n){$('est-range').textContent='Add destinations to estimate';return;}
+  base=[n*38000,n*58000];recalc();
+  $('js-route').textContent=cities.join(' → ');
+  const tn=cities.reduce((a,c)=>(nights[c]||2)+a,0);
+  $('js-days').textContent=(tn+1)+' Days / '+tn+' Nights (approx)';
+  if(!$('s3').classList.contains('on')){
+    showDiv('d23');revealSec('s3');setStep(4,"Who's Travelling?");
+  }
   if(stayStyle)renderHotels();
 }
 
-// ── DISTANCE ──
-function haverKm(a,b){const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-function runHaversine(cities,badgesEl,concEl){let m=0;cities.forEach(c=>{const ll=CITY_LL[c];if(ll)m=Math.max(m,haverKm({lat:28.6139,lng:77.2090},ll)*1.35);});showDistBadge(m,cities.length,badgesEl,concEl);}
-function runDistMatrix(cities,badgesEl,concEl){
-  distSvc.getDistanceMatrix({origins:['New Delhi, India'],destinations:cities.map(c=>c+', India'),travelMode:google.maps.TravelMode.DRIVING,unitSystem:google.maps.UnitSystem.METRIC},(res,st)=>{
-    if(st!=='OK'){runHaversine(cities,badgesEl,concEl);return;}
-    let m=0;try{res.rows[0].elements.forEach(el=>{if(el.status==='OK')m=Math.max(m,el.distance.value/1000);});}catch(e){runHaversine(cities,badgesEl,concEl);return;}
-    showDistBadge(m,cities.length,badgesEl,concEl);
+/* ═══════════════════════════════════════════
+   DISTANCE LOGIC
+═══════════════════════════════════════════ */
+function haverKm(a,b){
+  const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function runHaversine(cs,be,ce){
+  const dlh={lat:28.6139,lng:77.209};
+  let m=0;
+  cs.forEach(c=>{const ll=CITY_LL[c];if(ll)m=Math.max(m,haverKm(dlh,ll)*1.35);});
+  showDist(m,cs.length,be,ce);
+}
+function runDistMatrix(cs,be,ce){
+  distSvc.getDistanceMatrix({
+    origins:['New Delhi, India'],
+    destinations:cs.map(c=>c+', India'),
+    travelMode:google.maps.TravelMode.DRIVING,
+    unitSystem:google.maps.UnitSystem.METRIC
+  },(res,st)=>{
+    if(st!=='OK'){runHaversine(cs,be,ce);return;}
+    let m=0;
+    try{res.rows[0].elements.forEach(el=>{if(el.status==='OK')m=Math.max(m,el.distance.value/1000);});}
+    catch(e){runHaversine(cs,be,ce);return;}
+    showDist(m,cs.length,be,ce);
   });
 }
-function showDistBadge(km,n,badgesEl,concEl){
-  badgesEl.innerHTML='';concEl.classList.remove('show');
-  if(km<1000){badgesEl.innerHTML='<div class="rbadge ok">✔ &nbsp;Comfortable overland route confirmed</div><div class="rbadge n">🚗 &nbsp;Furthest destination ~'+Math.round(km)+' km from Delhi</div>';}
-  else{badgesEl.innerHTML='<div class="rbadge warn">✦ &nbsp;Extended route — our concierge will personalise this journey for you</div>';concEl.classList.add('show');}
-  if(n>=3)badgesEl.innerHTML+='<div class="rbadge n">📍 &nbsp;'+n+' destinations selected</div>';
-  if(n>=4)badgesEl.innerHTML+='<div class="rbadge warn">✈ &nbsp;Internal flights available on select legs</div>';
+function showDist(km,n,be,ce){
+  be.innerHTML='';ce.classList.remove('on');
+  if(km>0&&km<1000){
+    be.innerHTML='<div class="rbadge ok">✔ &nbsp;Comfortable overland route confirmed</div>'
+      +'<div class="rbadge info">🚗 &nbsp;Furthest destination ~'+Math.round(km)+' km · Private AC vehicle throughout</div>';
+  } else if(km>=1000){
+    be.innerHTML='<div class="rbadge warn">✦ &nbsp;Extended route — our concierge will personally optimise this for you</div>';
+    ce.classList.add('on');
+  }
+  if(n>=3)be.innerHTML+='<div class="rbadge info">📍 &nbsp;'+n+' destinations selected</div>';
+  if(n>=4)be.innerHTML+='<div class="rbadge warn">✈ &nbsp;Internal flights available on select legs</div>';
 }
 
-// ── SHEET ──
-function openSheet(){document.getElementById('j-sheet').classList.add('open');document.getElementById('j-bd').classList.add('open');}
-function closeSheet(){document.getElementById('j-sheet').classList.remove('open');document.getElementById('j-bd').classList.remove('open');}
+/* ═══════════════════════════════════════════
+   JOURNEY SHEET
+═══════════════════════════════════════════ */
+function openSheet(){show('jbd');show('jsheet');}
+function closeSheet(){hide('jbd');hide('jsheet');}
 
-// ── GOOGLE MAPS ──
+/* ═══════════════════════════════════════════
+   GOOGLE MAPS INIT
+═══════════════════════════════════════════ */
 function initGoogleMaps(){
-  mapsLoaded=true;distSvc=new google.maps.DistanceMatrixService();
-  const optsIN={componentRestrictions:{country:'in'},types:['(cities)'],fields:['name','formatted_address']};
-  const optsG={types:['(cities)'],fields:['name','formatted_address']};
-  function mkAC(id,opts,cb){const ac=new google.maps.places.Autocomplete(document.getElementById(id),opts);ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p&&p.name)cb(p);});}
-  mkAC('inp-pickup',optsG,p=>{document.getElementById('inp-pickup').value=p.formatted_address||p.name;});
-  mkAC('inp-dest1',optsIN,p=>{const c=p.name.split(',')[0].trim();document.getElementById('inp-dest1').value='';addCity(c);});
-  mkAC('inp-dest2',optsIN,p=>{const c=p.name.split(',')[0].trim();document.getElementById('inp-dest2').value='';addCity(c);});
-  mkAC('inp-drop',optsG,p=>{document.getElementById('inp-drop').value=p.formatted_address||p.name;});
+  mapsOk=true;
+  distSvc=new google.maps.DistanceMatrixService();
+  const opIN={componentRestrictions:{country:'in'},types:['(cities)'],fields:['name','formatted_address']};
+  const opGL={types:['(cities)'],fields:['name','formatted_address']};
+  function mkAC(id,opts,cb){
+    const inp=$(id);if(!inp)return;
+    const ac=new google.maps.places.Autocomplete(inp,opts);
+    ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p&&p.name)cb(p);});
+  }
+  mkAC('inp-pickup',opGL,p=>{$('inp-pickup').value=p.formatted_address||p.name;});
+  mkAC('inp-dest1',opIN,p=>{const c=p.name.split(',')[0].trim();$('inp-dest1').value='';addCity(c);});
+  mkAC('inp-dest2',opIN,p=>{const c=p.name.split(',')[0].trim();$('inp-dest2').value='';addCity(c);});
+  mkAC('inp-drop',opGL,p=>{$('inp-drop').value=p.formatted_address||p.name;});
 }
 
 setStep(1,'Plan Your Journey');
