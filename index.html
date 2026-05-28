@@ -1,217 +1,1475 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ivory Arc Travels – Header</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ivory Arc Travels — Journey Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;
+  --black2:#111;
+  --black3:#1a1a1a;
+  --black4:#222;
+  --ivory:#f5f0e8;
+  --ivory2:#e8e0d0;
+  --gold:#c9a84c;
+  --gold2:#e2c06e;
+  --gold3:#a0783a;
+  --gold-glow:rgba(201,168,76,0.18);
+  --green:#4caf7d;
+  --text-muted:rgba(245,240,232,0.55);
+  --text-mid:rgba(245,240,232,0.75);
+  --border:rgba(201,168,76,0.2);
+  --border2:rgba(245,240,232,0.1);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--black3);
+  color:var(--ivory);
+  font-family:'Lato',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  padding-bottom:90px;
+  overflow-x:hidden;
+}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet" />
+/* ═══════════════════════════════════════════
+   STICKY TOP STEP BAR
+═══════════════════════════════════════════ */
+#step-bar{
+  position:sticky;
+  top:0;
+  z-index:200;
+  background:rgba(10,10,10,0.97);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:9px 20px 0;
+}
+.step-bar-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.step-title{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--ivory);
+  text-transform:uppercase;
+}
+.step-count{
+  font-family:'Lato',sans-serif;
+  font-size:11px;
+  color:var(--gold);
+  letter-spacing:0.1em;
+}
+.progress-track{
+  height:2px;
+  background:rgba(245,240,232,0.1);
+  border-radius:2px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold3),var(--gold2));
+  border-radius:2px;
+  transition:width 0.5s ease;
+  width:16.66%;
+}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ═══════════════════════════════════════════
+   HEADER (reused from previous file)
+═══════════════════════════════════════════ */
+header{
+  background:var(--black);
+  width:100%;
+  padding:16px 0 14px;
+}
+.header-inner{
+  display:flex;
+  align-items:center;
+  width:100%;
+  padding:0 5%;
+}
+.logo-block{width:30%;flex-shrink:0;display:flex;align-items:center;justify-content:flex-start;}
+.logo-block img{max-height:88px;width:auto;max-width:100%;object-fit:contain;display:block;}
+.spacer{width:10%;flex-shrink:0;}
+.info-block{width:60%;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+.operating-since{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:13px;letter-spacing:0.2em;color:var(--ivory);text-transform:uppercase;}
+.trusted-label{font-family:'Cinzel',serif;font-weight:400;font-size:11px;letter-spacing:0.22em;color:var(--ivory);text-transform:uppercase;opacity:0.8;}
+.partner-logos{display:flex;align-items:center;gap:10px;}
+.logo-pill{background:#000;border-radius:5px;display:flex;align-items:center;justify-content:center;padding:2px 6px;height:32px;}
+.logo-pill img{height:26px;width:auto;object-fit:contain;display:block;mix-blend-mode:screen;}
+.cert-strip{font-family:'Cinzel',serif;font-weight:500;font-size:10.5px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;white-space:nowrap;}
 
-    :root {
-      --black: #0a0a0a;
-      --ivory: #f5f0e8;
-      --gold:  #c9a84c;
-    }
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.estimator{
+  max-width:780px;
+  margin:0 auto;
+  padding:32px 20px 40px;
+}
 
-    body {
-      background: var(--black);
-      font-family: 'Cormorant Garamond', serif;
-    }
+/* ═══════════════════════════════════════════
+   SECTION HEADINGS
+═══════════════════════════════════════════ */
+.section-label{
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:0.35em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:6px;
+  opacity:0.9;
+}
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;
+  font-size:24px;
+  letter-spacing:0.04em;
+  color:var(--ivory);
+  margin-bottom:20px;
+}
 
-    /* ── HEADER ── */
-    header {
-      background: var(--black);
-      width: 100%;
-      padding: 16px 0 14px;
-    }
+/* ═══════════════════════════════════════════
+   SECTION BLOCKS
+═══════════════════════════════════════════ */
+.section-block{
+  margin-bottom:40px;
+  opacity:0;
+  transform:translateY(18px);
+  transition:opacity 0.45s ease, transform 0.45s ease;
+  pointer-events:none;
+}
+.section-block.visible{
+  opacity:1;
+  transform:none;
+  pointer-events:all;
+}
 
-    /* ── INNER WRAPPER ── */
-    .header-inner {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 0 5%;
-      gap: 0;
-    }
+/* ═══════════════════════════════════════════
+   JOURNEY TYPE CARDS (Section 1)
+═══════════════════════════════════════════ */
+.journey-type-cards{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.jtype-card{
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:22px 24px;
+  background:var(--black2);
+  cursor:pointer;
+  position:relative;
+  transition:border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+  overflow:hidden;
+}
+.jtype-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,0.04) 0%,transparent 60%);
+  opacity:0;
+  transition:opacity 0.25s;
+}
+.jtype-card:hover{
+  border-color:rgba(201,168,76,0.4);
+  transform:translateY(-1px);
+}
+.jtype-card:hover::before{opacity:1;}
+.jtype-card.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold),0 4px 24px rgba(201,168,76,0.15);
+  transform:scale(1.012);
+}
+.jtype-card.selected::before{opacity:1;}
+.jtype-check{
+  position:absolute;
+  top:14px;right:16px;
+  width:22px;height:22px;
+  border-radius:50%;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;
+  transform:scale(0.5);
+  transition:opacity 0.2s, transform 0.2s;
+}
+.jtype-card.selected .jtype-check{opacity:1;transform:scale(1);}
+.jtype-check svg{width:12px;height:12px;stroke:#0a0a0a;stroke-width:2.5;fill:none;}
+.jtype-name{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;
+  font-size:20px;
+  letter-spacing:0.03em;
+  color:var(--ivory);
+  margin-bottom:5px;
+}
+.jtype-desc{
+  font-size:13px;
+  color:var(--text-mid);
+  letter-spacing:0.02em;
+  line-height:1.5;
+}
+.jtype-tag{
+  display:inline-block;
+  margin-top:10px;
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  text-transform:uppercase;
+  opacity:0.75;
+}
 
-    /* ── LEFT: LOGO (30%) ── */
-    .logo-block {
-      width: 30%;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
+/* ═══════════════════════════════════════════
+   CURATED JOURNEYS — HORIZONTAL SWIPE
+═══════════════════════════════════════════ */
+.swipe-hint{
+  font-size:11px;
+  color:var(--text-muted);
+  letter-spacing:0.1em;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.swipe-hint::before{content:'↔';color:var(--gold);font-size:13px;}
 
-    .logo-block img {
-      max-height: 88px;
-      width: auto;
-      max-width: 100%;
-      object-fit: contain;
-      display: block;
-    }
+.cards-scroller{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  padding-bottom:12px;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.cards-scroller::-webkit-scrollbar{display:none;}
 
-    /* ── SPACER (10%) ── */
-    .spacer {
-      width: 10%;
-      flex-shrink: 0;
-    }
+.dest-card{
+  min-width:200px;
+  max-width:200px;
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--black2);
+  border:1px solid var(--border2);
+  cursor:pointer;
+  position:relative;
+  flex-shrink:0;
+  scroll-snap-align:start;
+  transition:border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+.dest-card:hover{
+  border-color:rgba(201,168,76,0.35);
+  transform:translateY(-2px);
+}
+.dest-card.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold),0 6px 24px rgba(201,168,76,0.15);
+}
+.dest-card-img{
+  width:100%;height:118px;
+  object-fit:cover;
+  display:block;
+  transition:transform 0.35s;
+}
+.dest-card:hover .dest-card-img{transform:scale(1.04);}
+.dest-card-img-wrap{overflow:hidden;height:118px;}
+.dest-card-body{padding:13px 14px 14px;}
+.dest-card-name{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;
+  font-size:16px;
+  letter-spacing:0.04em;
+  color:var(--ivory);
+  margin-bottom:4px;
+}
+.dest-card-days{
+  font-size:11px;
+  color:var(--gold);
+  letter-spacing:0.1em;
+  margin-bottom:6px;
+  font-family:'Cinzel',serif;
+}
+.dest-card-tags{
+  font-size:11px;
+  color:var(--text-muted);
+  line-height:1.5;
+}
+.dest-card-check{
+  position:absolute;
+  top:10px;right:10px;
+  width:24px;height:24px;
+  border-radius:50%;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(0.4);
+  transition:opacity 0.2s,transform 0.2s;
+}
+.dest-card.selected .dest-card-check{opacity:1;transform:scale(1);}
+.dest-card-check svg{width:13px;height:13px;stroke:#0a0a0a;stroke-width:2.5;fill:none;}
 
-    /* ── RIGHT: INFO (60%) ── */
-    .info-block {
-      width: 60%;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 7px;
-    }
+/* ═══════════════════════════════════════════
+   ACCORDION — EXPERIENCES PANEL
+═══════════════════════════════════════════ */
+.experiences-panel{
+  margin-top:14px;
+  background:var(--black2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transition:max-height 0.45s ease, opacity 0.35s ease, margin 0.3s;
+}
+.experiences-panel.open{
+  max-height:600px;
+  opacity:1;
+}
+.experiences-inner{padding:20px;}
+.exp-section-title{
+  font-family:'Cinzel',serif;
+  font-size:9.5px;
+  letter-spacing:0.28em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.exp-subsection{margin-bottom:18px;}
+.exp-subsection:last-child{margin-bottom:0;}
+.exp-sub-label{
+  font-size:11px;
+  color:var(--text-muted);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-bottom:9px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border2);
+}
+.chips-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:6px 13px;
+  border-radius:20px;
+  font-size:12px;
+  letter-spacing:0.04em;
+  cursor:pointer;
+  transition:all 0.2s;
+  white-space:nowrap;
+  user-select:none;
+}
+/* Included chips — pre-checked, ivory outline */
+.chip.included{
+  border:1px solid rgba(245,240,232,0.3);
+  color:var(--ivory);
+  background:rgba(245,240,232,0.06);
+}
+.chip.included.checked{
+  border-color:var(--ivory2);
+  background:rgba(245,240,232,0.12);
+  color:var(--ivory);
+}
+/* Add-on chips */
+.chip.addon{
+  border:1px solid var(--border);
+  color:var(--text-mid);
+  background:transparent;
+}
+.chip.addon:hover{
+  border-color:rgba(201,168,76,0.5);
+  color:var(--ivory);
+}
+.chip.addon.selected{
+  border-color:var(--gold);
+  background:rgba(201,168,76,0.12);
+  color:var(--gold2);
+}
+.chip-icon{font-size:11px;}
 
-    /* Operating since */
-    .operating-since {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 400;
-      font-style: normal;
-      font-size: 13px;
-      letter-spacing: 0.2em;
-      color: var(--ivory);
-      text-transform: uppercase;
-    }
+/* ═══════════════════════════════════════════
+   SECTION 2B — BUILD YOUR OWN
+═══════════════════════════════════════════ */
+.field-block{margin-bottom:20px;}
+.field-label{
+  font-family:'Cinzel',serif;
+  font-size:9.5px;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.search-wrap{
+  position:relative;
+}
+.search-input{
+  width:100%;
+  background:var(--black2);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:14px 18px 14px 44px;
+  color:var(--ivory);
+  font-family:'Lato',sans-serif;
+  font-size:14px;
+  outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.search-input::placeholder{color:var(--text-muted);}
+.search-input:focus{
+  border-color:rgba(201,168,76,0.5);
+  box-shadow:0 0 0 2px rgba(201,168,76,0.08);
+}
+.search-icon{
+  position:absolute;
+  left:15px;top:50%;transform:translateY(-50%);
+  color:var(--gold);
+  opacity:0.7;
+  font-size:16px;
+  pointer-events:none;
+}
 
-    /* Trusted label */
-    .trusted-label {
-      font-family: 'Cinzel', serif;
-      font-weight: 400;
-      font-size: 11px;
-      letter-spacing: 0.22em;
-      color: var(--ivory);
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
+/* Autocomplete sheet */
+.autocomplete-sheet{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:var(--black2);
+  border-top:1px solid var(--border);
+  border-radius:20px 20px 0 0;
+  z-index:500;
+  max-height:55vh;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  padding-bottom:env(safe-area-inset-bottom,16px);
+}
+.autocomplete-sheet.open{transform:translateY(0);}
+.sheet-handle{
+  width:38px;height:4px;
+  border-radius:2px;
+  background:rgba(245,240,232,0.2);
+  margin:12px auto 0;
+}
+.sheet-search-bar{
+  padding:14px 16px;
+  border-bottom:1px solid var(--border2);
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+.ac-item{
+  padding:15px 20px;
+  border-bottom:1px solid var(--border2);
+  cursor:pointer;
+  transition:background 0.15s;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.ac-item:hover{background:rgba(245,240,232,0.04);}
+.ac-icon{color:var(--gold);font-size:14px;width:20px;text-align:center;}
+.ac-name{font-size:14px;color:var(--ivory);}
+.ac-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.sheet-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:499;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.3s;
+}
+.sheet-backdrop.open{opacity:1;pointer-events:all;}
 
-    /* Partner logos row */
-    .partner-logos {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+/* Destination chips row */
+.dest-chips-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.dest-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 16px;
+  border-radius:24px;
+  border:1px solid var(--border2);
+  background:var(--black2);
+  color:var(--text-mid);
+  font-size:13px;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+}
+.dest-chip:hover{
+  border-color:rgba(201,168,76,0.4);
+  color:var(--ivory);
+}
+.dest-chip.selected{
+  border-color:var(--gold);
+  background:rgba(201,168,76,0.1);
+  color:var(--gold2);
+}
+.dest-chip.selected::after{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:24px;
+  box-shadow:0 0 10px rgba(201,168,76,0.2);
+  pointer-events:none;
+}
+@keyframes chipPulse{
+  0%{box-shadow:0 0 0 0 rgba(201,168,76,0.5);}
+  70%{box-shadow:0 0 0 8px rgba(201,168,76,0);}
+  100%{box-shadow:0 0 0 0 rgba(201,168,76,0);}
+}
+.dest-chip.pulse{animation:chipPulse 0.5s ease;}
 
-    /*
-      mix-blend-mode: screen on a black parent background makes
-      white/light backgrounds completely invisible — only the
-      coloured logo artwork remains visible.
-    */
-    .logo-pill {
-      background: #000;
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2px 6px;
-      height: 32px;
-    }
+/* ═══════════════════════════════════════════
+   ANIMATED ROUTE STRIP
+═══════════════════════════════════════════ */
+.route-strip-wrap{
+  margin-top:22px;
+  background:var(--black2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 18px;
+  display:none;
+}
+.route-strip-wrap.visible{display:block;}
+.route-strip-label{
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.28em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.route-strip{
+  display:flex;
+  align-items:center;
+  gap:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding-bottom:2px;
+}
+.route-strip::-webkit-scrollbar{display:none;}
+.route-city{
+  display:flex;align-items:center;gap:0;
+  white-space:nowrap;
+}
+@keyframes cityAppear{
+  from{opacity:0;transform:scale(0.7);}
+  to{opacity:1;transform:scale(1);}
+}
+.route-city-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;
+  font-weight:500;
+  color:var(--ivory);
+  animation:cityAppear 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.route-arrow{
+  color:var(--gold);
+  font-size:14px;
+  margin:0 8px;
+  opacity:0.7;
+  animation:cityAppear 0.3s ease both;
+}
+.route-info-strip{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border2);
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.route-info-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;
+  border-radius:16px;
+  border:1px solid rgba(201,168,76,0.25);
+  font-size:11px;
+  color:var(--text-mid);
+  background:rgba(201,168,76,0.05);
+}
+.route-info-badge .bi{color:var(--gold);font-size:11px;}
 
-    .logo-pill img {
-      height: 26px;
-      width: auto;
-      object-fit: contain;
-      display: block;
-      mix-blend-mode: screen;
-    }
+/* ═══════════════════════════════════════════
+   FLOATING ESTIMATE BAR
+═══════════════════════════════════════════ */
+#estimate-bar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:300;
+  background:rgba(10,10,10,0.97);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  height:64px;
+  display:flex;
+  align-items:center;
+  padding:0 20px;
+  justify-content:space-between;
+  gap:12px;
+}
+.estimate-left{display:flex;flex-direction:column;gap:2px;}
+.estimate-micro{
+  font-family:'Cinzel',serif;
+  font-size:8.5px;
+  letter-spacing:0.22em;
+  color:var(--text-muted);
+  text-transform:uppercase;
+}
+.estimate-range{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;
+  font-size:20px;
+  letter-spacing:0.03em;
+  color:var(--gold2);
+  transition:all 0.3s;
+}
+.view-btn{
+  padding:11px 22px;
+  border-radius:24px;
+  background:var(--gold);
+  color:var(--black);
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  border:none;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background 0.2s, transform 0.15s;
+  flex-shrink:0;
+}
+.view-btn:hover{background:var(--gold2);transform:scale(1.02);}
+.view-btn:active{transform:scale(0.97);}
 
-    /* Cert strip */
-    .cert-strip {
-      font-family: 'Cinzel', serif;
-      font-weight: 500;
-      font-size: 10.5px;
-      letter-spacing: 0.25em;
-      color: var(--gold);
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+/* ═══════════════════════════════════════════
+   BOTTOM SHEET — JOURNEY SUMMARY
+═══════════════════════════════════════════ */
+#journey-sheet{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:600;
+  background:var(--black2);
+  border-top:1px solid var(--border);
+  border-radius:20px 20px 0 0;
+  max-height:75vh;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  padding-bottom:env(safe-area-inset-bottom,20px);
+}
+#journey-sheet.open{transform:translateY(0);}
+#sheet-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:599;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.3s;
+}
+#sheet-backdrop.open{opacity:1;pointer-events:all;}
+.journey-sheet-inner{padding:24px 22px;}
+.sheet-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+.sheet-title{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:500;
+  font-size:22px;
+  letter-spacing:0.04em;
+  color:var(--ivory);
+}
+.sheet-close{
+  width:30px;height:30px;
+  border-radius:50%;
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--text-muted);
+  font-size:16px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color 0.2s, color 0.2s;
+}
+.sheet-close:hover{border-color:var(--gold);color:var(--gold);}
+.route-display{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  font-weight:400;
+  color:var(--gold2);
+  letter-spacing:0.05em;
+  margin-bottom:14px;
+  font-style:italic;
+}
+.journey-meta{
+  display:flex;gap:16px;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.journey-meta-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;
+  color:var(--text-mid);
+}
+.journey-meta-item span{color:var(--ivory);}
+.included-list{margin-top:4px;}
+.included-title{
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.included-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border2);
+  font-size:13px;
+  color:var(--text-mid);
+}
+.included-item:last-child{border-bottom:none;}
+.tick{color:var(--gold);font-size:14px;}
 
-    /* ── RESPONSIVE: tablet ── */
-    @media (max-width: 900px) {
-      .logo-block img    { max-height: 70px; }
-      .cert-strip        { font-size: 9px; letter-spacing: 0.16em; }
-      .logo-pill         { height: 26px; padding: 2px 4px; }
-      .logo-pill img     { height: 20px; }
-    }
+/* ═══════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════ */
+.section-divider{
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--border),transparent);
+  margin:32px 0;
+}
 
-    /* ── RESPONSIVE: mobile ── */
-    @media (max-width: 600px) {
-      header { padding: 12px 0; }
-      .header-inner {
-        flex-direction: column;
-        align-items: center;
-        padding: 0 5%;
-        gap: 12px;
-      }
-      .spacer { display: none; }
-      .logo-block { width: 100%; justify-content: center; }
-      .logo-block img { max-height: 65px; }
-      .info-block { width: 100%; align-items: center; gap: 8px; }
-      .cert-strip { font-size: 8.5px; letter-spacing: 0.13em; text-align: center; white-space: normal; }
-    }
-  </style>
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:600px){
+  .header-inner{flex-direction:column;align-items:center;padding:12px 5%;gap:14px;}
+  .spacer{display:none;}
+  .logo-block{width:100%;justify-content:center;}
+  .logo-block img{max-height:65px;}
+  .info-block{width:100%;align-items:center;}
+  .cert-strip{font-size:9px;letter-spacing:0.12em;text-align:center;white-space:normal;}
+  .section-title{font-size:20px;}
+  .estimate-range{font-size:18px;}
+}
+</style>
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc Travels"/>
+    </div>
+    <div class="spacer"></div>
+    <div class="info-block">
+      <span class="operating-since">Operating since 2019</span>
+      <span class="trusted-label">Trusted &amp; Verified By</span>
+      <div class="partner-logos">
+        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.54.26-AM.png" alt="Google"/></div>
+        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.56.00-AM.png" alt="TripAdvisor"/></div>
+        <div class="logo-pill"><img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.57.24-AM.png" alt="Viator"/></div>
+      </div>
+      <span class="cert-strip">GST Registered &nbsp;·&nbsp; MSME Certified &nbsp;·&nbsp; Govt. of India Recognised</span>
+    </div>
+  </div>
+</header>
 
-      <!-- LEFT: LOGO -->
-      <div class="logo-block">
-        <img
-          src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png"
-          alt="Ivory Arc Travels"
-        />
+<!-- ══════════════ STICKY STEP BAR ══════════════ -->
+<div id="step-bar">
+  <div class="step-bar-inner">
+    <span class="step-title" id="step-title-text">Plan Your Journey</span>
+    <span class="step-count" id="step-count-text">Step 1 of 6</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<!-- ══════════════ MAIN ESTIMATOR ══════════════ -->
+<div class="estimator">
+
+  <!-- ── SECTION 1: JOURNEY TYPE ── -->
+  <div class="section-block visible" id="sec1">
+    <div class="section-label">Step 1</div>
+    <div class="section-title">How would you like to journey?</div>
+    <div class="journey-type-cards">
+
+      <div class="jtype-card" id="jtype-curated" onclick="selectJourneyType('curated')">
+        <div class="jtype-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="jtype-name">Curated Journeys</div>
+        <div class="jtype-desc">Explore our most loved private routes — handcrafted for discerning travellers who want the iconic India experience, perfected.</div>
+        <span class="jtype-tag">12 signature routes · Private chauffeur · Luxury stays</span>
       </div>
 
-      <!-- SPACER: the 10% breathing room -->
-      <div class="spacer"></div>
-
-      <!-- RIGHT: INFO -->
-      <div class="info-block">
-
-        <span class="operating-since">Operating since 2019</span>
-
-        <span class="trusted-label">Trusted &amp; Verified By</span>
-
-        <div class="partner-logos">
-          <div class="logo-pill">
-            <img
-              src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.54.26-AM.png"
-              alt="Google"
-            />
-          </div>
-          <div class="logo-pill">
-            <img
-              src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.56.00-AM.png"
-              alt="TripAdvisor"
-            />
-          </div>
-          <div class="logo-pill">
-            <img
-              src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.57.24-AM.png"
-              alt="Viator"
-            />
-          </div>
-        </div>
-
-        <span class="cert-strip">
-          GST Registered &nbsp;·&nbsp; MSME Certified &nbsp;·&nbsp; Govt. of India Recognised
-        </span>
-
+      <div class="jtype-card" id="jtype-custom" onclick="selectJourneyType('custom')">
+        <div class="jtype-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="jtype-name">Build Your Own Journey</div>
+        <div class="jtype-desc">Create your own North India route — choose your destinations, experiences, and pace. A journey as unique as you are.</div>
+        <span class="jtype-tag">Fully bespoke · Your cities · Your sequence</span>
       </div>
 
     </div>
-  </header>
+  </div>
 
+  <div class="section-divider"></div>
+
+  <!-- ── SECTION 2A: CURATED JOURNEYS ── -->
+  <div class="section-block" id="sec2a">
+    <div class="section-label">Step 2 · Curated Routes</div>
+    <div class="section-title">Choose your journey</div>
+    <div class="swipe-hint">Swipe to explore all routes</div>
+
+    <div class="cards-scroller" id="curated-scroller">
+
+      <div class="dest-card" id="card-golden" onclick="selectCurated('golden')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Golden Triangle"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Golden Triangle</div>
+          <div class="dest-card-days">6 Days · 5 Nights</div>
+          <div class="dest-card-tags">Delhi · Agra · Jaipur<br/>Heritage · Chauffeur Driven</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-agra" onclick="selectCurated('agra')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg" alt="Agra Discovery"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Agra Discovery</div>
+          <div class="dest-card-days">2 Days · 1 Night</div>
+          <div class="dest-card-tags">Taj Mahal · Heritage<br/>Chauffeur Driven</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-spiritual" onclick="selectCurated('spiritual')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg" alt="Spiritual North India"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Spiritual Circuit</div>
+          <div class="dest-card-days">7 Days · 6 Nights</div>
+          <div class="dest-card-tags">Varanasi · Mathura · Haridwar<br/>Temples · Aarti · Wellness</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-adventure" onclick="selectCurated('adventure')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg" alt="Adventure Escape"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Adventure Escape</div>
+          <div class="dest-card-days">5 Days · 4 Nights</div>
+          <div class="dest-card-tags">Rishikesh · Jim Corbett<br/>Rafting · Safari · Wellness</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-royal" onclick="selectCurated('royal')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg" alt="Royal Rajputana"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Royal Rajputana</div>
+          <div class="dest-card-days">4 Days · 3 Nights</div>
+          <div class="dest-card-tags">Jaipur · Amber Fort<br/>Royal Dinner · Balloon Sunrise</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-himalayas" onclick="selectCurated('himalayas')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg" alt="Himalayan Retreat"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Himalayan Retreat</div>
+          <div class="dest-card-days">6 Days · 5 Nights</div>
+          <div class="dest-card-tags">Shimla · Manali<br/>Snow · Paragliding · Spa</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-amritsar" onclick="selectCurated('amritsar')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg" alt="Punjab Immersion"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Punjab Immersion</div>
+          <div class="dest-card-days">3 Days · 2 Nights</div>
+          <div class="dest-card-tags">Amritsar · Golden Temple<br/>Wagah Border · Food Walk</div>
+        </div>
+      </div>
+
+      <div class="dest-card" id="card-varanasi" onclick="selectCurated('varanasi')">
+        <div class="dest-card-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="dest-card-img-wrap"><img class="dest-card-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg" alt="Varanasi Soul"/></div>
+        <div class="dest-card-body">
+          <div class="dest-card-name">Varanasi Soul</div>
+          <div class="dest-card-days">3 Days · 2 Nights</div>
+          <div class="dest-card-tags">Varanasi · Ghats · Aarti<br/>Dawn Boat · Silk Workshop</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Experiences accordion panel -->
+    <div class="experiences-panel" id="exp-panel">
+      <div class="experiences-inner" id="exp-inner">
+        <!-- dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2B: BUILD YOUR OWN ── -->
+  <div class="section-block" id="sec2b">
+    <div class="section-label">Step 2 · Build Your Route</div>
+    <div class="section-title">Where are you journeying?</div>
+
+    <div class="field-block">
+      <div class="field-label">Departing from</div>
+      <div class="search-wrap">
+        <span class="search-icon">✈</span>
+        <input class="search-input" id="depart-input" type="text" placeholder="City or airport you're flying into…" autocomplete="off" onfocus="openACSheet()"/>
+      </div>
+    </div>
+
+    <div class="field-block">
+      <div class="field-label">Destinations to explore</div>
+      <div class="dest-chips-row" id="dest-chips-row">
+        <div class="dest-chip" data-city="Delhi" onclick="toggleDestChip(this)">
+          <span>🏛</span> Delhi
+        </div>
+        <div class="dest-chip" data-city="Agra" onclick="toggleDestChip(this)">
+          <span>🕌</span> Agra
+        </div>
+        <div class="dest-chip" data-city="Jaipur" onclick="toggleDestChip(this)">
+          <span>🏰</span> Jaipur
+        </div>
+        <div class="dest-chip" data-city="Haridwar &amp; Rishikesh" onclick="toggleDestChip(this)">
+          <span>🙏</span> Haridwar &amp; Rishikesh
+        </div>
+        <div class="dest-chip" data-city="Mathura &amp; Vrindavan" onclick="toggleDestChip(this)">
+          <span>🪷</span> Mathura &amp; Vrindavan
+        </div>
+        <div class="dest-chip" data-city="Amritsar" onclick="toggleDestChip(this)">
+          <span>⭐</span> Amritsar
+        </div>
+      </div>
+    </div>
+
+    <!-- Route strip -->
+    <div class="route-strip-wrap" id="route-strip-wrap">
+      <div class="route-strip-label">Your Route</div>
+      <div class="route-strip" id="route-strip"></div>
+      <div class="route-info-strip" id="route-info-strip"></div>
+    </div>
+
+  </div>
+
+</div><!-- /estimator -->
+
+<!-- ══════════════ FLOATING ESTIMATE BAR ══════════════ -->
+<div id="estimate-bar">
+  <div class="estimate-left">
+    <span class="estimate-micro">Estimated Range</span>
+    <span class="estimate-range" id="estimate-range">₹1.4L – ₹1.8L</span>
+  </div>
+  <button class="view-btn" onclick="openJourneySheet()">View Journey</button>
+</div>
+
+<!-- ══════════════ JOURNEY SUMMARY SHEET ══════════════ -->
+<div id="sheet-backdrop" onclick="closeJourneySheet()"></div>
+<div id="journey-sheet">
+  <div class="journey-sheet-inner">
+    <div class="sheet-top">
+      <div class="sheet-title">Your Journey</div>
+      <button class="sheet-close" onclick="closeJourneySheet()">✕</button>
+    </div>
+    <div class="route-display" id="sheet-route">Delhi → Agra → Jaipur</div>
+    <div class="journey-meta">
+      <div class="journey-meta-item">📅 <span id="sheet-days">6 Days / 5 Nights</span></div>
+      <div class="journey-meta-item">👥 <span>2 Adults</span></div>
+    </div>
+    <div class="included-list">
+      <div class="included-title">Always Included</div>
+      <div class="included-item"><span class="tick">✔</span> Private Chauffeur &amp; AC Vehicle</div>
+      <div class="included-item"><span class="tick">✔</span> 4★ Handpicked Stays</div>
+      <div class="included-item"><span class="tick">✔</span> Airport Pickup &amp; Drop</div>
+      <div class="included-item"><span class="tick">✔</span> Dedicated Travel Manager</div>
+      <div class="included-item"><span class="tick">✔</span> All Monument Entries (Included sites)</div>
+    </div>
+    <div id="sheet-addons-section" style="margin-top:18px;display:none;">
+      <div class="included-title">Your Add-ons</div>
+      <div id="sheet-addons-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ AUTOCOMPLETE SHEET ══════════════ -->
+<div class="sheet-backdrop" id="ac-backdrop" onclick="closeACSheet()"></div>
+<div class="autocomplete-sheet" id="ac-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-search-bar">Where are you flying in from?</div>
+  <div id="ac-list">
+    <div class="ac-item" onclick="selectAC('New Delhi (DEL)')"><span class="ac-icon">✈</span><div><div class="ac-name">New Delhi</div><div class="ac-sub">Indira Gandhi International · DEL</div></div></div>
+    <div class="ac-item" onclick="selectAC('Mumbai (BOM)')"><span class="ac-icon">✈</span><div><div class="ac-name">Mumbai</div><div class="ac-sub">Chhatrapati Shivaji Maharaj International · BOM</div></div></div>
+    <div class="ac-item" onclick="selectAC('Bengaluru (BLR)')"><span class="ac-icon">✈</span><div><div class="ac-name">Bengaluru</div><div class="ac-sub">Kempegowda International · BLR</div></div></div>
+    <div class="ac-item" onclick="selectAC('London (LHR)')"><span class="ac-icon">✈</span><div><div class="ac-name">London Heathrow</div><div class="ac-sub">International Arrival · LHR</div></div></div>
+    <div class="ac-item" onclick="selectAC('Dubai (DXB)')"><span class="ac-icon">✈</span><div><div class="ac-name">Dubai</div><div class="ac-sub">International Arrival · DXB</div></div></div>
+    <div class="ac-item" onclick="selectAC('Singapore (SIN)')"><span class="ac-icon">✈</span><div><div class="ac-name">Singapore Changi</div><div class="ac-sub">International Arrival · SIN</div></div></div>
+    <div class="ac-item" onclick="selectAC('New York (JFK)')"><span class="ac-icon">✈</span><div><div class="ac-name">New York JFK</div><div class="ac-sub">International Arrival · JFK</div></div></div>
+    <div class="ac-item" onclick="selectAC('Sydney (SYD)')"><span class="ac-icon">✈</span><div><div class="ac-name">Sydney</div><div class="ac-sub">International Arrival · SYD</div></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const curatedData = {
+  golden:{
+    name:'Golden Triangle', days:'6 Days / 5 Nights', route:'Delhi → Agra → Jaipur',
+    baseRange:[130000,180000],
+    included:[
+      {id:'red-fort',label:'Red Fort'},
+      {id:'humayun',label:'Humayun Tomb'},
+      {id:'india-gate',label:'India Gate'},
+      {id:'taj-mahal',label:'Taj Mahal'},
+      {id:'agra-fort',label:'Agra Fort'},
+      {id:'amber-fort',label:'Amber Fort'},
+      {id:'city-palace',label:'City Palace'},
+      {id:'hawa-mahal',label:'Hawa Mahal'},
+    ],
+    addons:[
+      {id:'balloon',label:'Balloon Sunrise',cost:6000},
+      {id:'royal-dinner',label:'Royal Dinner',cost:4500},
+      {id:'street-food',label:'Street Food Walk',cost:1200},
+      {id:'sunrise-taj',label:'Sunrise Taj',cost:2500},
+      {id:'vip-entry',label:'VIP Entry',cost:3500},
+      {id:'photographer',label:'Photographer',cost:8000},
+      {id:'old-delhi',label:'Old Delhi Walk',cost:1500},
+      {id:'rickshaw',label:'Rickshaw Ride',cost:800},
+    ]
+  },
+  agra:{
+    name:'Agra Discovery', days:'2 Days / 1 Night', route:'Agra',
+    baseRange:[35000,55000],
+    included:[
+      {id:'taj-mahal',label:'Taj Mahal'},
+      {id:'agra-fort',label:'Agra Fort'},
+    ],
+    addons:[
+      {id:'baby-taj',label:'Baby Taj',cost:1200},
+      {id:'mehtab',label:'Mehtab Bagh',cost:800},
+      {id:'fatehpur',label:'Fatehpur Sikri',cost:2500},
+      {id:'sunrise-taj',label:'Sunrise Taj',cost:2500},
+      {id:'heritage-walk',label:'Heritage Walk',cost:1500},
+      {id:'vip-entry',label:'VIP Entry',cost:3500},
+      {id:'petha',label:'Petha Making',cost:1000},
+      {id:'tonga',label:'Tonga Ride',cost:600},
+      {id:'mughal-dinner',label:'Mughal Dinner',cost:5500},
+      {id:'photographer',label:'Photographer',cost:8000},
+    ]
+  },
+  spiritual:{
+    name:'Spiritual Circuit', days:'7 Days / 6 Nights', route:'Varanasi → Mathura → Haridwar',
+    baseRange:[120000,165000],
+    included:[
+      {id:'janmabhoomi',label:'Janmabhoomi'},
+      {id:'dwarkadhish',label:'Dwarkadhish Temple'},
+      {id:'banke-bihari',label:'Banke Bihari'},
+      {id:'laxman-jhula',label:'Laxman Jhula'},
+      {id:'har-ki-pauri',label:'Har Ki Pauri'},
+      {id:'ganga-aarti-h',label:'Ganga Aarti (Haridwar)'},
+    ],
+    addons:[
+      {id:'iskcon',label:'ISKCON Visit',cost:0},
+      {id:'evening-aarti',label:'Evening Aarti',cost:800},
+      {id:'flower-ceremony',label:'Flower Ceremony',cost:1200},
+      {id:'boat-ride',label:'Boat Ride',cost:1500},
+      {id:'govardhan',label:'Govardhan Walk',cost:1000},
+      {id:'holi',label:'Holi Colour Experience',cost:1800},
+      {id:'yoga',label:'Yoga Session',cost:1200},
+      {id:'ganga-aarti-seat',label:'Ganga Aarti Seating',cost:2500},
+      {id:'overnight-ganges',label:'Overnight Ganges Experience',cost:12000},
+    ]
+  },
+  adventure:{
+    name:'Adventure Escape', days:'5 Days / 4 Nights', route:'Rishikesh → Jim Corbett',
+    baseRange:[95000,135000],
+    included:[
+      {id:'laxman-jhula',label:'Laxman Jhula'},
+      {id:'har-ki-pauri',label:'Har Ki Pauri'},
+      {id:'ganga-aarti',label:'Ganga Aarti'},
+      {id:'dhikala',label:'Dhikala Safari'},
+      {id:'nature-walk',label:'Nature Walk'},
+    ],
+    addons:[
+      {id:'rafting-g13',label:'River Rafting G1–3',cost:2500},
+      {id:'rafting-g4',label:'Rafting G4 (Advanced)',cost:4500},
+      {id:'bungee',label:'Bungee Jumping',cost:3500},
+      {id:'flying-fox',label:'Flying Fox',cost:2000},
+      {id:'cliff-jump',label:'Cliff Jump',cost:1500},
+      {id:'bijrani',label:'Bijrani Safari',cost:5000},
+      {id:'elephant',label:'Elephant Safari',cost:4000},
+      {id:'night-safari',label:'Night Safari',cost:6000},
+      {id:'camp-stay',label:'Camp Stay',cost:8000},
+      {id:'massage',label:'Riverside Massage',cost:3500},
+    ]
+  },
+  royal:{
+    name:'Royal Rajputana', days:'4 Days / 3 Nights', route:'Jaipur',
+    baseRange:[75000,105000],
+    included:[
+      {id:'amber-fort',label:'Amber Fort'},
+      {id:'city-palace',label:'City Palace'},
+      {id:'hawa-mahal',label:'Hawa Mahal'},
+    ],
+    addons:[
+      {id:'jantar',label:'Jantar Mantar',cost:800},
+      {id:'nahargarh',label:'Nahargarh Fort',cost:1200},
+      {id:'jal-mahal',label:'Jal Mahal',cost:600},
+      {id:'balloon',label:'Balloon Sunrise',cost:6000},
+      {id:'elephant',label:'Elephant Ride',cost:3500},
+      {id:'camel',label:'Camel Ride',cost:1200},
+      {id:'block-print',label:'Block Printing',cost:1500},
+      {id:'pottery',label:'Pottery Workshop',cost:1200},
+      {id:'turban',label:'Turban Tying',cost:500},
+      {id:'royal-dinner',label:'Royal Dinner',cost:4500},
+      {id:'jewellery-walk',label:'Jewellery Walk',cost:800},
+    ]
+  },
+  himalayas:{
+    name:'Himalayan Retreat', days:'6 Days / 5 Nights', route:'Shimla → Manali',
+    baseRange:[110000,155000],
+    included:[],
+    addons:[
+      {id:'paragliding',label:'Paragliding',cost:4500},
+      {id:'biking',label:'Mountain Biking',cost:2500},
+      {id:'snow-sports',label:'Snow Sports',cost:3500},
+      {id:'spa',label:'Himalayan Spa',cost:5000},
+      {id:'camping',label:'Mountain Camping',cost:6000},
+      {id:'home-meal',label:'Local Home Meal Experience',cost:1800},
+    ]
+  },
+  amritsar:{
+    name:'Punjab Immersion', days:'3 Days / 2 Nights', route:'Amritsar',
+    baseRange:[45000,70000],
+    included:[
+      {id:'golden-temple',label:'Golden Temple'},
+      {id:'jallianwala',label:'Jallianwala Bagh'},
+      {id:'wagah',label:'Wagah Border Ceremony'},
+    ],
+    addons:[
+      {id:'partition',label:'Partition Museum',cost:800},
+      {id:'gobindgarh',label:'Gobindgarh Fort',cost:1500},
+      {id:'langar',label:'Langar Experience',cost:0},
+      {id:'food-walk',label:'Food Walk',cost:1200},
+      {id:'wagah-vip',label:'Wagah VIP Access',cost:2500},
+      {id:'turban',label:'Turban Tying',cost:500},
+    ]
+  },
+  varanasi:{
+    name:'Varanasi Soul', days:'3 Days / 2 Nights', route:'Varanasi',
+    baseRange:[55000,80000],
+    included:[],
+    addons:[
+      {id:'boat-dawn',label:'Dawn Boat Experience',cost:2500},
+      {id:'silk',label:'Silk Workshop',cost:1500},
+      {id:'aarti-seat',label:'Ganga Aarti Seating',cost:2500},
+      {id:'blessing',label:'Blessing Ceremony',cost:1800},
+      {id:'cooking',label:'Cooking Class',cost:2000},
+      {id:'photo-tour',label:'Photography Tour',cost:5000},
+      {id:'pind-daan',label:'Pind Daan Ritual',cost:3500},
+      {id:'overnight-ganges',label:'Overnight Ganges Experience',cost:12000},
+    ]
+  }
+};
+
+const distanceInfo = {
+  2:{icon:'🚗',text:'Comfortable private transfer between your cities — sit back and watch the landscapes unfold.'},
+  3:{icon:'🗺',text:'A classic North India sweep. Expect scenic highway drives of 4–6 hrs between cities — we time stops perfectly.'},
+  4:{icon:'⏱',text:'An ambitious and rewarding route. We schedule drives to align with golden hour arrivals wherever possible.'},
+  5:{icon:'✈',text:'For 5+ cities, we recommend considering internal flights for select legs — we\'ll advise the optimal mix of road and air.'},
+  6:{icon:'✈',text:'A comprehensive grand tour. We\'ll customise a road + air itinerary to make the most of every day.'},
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let journeyType = null;
+let selectedCurated = null;
+let selectedAddons = new Set();
+let selectedCities = [];
+let estimateBase = [140000, 180000];
+let addonTotal = 0;
+let currentStep = 1;
+
+// ═══════════════════════════════════════
+// STEP / PROGRESS
+// ═══════════════════════════════════════
+function setStep(n, title){
+  currentStep = n;
+  document.getElementById('step-count-text').textContent = `Step ${n} of 6`;
+  document.getElementById('step-title-text').textContent = title;
+  document.getElementById('progress-fill').style.width = (n/6*100)+'%';
+}
+
+// ═══════════════════════════════════════
+// JOURNEY TYPE
+// ═══════════════════════════════════════
+function selectJourneyType(type){
+  journeyType = type;
+  document.getElementById('jtype-curated').classList.toggle('selected', type==='curated');
+  document.getElementById('jtype-custom').classList.toggle('selected', type==='custom');
+
+  const sec2a = document.getElementById('sec2a');
+  const sec2b = document.getElementById('sec2b');
+
+  if(type==='curated'){
+    sec2a.classList.add('visible');
+    sec2b.classList.remove('visible');
+    setStep(2,'Choose Your Journey');
+  } else {
+    sec2b.classList.add('visible');
+    sec2a.classList.remove('visible');
+    setStep(2,'Build Your Route');
+  }
+
+  setTimeout(()=>{
+    const target = type==='curated' ? sec2a : sec2b;
+    target.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 120);
+}
+
+// ═══════════════════════════════════════
+// CURATED SELECTION
+// ═══════════════════════════════════════
+function selectCurated(key){
+  // deselect all cards
+  document.querySelectorAll('.dest-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('card-'+key).classList.add('selected');
+
+  selectedCurated = key;
+  selectedAddons.clear();
+  const data = curatedData[key];
+  estimateBase = data.baseRange;
+  addonTotal = 0;
+  updateEstimate();
+
+  // update sheet
+  document.getElementById('sheet-route').textContent = data.route;
+  document.getElementById('sheet-days').textContent = data.days;
+
+  renderExperiencesPanel(data);
+  setStep(3,'Personalise Experiences');
+}
+
+function renderExperiencesPanel(data){
+  const panel = document.getElementById('exp-panel');
+  const inner = document.getElementById('exp-inner');
+
+  inner.innerHTML = '';
+
+  // Included
+  if(data.included.length > 0){
+    const s = document.createElement('div');
+    s.className = 'exp-subsection';
+    s.innerHTML = `<div class="exp-section-title">Included in Your Tour</div><div class="exp-sub-label">These experiences are part of your journey</div>`;
+    const row = document.createElement('div');
+    row.className = 'chips-row';
+    data.included.forEach(exp=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip included checked';
+      chip.setAttribute('data-id', exp.id);
+      chip.innerHTML = `<span class="chip-icon">✓</span> ${exp.label}`;
+      row.appendChild(chip);
+    });
+    s.appendChild(row);
+    inner.appendChild(s);
+  }
+
+  // Add-ons
+  if(data.addons.length > 0){
+    const s2 = document.createElement('div');
+    s2.className = 'exp-subsection';
+    s2.innerHTML = `<div class="exp-section-title" style="margin-top:${data.included.length>0?'16px':'0'}">Enhance Your Experience</div><div class="exp-sub-label">Select add-ons — pricing updates in estimate below</div>`;
+    const row2 = document.createElement('div');
+    row2.className = 'chips-row';
+    data.addons.forEach(exp=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip addon';
+      chip.setAttribute('data-id', exp.id);
+      chip.setAttribute('data-cost', exp.cost);
+      chip.innerHTML = `<span class="chip-icon">+</span> ${exp.label}`;
+      chip.onclick = ()=>toggleAddon(chip, exp);
+      row2.appendChild(chip);
+    });
+    s2.appendChild(row2);
+    inner.appendChild(s2);
+  }
+
+  // open panel
+  panel.classList.add('open');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 120);
+}
+
+function toggleAddon(chip, exp){
+  if(selectedAddons.has(exp.id)){
+    selectedAddons.delete(exp.id);
+    addonTotal -= exp.cost;
+    chip.classList.remove('selected');
+    chip.innerHTML = `<span class="chip-icon">+</span> ${exp.label}`;
+  } else {
+    selectedAddons.add(exp.id);
+    addonTotal += exp.cost;
+    chip.classList.add('selected');
+    chip.innerHTML = `<span class="chip-icon">✓</span> ${exp.label}`;
+  }
+  updateEstimate();
+  updateSheetAddons();
+}
+
+function updateSheetAddons(){
+  const sec = document.getElementById('sheet-addons-section');
+  const list = document.getElementById('sheet-addons-list');
+  if(!selectedCurated) return;
+  const data = curatedData[selectedCurated];
+  const added = data.addons.filter(a=>selectedAddons.has(a.id));
+  if(added.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML = added.map(a=>`<div class="included-item"><span class="tick">✓</span>${a.label}</div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// ESTIMATE
+// ═══════════════════════════════════════
+function updateEstimate(){
+  const lo = estimateBase[0] + addonTotal;
+  const hi = estimateBase[1] + addonTotal;
+  const fmt = n => n>=100000 ? `₹${(n/100000).toFixed(1)}L` : `₹${(n/1000).toFixed(0)}K`;
+  document.getElementById('estimate-range').textContent = `${fmt(lo)} – ${fmt(hi)}`;
+}
+
+// ═══════════════════════════════════════
+// JOURNEY SHEET
+// ═══════════════════════════════════════
+function openJourneySheet(){
+  document.getElementById('journey-sheet').classList.add('open');
+  document.getElementById('sheet-backdrop').classList.add('open');
+}
+function closeJourneySheet(){
+  document.getElementById('journey-sheet').classList.remove('open');
+  document.getElementById('sheet-backdrop').classList.remove('open');
+}
+
+// ═══════════════════════════════════════
+// DESTINATION CHIPS (2B)
+// ═══════════════════════════════════════
+function toggleDestChip(chip){
+  const city = chip.getAttribute('data-city');
+  chip.classList.toggle('selected');
+  chip.classList.add('pulse');
+  setTimeout(()=>chip.classList.remove('pulse'), 600);
+
+  if(chip.classList.contains('selected')){
+    if(!selectedCities.includes(city)) selectedCities.push(city);
+  } else {
+    selectedCities = selectedCities.filter(c=>c!==city);
+  }
+  renderRouteStrip();
+  updateEstimateCustom();
+  if(selectedCities.length>0) setStep(3,'Add Your Preferences');
+}
+
+function renderRouteStrip(){
+  const wrap = document.getElementById('route-strip-wrap');
+  const strip = document.getElementById('route-strip');
+  const info = document.getElementById('route-info-strip');
+
+  if(selectedCities.length===0){wrap.classList.remove('visible');return;}
+  wrap.classList.add('visible');
+
+  strip.innerHTML = '';
+  selectedCities.forEach((city, i)=>{
+    const cityEl = document.createElement('div');
+    cityEl.className = 'route-city';
+    if(i>0){
+      const arrow = document.createElement('span');
+      arrow.className = 'route-arrow';
+      arrow.textContent = '→';
+      strip.appendChild(arrow);
+    }
+    const nameEl = document.createElement('span');
+    nameEl.className = 'route-city-name';
+    nameEl.textContent = city;
+    nameEl.style.animationDelay = (i*0.08)+'s';
+    cityEl.appendChild(nameEl);
+    strip.appendChild(cityEl);
+  });
+
+  // info badges
+  info.innerHTML = '';
+  const n = selectedCities.length;
+  if(n>=2){
+    const hints = [
+      {icon:'🚗', text: n<=3 ? 'Comfortable private transfers' : 'Mixed road & air recommended'},
+      {icon:'📍', text:`${n} destination${n>1?'s':''} selected`},
+      {icon:'⏱', text: n===2 ? '2–4 hr avg. drive between cities' : n<=4 ? '4–6 hr scenic drives' : 'We\'ll optimise travel time for you'},
+    ];
+    if(n>=4){
+      hints.push({icon:'✈', text:'Internal flights available on request'});
+    }
+    hints.forEach(h=>{
+      const badge = document.createElement('div');
+      badge.className = 'route-info-badge';
+      badge.innerHTML = `<span class="bi">${h.icon}</span>${h.text}`;
+      info.appendChild(badge);
+    });
+  }
+}
+
+function updateEstimateCustom(){
+  const perCity = 45000;
+  const n = selectedCities.length;
+  if(n===0){
+    document.getElementById('estimate-range').textContent = 'Select destinations';
+    return;
+  }
+  const lo = n * perCity * 0.9;
+  const hi = n * perCity * 1.4;
+  const fmt = n => n>=100000 ? `₹${(n/100000).toFixed(1)}L` : `₹${(n/1000).toFixed(0)}K`;
+  document.getElementById('estimate-range').textContent = `${fmt(lo)} – ${fmt(hi)}`;
+
+  // update sheet route
+  document.getElementById('sheet-route').textContent = selectedCities.join(' → ') || '—';
+  document.getElementById('sheet-days').textContent = `${n*2} Days / ${n*2-1} Nights (approx)`;
+}
+
+// ═══════════════════════════════════════
+// AUTOCOMPLETE SHEET
+// ═══════════════════════════════════════
+function openACSheet(){
+  document.getElementById('ac-sheet').classList.add('open');
+  document.getElementById('ac-backdrop').classList.add('open');
+  document.getElementById('depart-input').blur();
+}
+function closeACSheet(){
+  document.getElementById('ac-sheet').classList.remove('open');
+  document.getElementById('ac-backdrop').classList.remove('open');
+}
+function selectAC(val){
+  document.getElementById('depart-input').value = val;
+  closeACSheet();
+}
+
+// init
+setStep(1,'Plan Your Journey');
+</script>
 </body>
 </html>
