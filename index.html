@@ -5,114 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ivory Arc Travels – Header</title>
 
-  <!-- Google Fonts: Cinzel (luxury display) + Cormorant Garamond (elegant body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --black:       #0a0a0a;
-      --ivory:       #f5f0e8;
-      --gold:        #c9a84c;
-      --gold-light:  #e2c06e;
-      --gold-dim:    #a0783a;
-      --white:       #ffffff;
+      --black: #0a0a0a;
+      --ivory: #f5f0e8;
+      --gold:  #c9a84c;
     }
 
     body {
-      background: #1a1a1a;
+      background: var(--black);
       font-family: 'Cormorant Garamond', serif;
     }
 
-    /* ─── HEADER SHELL ─────────────────────────────────────────────── */
+    /* ── HEADER ── */
     header {
       background: var(--black);
       width: 100%;
-      padding: 18px 0 14px;
-      border-bottom: 1px solid rgba(201, 168, 76, 0.35);
-      position: relative;
+      padding: 16px 0 14px;
     }
 
-    /* subtle gold shimmer line at very top */
-    header::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg,
-        transparent 0%,
-        var(--gold-dim) 20%,
-        var(--gold-light) 50%,
-        var(--gold-dim) 80%,
-        transparent 100%
-      );
-    }
-
-    /* ─── INNER WRAPPER ─────────────────────────────────────────────── */
+    /* ── INNER WRAPPER ── */
     .header-inner {
       display: flex;
       align-items: center;
       width: 100%;
-      /* 5% left padding | 30% logo | gap | 60% right | 5% right padding */
       padding: 0 5%;
+      gap: 0;
     }
 
-    /* ─── LEFT: LOGO BLOCK (30% of total width) ─────────────────────── */
+    /* ── LEFT: LOGO (30%) ── */
     .logo-block {
       width: 30%;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding-right: 24px;
     }
 
     .logo-block img {
-      max-height: 90px;
+      max-height: 88px;
       width: auto;
       max-width: 100%;
       object-fit: contain;
       display: block;
-      /* slight drop shadow to lift logo off black */
-      filter: drop-shadow(0 2px 8px rgba(201, 168, 76, 0.18));
     }
 
-    /* ─── RIGHT: INFO BLOCK (60% of total width) ─────────────────────── */
+    /* ── SPACER (10%) ── */
+    .spacer {
+      width: 10%;
+      flex-shrink: 0;
+    }
+
+    /* ── RIGHT: INFO (60%) ── */
     .info-block {
       width: 60%;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 8px;
+      gap: 7px;
     }
 
-    /* ── Operating since ── */
+    /* Operating since */
     .operating-since {
       font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      font-style: italic;
+      font-weight: 400;
+      font-style: normal;
       font-size: 13px;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.2em;
       color: var(--ivory);
       text-transform: uppercase;
-      opacity: 0.88;
     }
 
-    /* ── Trusted line ── */
-    .trusted-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
+    /* Trusted label */
     .trusted-label {
       font-family: 'Cinzel', serif;
       font-weight: 400;
@@ -120,32 +91,40 @@
       letter-spacing: 0.22em;
       color: var(--ivory);
       text-transform: uppercase;
-      white-space: nowrap;
-      opacity: 0.75;
+      opacity: 0.8;
     }
 
-    /* partner logos container */
+    /* Partner logos row */
     .partner-logos {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .partner-logos img {
-      height: 28px;
+    /*
+      mix-blend-mode: screen on a black parent background makes
+      white/light backgrounds completely invisible — only the
+      coloured logo artwork remains visible.
+    */
+    .logo-pill {
+      background: #000;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      height: 32px;
+    }
+
+    .logo-pill img {
+      height: 26px;
       width: auto;
       object-fit: contain;
-      /* keep them visible on dark bg: remove dark backgrounds from screenshots */
-      border-radius: 4px;
-      filter: brightness(1.05) contrast(1.05);
-      transition: filter 0.2s ease;
+      display: block;
+      mix-blend-mode: screen;
     }
 
-    .partner-logos img:hover {
-      filter: brightness(1.2) contrast(1.1);
-    }
-
-    /* ── Certifications strip ── */
+    /* Cert strip */
     .cert-strip {
       font-family: 'Cinzel', serif;
       font-weight: 500;
@@ -154,72 +133,30 @@
       color: var(--gold);
       text-transform: uppercase;
       white-space: nowrap;
-      /* subtle glow */
-      text-shadow:
-        0 0 12px rgba(201, 168, 76, 0.45),
-        0 0 24px rgba(201, 168, 76, 0.15);
     }
 
-    /* ─── DECORATIVE DIVIDER between logo & info ─────────────────────── */
-    .divider {
-      flex-shrink: 0;
-      /* remaining 10% is the gap/padding between the two blocks */
-      /* already handled by the 5%+30%+60%+5% = 100% math; 
-         this element takes visual space as a thin gold vertical rule */
-      width: 1px;
-      height: 70px;
-      background: linear-gradient(180deg,
-        transparent 0%,
-        rgba(201, 168, 76, 0.4) 30%,
-        rgba(201, 168, 76, 0.4) 70%,
-        transparent 100%
-      );
-      margin: 0 auto;
-      /* centers itself in the 10% gap area */
-      flex: 1 0 0;
-      max-width: 60px;
-    }
-
-    /* ─── RESPONSIVE: tablet ────────────────────────────────────────── */
+    /* ── RESPONSIVE: tablet ── */
     @media (max-width: 900px) {
-      .header-inner {
-        padding: 0 4%;
-      }
-      .logo-block img  { max-height: 70px; }
-      .cert-strip      { font-size: 9px; letter-spacing: 0.18em; }
-      .partner-logos img { height: 22px; }
-      .trusted-label   { font-size: 10px; }
+      .logo-block img    { max-height: 70px; }
+      .cert-strip        { font-size: 9px; letter-spacing: 0.16em; }
+      .logo-pill         { height: 26px; padding: 2px 4px; }
+      .logo-pill img     { height: 20px; }
     }
 
-    /* ─── RESPONSIVE: mobile ────────────────────────────────────────── */
+    /* ── RESPONSIVE: mobile ── */
     @media (max-width: 600px) {
-      header { padding: 14px 0 12px; }
-
+      header { padding: 12px 0; }
       .header-inner {
         flex-direction: column;
         align-items: center;
         padding: 0 5%;
-        gap: 14px;
+        gap: 12px;
       }
-      .divider { display: none; }
-      .logo-block {
-        width: 100%;
-        justify-content: center;
-        padding: 0;
-      }
+      .spacer { display: none; }
+      .logo-block { width: 100%; justify-content: center; }
       .logo-block img { max-height: 65px; }
-      .info-block {
-        width: 100%;
-        align-items: center;
-        gap: 8px;
-      }
-      .cert-strip {
-        font-size: 9px;
-        letter-spacing: 0.15em;
-        text-align: center;
-        white-space: normal;
-      }
-      .trusted-row { flex-wrap: wrap; justify-content: center; }
+      .info-block { width: 100%; align-items: center; gap: 8px; }
+      .cert-strip { font-size: 8.5px; letter-spacing: 0.13em; text-align: center; white-space: normal; }
     }
   </style>
 </head>
@@ -228,7 +165,7 @@
   <header>
     <div class="header-inner">
 
-      <!-- ── LEFT: LOGO ─────────────────────────────────────────────── -->
+      <!-- LEFT: LOGO -->
       <div class="logo-block">
         <img
           src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png"
@@ -236,25 +173,30 @@
         />
       </div>
 
-      <!-- ── CENTRE: VERTICAL RULE (occupies the 10% gap) ──────────── -->
-      <div class="divider"></div>
+      <!-- SPACER: the 10% breathing room -->
+      <div class="spacer"></div>
 
-      <!-- ── RIGHT: INFO ────────────────────────────────────────────── -->
+      <!-- RIGHT: INFO -->
       <div class="info-block">
 
         <span class="operating-since">Operating since 2019</span>
 
-        <div class="trusted-row">
-          <span class="trusted-label">Trusted &amp; Verified By</span>
-          <div class="partner-logos">
+        <span class="trusted-label">Trusted &amp; Verified By</span>
+
+        <div class="partner-logos">
+          <div class="logo-pill">
             <img
               src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.54.26-AM.png"
               alt="Google"
             />
+          </div>
+          <div class="logo-pill">
             <img
               src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.56.00-AM.png"
               alt="TripAdvisor"
             />
+          </div>
+          <div class="logo-pill">
             <img
               src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Screenshot-2026-05-28-at-10.57.24-AM.png"
               alt="Viator"
@@ -267,7 +209,6 @@
         </span>
 
       </div>
-      <!-- /info-block -->
 
     </div>
   </header>
