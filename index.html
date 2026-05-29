@@ -121,10 +121,10 @@ input,textarea,select{font-family:inherit}
 .divider.on{display:block}
 
 /* ── SECTION HEADERS ── */
-.sec-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.35em;
-  color:var(--gold);text-transform:uppercase;margin-bottom:7px;opacity:.85}
-.sec-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:24px;
-  color:var(--ivory);margin-bottom:16px;line-height:1.25;letter-spacing:.03em}
+.sec-label{font-family:'Lato',sans-serif;font-size:9px;font-weight:700;letter-spacing:.18em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:7px;opacity:.9}
+.sec-title{font-family:'Lato',sans-serif;font-weight:300;font-size:22px;
+  color:var(--ivory);margin-bottom:16px;line-height:1.4;letter-spacing:.01em}
 .sec-sub{font-size:12px;color:var(--mid);margin-bottom:18px;
   line-height:1.65;letter-spacing:.02em}
 
@@ -873,6 +873,38 @@ input,textarea,select{font-family:inherit}
     </div>
 
     <!-- Overnight section -->
+    <!-- Custom BYO overnight section -->
+    <div id="s5-custom" style="display:none">
+      <div class="block" style="margin-bottom:14px">
+        <div class="f-lbl" style="display:block;margin-bottom:12px">Would you like to stay overnight at any of your chosen destinations?</div>
+        <div class="opt-list">
+          <div class="opt" id="ovn-yes" onclick="setCustomOvernight(true)">
+            <div class="opt-radio"></div>
+            <div class="opt-body"><div class="opt-name">Yes, I'd like to stay overnight</div><div class="opt-sub">Select cities, number of nights (up to 2 per city), and your preferred stay style</div></div>
+          </div>
+          <div class="opt" id="ovn-no" onclick="setCustomOvernight(false)">
+            <div class="opt-radio"></div>
+            <div class="opt-body"><div class="opt-name">No, this is a day journey</div><div class="opt-sub">We'll keep it as a comfortable overland day experience</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="custom-overnight-wrap" style="display:none">
+        <div class="block" style="margin-bottom:14px">
+          <div class="f-lbl" style="display:block;margin-bottom:12px">Nights per destination <span style="font-size:10px;color:var(--mut);font-family:'Lato',sans-serif;letter-spacing:.04em;text-transform:none;font-weight:300">(maximum 2 nights per city)</span></div>
+          <div id="custom-city-nights-wrap"></div>
+        </div>
+        <div class="stay-cards" style="margin-bottom:0">
+          <div class="stay-card" id="stay-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, boutiques &amp; high-rated guesthouses</div></div>
+          <div class="stay-card" id="stay-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels with elevated comfort</div></div>
+          <div class="stay-card" id="stay-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses</div></div>
+        </div>
+        <div id="custom-hotel-blocks" style="margin-top:16px"></div>
+        <div class="google-note" style="margin-top:10px">🏨 &nbsp;Live rates sourced from Google Hotels. A 10% accommodation convenience fee applies.</div>
+        <button class="btn-gold" id="s5-custom-continue" onclick="doneS5()" style="display:none;margin-top:14px">Continue to Guide Preference →</button>
+      </div>
+      <button class="btn-gold" id="s5-no-continue" onclick="doneS5()" style="display:none;margin-top:14px">Continue →</button>
+    </div>
+
     <div id="s5-overnight">
       <div class="stay-cards">
         <div class="stay-card" id="stay-3" onclick="selStay(3)">
@@ -1015,38 +1047,55 @@ input,textarea,select{font-family:inherit}
     <!-- Step 1: Phone -->
     <div id="otp-step1">
       <div class="otp-box">
-        <div class="otp-ico">📱</div>
-        <div class="otp-title">Enter Your Mobile Number</div>
-        <div class="otp-sub">We'll send a 4-digit code to verify your number and unlock your detailed journey investment.</div>
-        <div style="display:flex;gap:10px;max-width:340px;margin:0 auto">
-          <div style="background:var(--blk2);border:1px solid var(--gbd);border-radius:10px;padding:14px 12px;font-family:'Cinzel',serif;font-size:12px;color:var(--gold);white-space:nowrap">+91</div>
-          <input type="tel" id="phone-inp" class="otp-inp" maxlength="10" placeholder="10-digit number" oninput="onPhoneInput()"/>
+        <div class="otp-ico" style="font-family:'Lato',sans-serif;font-size:28px">✦</div>
+        <div class="otp-title">Complete Your Details</div>
+        <div class="otp-sub">We'll use these to prepare your journey proposal and stay in touch.</div>
+        <div style="max-width:380px;margin:0 auto;display:flex;flex-direction:column;gap:12px">
+          <input type="text" id="cust-name" class="f-inp" placeholder="Your Name — John Doe" style="text-align:left"/>
+          <div>
+            <input type="email" id="cust-email" class="f-inp" placeholder="Email — john.doe@example.com" oninput="validateEmailField()" style="text-align:left"/>
+            <div id="email-error" style="display:none;font-size:10.5px;color:#e08888;margin-top:5px;text-align:left;padding-left:4px">Please enter a valid email address</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <select id="country-code" style="background:var(--blk3);border:1px solid var(--gbd);border-radius:9px;color:var(--ivory);padding:11px 8px;font-size:12px;outline:none;flex-shrink:0;cursor:pointer">
+              <option value="+1">🇺🇸 United States +1</option>
+              <option value="+44">🇬🇧 United Kingdom +44</option>
+              <option value="+91" selected>🇮🇳 India +91</option>
+              <option value="+61">🇦🇺 Australia +61</option>
+              <option value="+49">🇩🇪 Germany +49</option>
+              <option value="+33">🇫🇷 France +33</option>
+              <option value="+971">🇦🇪 UAE +971</option>
+              <option value="+65">🇸🇬 Singapore +65</option>
+              <option value="+81">🇯🇵 Japan +81</option>
+              <option value="+86">🇨🇳 China +86</option>
+              <option value="+1">🇨🇦 Canada +1</option>
+              <option value="+64">🇳🇿 New Zealand +64</option>
+            </select>
+            <input type="tel" id="phone-inp" class="f-inp" placeholder="Mobile number" oninput="onPhoneInput()" style="flex:1"/>
+          </div>
         </div>
-        <div id="recaptcha-container"></div>
-        <div id="recaptcha-container"></div>
-        <button class="btn-solid" id="send-otp-btn" onclick="sendOTP()" style="max-width:340px;margin:14px auto 0;display:block">Send OTP →</button>
+        <div id="recaptcha-container" style="margin-top:10px"></div>
+        <button class="btn-solid" id="send-otp-btn" onclick="sendOTP()" style="max-width:380px;margin:14px auto 0;display:block">Send Verification Code →</button>
       </div>
     </div>
-
-    <!-- Step 2: OTP Entry -->
     <div id="otp-step2" style="display:none">
       <div class="otp-box">
         <div class="otp-ico">🔐</div>
         <div class="otp-title">Enter Verification Code</div>
-        <div class="otp-sub" id="otp-sent-msg">A 4-digit code has been sent to your number.</div>
-        <div class="otp-digits">
-          <input type="tel" class="otp-digit" maxlength="1" id="od0" oninput="otpInput(0)"/>
-          <input type="tel" class="otp-digit" maxlength="1" id="od1" oninput="otpInput(1)"/>
-          <input type="tel" class="otp-digit" maxlength="1" id="od2" oninput="otpInput(2)"/>
-          <input type="tel" class="otp-digit" maxlength="1" id="od3" oninput="otpInput(3)"/>
+        <div class="otp-sub" id="otp-sent-msg">A 6-digit code has been sent to your number.</div>
+        <div class="otp-digits" style="gap:7px">
+          <input type="tel" class="otp-digit" maxlength="1" id="od0" oninput="otpInput(0)" style="width:46px;height:56px"/>
+          <input type="tel" class="otp-digit" maxlength="1" id="od1" oninput="otpInput(1)" style="width:46px;height:56px"/>
+          <input type="tel" class="otp-digit" maxlength="1" id="od2" oninput="otpInput(2)" style="width:46px;height:56px"/>
+          <input type="tel" class="otp-digit" maxlength="1" id="od3" oninput="otpInput(3)" style="width:46px;height:56px"/>
+          <input type="tel" class="otp-digit" maxlength="1" id="od4" oninput="otpInput(4)" style="width:46px;height:56px"/>
+          <input type="tel" class="otp-digit" maxlength="1" id="od5" oninput="otpInput(5)" style="width:46px;height:56px"/>
         </div>
-        <div class="alert red" id="otp-error" style="max-width:300px;margin:10px auto 0;text-align:center">Incorrect code. Please try again.</div>
-        <button class="btn-solid" id="verify-btn" onclick="verifyOTP()" style="max-width:300px;margin:14px auto 0;display:block">Verify &amp; Unlock →</button>
-        <div style="margin-top:12px;font-size:11px;color:var(--mut);text-align:center;cursor:pointer" onclick="resendOTP()">Resend OTP</div>
+        <div class="alert red" id="otp-error" style="max-width:320px;margin:10px auto 0;text-align:center">Incorrect code. Please try again.</div>
+        <button class="btn-solid" id="verify-btn" onclick="verifyOTP()" style="max-width:320px;margin:14px auto 0;display:block">Verify &amp; Unlock →</button>
+        <div style="margin-top:12px;font-size:11px;color:var(--mut);text-align:center;cursor:pointer" onclick="resendOTP()">Resend Code</div>
       </div>
     </div>
-
-    <!-- Step 3: Verified -->
     <div id="otp-step3" style="display:none">
       <div class="otp-box">
         <div class="otp-ico">✅</div>
@@ -1147,6 +1196,7 @@ input,textarea,select{font-family:inherit}
    DATA
 ═══════════════════════════════════════════════════════ */
 const RATES={agra:7500,mathura:7500,delhi:7500,jaipur:8000,rishikesh:8000,amritsar:9000,varanasi:11000,golden:11000,corbett:11000,shimla:13000};
+const HOTEL_NIGHTLY={3:5500,4:11000,5:26500}; // per night averages per tier
 const IMG={
   Delhi:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg',
   Agra:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg',
@@ -1252,7 +1302,7 @@ const S={
   byoCities:[],byoPickup:'',byoDrop:'',isOneWay:null,
   addons:new Set(),addonTotal:0,
   stayStyle:null,hotelSel:{},nights:{},
-  guideOn:true,departure:null,depHotel:'',
+  guideOn:true,wantsOvernight:null,departure:null,depHotel:'',customerName:'',customerEmail:'',
   phone:'',otpVerified:false,section:1
 };
 let _confirmResult, _recaptchaVerifier;
@@ -1487,9 +1537,26 @@ function togCity(chip){
   const city=chip.getAttribute('data-city');
   chip.classList.toggle('on');
   chip.classList.contains('on')?(S.byoCities.includes(city)||S.byoCities.push(city)):(S.byoCities=S.byoCities.filter(c=>c!==city));
+  updateBYOPlaceholders();
   updateRoute();
   $('s3-continue').style.display=S.byoCities.length?'block':'none';
   recalc();
+}
+function updateBYOPlaceholders(){
+  const cities=S.byoCities;
+  const d1=$('byo-dest1'),d2=$('byo-dest2'),drop=$('byo-drop');
+  if(cities.length===0){
+    if(d1)d1.placeholder='Search another city or region in North India…';
+    if(d2)d2.placeholder='Add one more destination to your route…';
+    if(drop)drop.placeholder='Hotel, airport or city you're departing from…';
+  } else if(cities.length===1){
+    if(d2)d2.placeholder='After '+cities[0]+', where would you like to go next?';
+    if(drop)drop.placeholder='After '+cities[0]+', journey ends at…';
+  } else if(cities.length===2){
+    if(drop)drop.placeholder='After '+cities[cities.length-1]+', journey ends at…';
+  } else {
+    if(drop)drop.placeholder='After '+cities[cities.length-1]+', your journey ends at…';
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1506,17 +1573,52 @@ function extractCityName(name){
 function checkOneWay(){
   const owBox=$('one-way-box');if(!owBox)return;
   if(!S.byoPickup||!S.byoDrop){owBox.style.display='none';return;}
-  const pc=extractCityName(S.byoPickup).toLowerCase();
-  const dc=extractCityName(S.byoDrop).toLowerCase();
-  const same=(pc===dc)||pc.indexOf(dc)>=0||dc.indexOf(pc)>=0;
+  const pc=normCity(S.byoPickup);
+  const dc=normCity(S.byoDrop);
+  const same=(pc===dc)||pc.includes(dc)||dc.includes(pc);
   owBox.style.display=same?'none':'block';
+}
+function normCity(name){
+  /* Maps airports, stations and common aliases to canonical city name */
+  const map={
+    'indira gandhi':'delhi','igi airport':'delhi','igi':'delhi','new delhi':'delhi',
+    'noida international':'delhi','jewar':'delhi','delhi airport':'delhi',
+    'chhatrapati shivaji':'mumbai','csia':'mumbai','bom':'mumbai',
+    'kempegowda':'bengaluru','bengaluru':'bengaluru','bangalore':'bengaluru',
+    'rajiv gandhi':'hyderabad','hyderabad':'hyderabad',
+    'netaji subhas':'kolkata','kolkata':'kolkata','calcutta':'kolkata',
+    'agra airport':'agra','kheria':'agra',
+    'jaipur airport':'jaipur','sanganeer':'jaipur',
+    'amritsar airport':'amritsar','sri guru':'amritsar',
+    'varanasi airport':'varanasi','lal bahadur':'varanasi',
+    'dehradun':'rishikesh','jolly grant':'rishikesh',
+  };
+  const lower=name.toLowerCase().trim();
+  for(const k in map){if(lower.includes(k))return map[k];}
+  return lower.split(',')[0].trim().replace(/\s+(airport|international|domestic|railway|station|junction)$/,'').trim();
 }
 function setOneWay(isOneWay){
   S.isOneWay=isOneWay;
   const yes=$('ow-yes'),no=$('ow-no');
-  if(yes){yes.style.background=isOneWay?'var(--gbg2)':'transparent';yes.style.borderColor=isOneWay?'var(--gold)':'var(--gbd)';yes.style.color=isOneWay?'var(--gold2)':'var(--gold)';}
-  if(no){no.style.background=!isOneWay?'rgba(245,240,232,.05)':'transparent';no.style.borderColor=!isOneWay?'var(--bd2)':'var(--bd)';no.style.color=!isOneWay?'var(--ivory2)':'var(--mid)';}
+  if(yes){
+    yes.style.background=isOneWay?'var(--gbg2)':'transparent';
+    yes.style.borderColor=isOneWay?'var(--gold)':'var(--gbd)';
+    yes.style.color=isOneWay?'var(--gold2)':'var(--gold)';
+  }
+  if(no){
+    no.style.background=!isOneWay?'rgba(245,240,232,.07)':'transparent';
+    no.style.borderColor=!isOneWay?'var(--bd2)':'var(--bd)';
+    no.style.color=!isOneWay?'var(--ivory2)':'var(--mid)';
+  }
+  /* If they confirmed No (return trip), hide the question */
+  if(!isOneWay){
+    setTimeout(function(){
+      var box=$('one-way-box');
+      if(box)box.style.display='none';
+    },800);
+  }
 }
+
 function showDistBadges(km,duration,nodeCount,badgesEl,concEl){
   badgesEl.innerHTML='';concEl.classList.remove('on');
   const allIn=S.byoCities.every(c=>PORTFOLIO.has(c));
@@ -1596,8 +1698,20 @@ function doneS4(){
   calcAddonTotal();
   const n=S.addons.size;
   collapseSec(4,n?n+' add-on'+(n>1?'s':'')+' selected':'Included experiences only');
-  if(S.tour&&S.tour.nights===0){$('s5-overnight').style.display='none';$('s5-day-msg').style.display='block';}
-  else{$('s5-overnight').style.display='block';$('s5-day-msg').style.display='none';}
+  /* Reset all S5 sub-sections */
+  ['s5-day-msg','s5-overnight','s5-custom'].forEach(function(id){var el=$(id);if(el)el.style.display='none';});
+  if(S.jt==='byo'){
+    $('s5-custom').style.display='block';
+    /* Reset any previous overnight choice */
+    S.wantsOvernight=null;
+    ['ovn-yes','ovn-no'].forEach(function(id){var el=$(id);if(el)el.classList.remove('on');});
+    $('custom-overnight-wrap').style.display='none';
+    $('s5-no-continue').style.display='none';
+  } else if(S.tour&&S.tour.nights===0){
+    $('s5-day-msg').style.display='block';
+  } else {
+    $('s5-overnight').style.display='block';
+  }
   revealSec(5);
 }
 
@@ -1606,11 +1720,82 @@ function doneS4(){
 ═══════════════════════════════════════════════════════ */
 function selStay(stars){
   S.stayStyle=stars;[3,4,5].forEach(s=>$('stay-'+s).classList.toggle('on',s===stars));
-  renderHotelBlocks();$('s5-continue').style.display='block';recalc();
+  if(S.jt==='byo'&&S.wantsOvernight){
+    renderCustomHotelBlocks();
+    $('s5-custom-continue').style.display='block';
+  } else {
+    renderHotelBlocks();$('s5-continue').style.display='block';
+  }
+  recalc();
 }
+function renderCustomHotelBlocks(){
+  var wrap=$('custom-hotel-blocks');if(!wrap)return;
+  wrap.innerHTML='';
+  if(!S.stayStyle)return;
+  var cities=S.byoCities.filter(function(c){return HOTELS[c]&&(S.nights[c]||0)>0;});
+  if(!cities.length)return;
+  var outer=document.createElement('div');
+  cities.forEach(function(city){
+    var pool=HOTELS[city];if(!pool)return;
+    var primary=pool[S.stayStyle]||pool[4]||pool[3]||[];
+    var upgrade=S.stayStyle<5&&pool[S.stayStyle+1]?pool[S.stayStyle+1].slice(0,1):[];
+    var cid=city.replace(/\s/g,'_');
+    var n=S.nights[city]||1;
+    var nightly=HOTEL_NIGHTLY[S.stayStyle]||11000;
+    var cityDiv=document.createElement('div');cityDiv.className='hotel-city';
+    var hdr=document.createElement('div');hdr.className='hcity-hdr';
+    hdr.innerHTML='<span class="hcity-name">'+city+'</span>'
+      +'<span style="font-size:11px;color:var(--mut)">'+n+' night'+(n>1?'s':'')+' · est. '+fmtCFull(nightly)+'/night</span>';
+    cityDiv.appendChild(hdr);
+    primary.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-'+i));});
+    if(upgrade.length){
+      var ul=document.createElement('div');ul.className='upgrade-lbl';ul.textContent='Upgrade Option';
+      cityDiv.appendChild(ul);
+      cityDiv.appendChild(hotelCardHTML(city,upgrade[0],cid+'-up-0'));
+    }
+    outer.appendChild(cityDiv);
+  });
+  wrap.appendChild(outer);
+}
+function setCustomOvernight(yes){
+  S.wantsOvernight=yes;
+  $('ovn-yes').classList.toggle('on',yes);
+  $('ovn-no').classList.toggle('on',!yes);
+  $('custom-overnight-wrap').style.display=yes?'block':'none';
+  $('s5-no-continue').style.display=!yes?'block':'none';
+  if(yes) renderCustomCityNights();
+}
+function renderCustomCityNights(){
+  var wrap=$('custom-city-nights-wrap');if(!wrap)return;
+  var cities=S.byoCities.filter(function(city){return HOTELS[city];});
+  if(!cities.length){
+    wrap.innerHTML='<div style="font-size:12px;color:var(--mut);padding:10px 0;font-style:italic">No supported destinations selected yet. Add cities from Step 3 and return here.</div>';
+    return;
+  }
+  var h='<div style="background:var(--blk2);border:1px solid var(--bd);border-radius:12px;padding:4px 18px;">';
+  cities.forEach(function(city){
+    var cid=city.replace(/\s/g,'_');
+    if(!(city in S.nights))S.nights[city]=1;
+    var cur=S.nights[city];
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--bd)">';
+    h+='<div><div style="font-size:16px;color:var(--ivory)">'+city+'</div>';
+    h+='<div style="font-size:10px;color:var(--mut);margin-top:2px">Max 2 nights</div></div>';
+    h+='<div style="display:flex;align-items:center">';
+    h+='<button class="ns-btn" onclick="adjNights(\''+city+'\',-1,0,2)">&#8722;</button>';
+    h+='<span id="s3-ns-'+cid+'" style="font-family:\'Cormorant Garamond\',serif;font-size:18px;color:var(--ivory);width:44px;text-align:center">'+(cur===0?'Skip':cur)+'</span>';
+    h+='<button class="ns-btn" onclick="adjNights(\''+city+'\',1,0,2)">+</button>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  wrap.innerHTML=h;
+}
+
 function overnightCities(){
   if(S.tour&&S.tour.cityNights)return Object.keys(S.tour.cityNights).filter(c=>(S.nights[c]||0)>0);
-  if(S.byoCities.length)return S.byoCities.filter(c=>HOTELS[c]&&(S.nights[c]===undefined||S.nights[c]>0));
+  if(S.jt==='byo'){
+    if(!S.wantsOvernight)return[];
+    return S.byoCities.filter(c=>HOTELS[c]&&(S.nights[c]||0)>0);
+  }
   return[];
 }
 function hotelCardHTML(city,hh,hid){
@@ -1621,7 +1806,7 @@ function hotelCardHTML(city,hh,hid){
   div.addEventListener('click',function(){selHotel(this.dataset.city,this.dataset.name,this.dataset.hid);});
   var img=document.createElement('img');img.className='hotel-img';img.src=hh.img;img.alt=hh.n;img.onerror=function(){this.style.background='#222';};
   var info=document.createElement('div');info.className='hotel-info';
-  info.innerHTML='<div class="hotel-name">'+hh.n+'</div><div class="hotel-meta">'+hh.m+'</div><div class="hotel-note">'+hh.note+'</div><div class="hotel-sel-btn">'+(sel?'&#10003; Selected':'Select Stay')+'</div>';
+  info.innerHTML='<div class="hotel-name">'+hh.n+'</div><div class="hotel-meta">'+hh.m+'</div><div class="hotel-note">'+hh.note+'</div><div class="hotel-sel-btn">'+(sel?'✓ Selected':'Select Stay')+'</div>';
   div.appendChild(img);div.appendChild(info);return div;
 }
 function renderHotelBlocks(){
@@ -1662,13 +1847,13 @@ function selHotel(city,name,hid){
   S.hotelSel[city]=name;
   var cid=city.replace(/\s/g,'_');
   document.querySelectorAll('[id^="hc-'+cid+'"]').forEach(c=>{c.classList.remove('on');var b=c.querySelector('.hotel-sel-btn');if(b)b.textContent='Select Stay';});
-  var el=$('hc-'+hid);if(el){el.classList.add('on');var b=el.querySelector('.hotel-sel-btn');if(b)b.textContent='&#10003; Selected';}
+  var el=$('hc-'+hid);if(el){el.classList.add('on');var b=el.querySelector('.hotel-sel-btn');if(b)b.textContent='✓ Selected';}
   recalc();
 }
 function skipHotel(city){delete S.hotelSel[city];recalc();}
-function adjNights(city,d,min){
+function adjNights(city,d,min,maxN){
   var prev=S.nights[city]!==undefined?S.nights[city]:(min||1);
-  var next=Math.max(0,prev+d);
+  var next=Math.max(0,Math.min(maxN||999,prev+d));
   S.nights[city]=next;
   var el3=$('s3-ns-'+city.replace(/\s/g,'_'));if(el3)el3.textContent=next===0?'Skip':next;
   var el5=$('ns-'+city.replace(/\s/g,'_'));if(el5)el5.textContent=next===0?'Skip':next;
@@ -1681,10 +1866,24 @@ function calcHotelCost(){
   if(!S.stayStyle)return{lo:0,hi:0,exact:0};
   const sc=STAY_COST[S.stayStyle];const cities=overnightCities();
   let exact=0,lo=0,hi=0;
-  cities.forEach(c=>{const n=S.nights[c]||smartNights(c);lo+=sc.lo*n;hi+=sc.hi*n;exact+=((sc.lo+sc.hi)/2)*n;});
+  cities.forEach(function(city){
+    const n=S.nights[city]||0;if(!n)return;
+    lo+=sc.lo*n;hi+=sc.hi*n;
+    /* Use selected hotel rate if known, else nightly avg */
+    exact+=HOTEL_NIGHTLY[S.stayStyle]*n;
+  });
   return{lo,hi,exact};
 }
 function doneS5(){
+  /* BYO: if they said no overnight, skip accommodation */
+  if(S.jt==='byo'&&S.wantsOvernight===false){
+    collapseSec(5,'Day journey — no overnight stays');
+    if(!S.tour||S.jt==='byo'){collapseSec(6,'No guide preference');revealSec(7);}
+    else revealSec(6);
+    return;
+  }
+  if(S.jt==='byo'&&S.wantsOvernight===null){alert('Please select whether you want to stay overnight.');return;}
+  if(S.jt==='byo'&&S.wantsOvernight&&!S.stayStyle){alert('Please select your preferred stay style.');return;}
   if(!S.stayStyle&&S.tour&&S.tour.nights>0){alert('Please select your preferred stay style.');return;}
   const names={3:'Boutique Comfort (3*)',4:'Premium Stay (4*)',5:'Luxury Collection (5*)'};
   collapseSec(5,S.stayStyle?names[S.stayStyle]+' - '+totalNights()+' night'+(totalNights()>1?'s':''):'Day tour - no accommodation');
@@ -1766,43 +1965,57 @@ var _fbApp,_fbAuth,_fbDb;
    SECTION 9 — OTP VIA FIREBASE PHONE AUTH
 ═══════════════════════════════════════════════════════ */
 function onPhoneInput(){var v=$('phone-inp').value.replace(/\D/g,'');$('phone-inp').value=v;}
+function validateEmailField(){
+  var v=$('cust-email').value.trim();
+  var ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  $('email-error').style.display=(v&&!ok)?'block':'none';
+  return ok||!v;
+}
+function onPhoneInput(){var v=$('phone-inp').value.replace(/\D/g,'');$('phone-inp').value=v;}
 function sendOTP(){
+  var name=$('cust-name').value.trim();
+  var email=$('cust-email').value.trim();
   var phone=$('phone-inp').value.trim();
-  if(phone.length<10){alert('Please enter a valid 10-digit mobile number.');return;}
-  S.phone=phone;
+  var code=$('country-code').value;
+  if(!name){alert('Please enter your name.');return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('email-error').style.display='block';alert('Please enter a valid email address.');return;}
+  if(phone.length<6){alert('Please enter a valid mobile number.');return;}
+  S.phone=phone;S.customerName=name;S.customerEmail=email;S.countryCode=code;
+  var fullNumber=code+phone;
   $('send-otp-btn').textContent='Sending...';$('send-otp-btn').disabled=true;
   try{
     if(_recaptchaVerifier){try{_recaptchaVerifier.clear();}catch(e){}}
     _recaptchaVerifier=new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible',callback:function(){}});
-    _fbAuth.signInWithPhoneNumber('+91'+phone,_recaptchaVerifier)
+    _fbAuth.signInWithPhoneNumber(fullNumber,_recaptchaVerifier)
       .then(function(cr){
         _confirmResult=cr;
         $('otp-step1').style.display='none';$('otp-step2').style.display='block';
-        $('otp-sent-msg').textContent='A verification code has been sent to +91 '+phone.slice(0,5)+'XXXXX';
+        $('otp-sent-msg').textContent='A 6-digit code has been sent to '+code+' '+phone.slice(0,4)+'XXXXXX';
         $('od0').focus();
       })
       .catch(function(err){
-        $('send-otp-btn').textContent='Send OTP';$('send-otp-btn').disabled=false;
+        $('send-otp-btn').textContent='Send Verification Code';$('send-otp-btn').disabled=false;
         try{_recaptchaVerifier.clear();}catch(e){}
-        const msg=err.code==='auth/invalid-phone-number'?'Invalid phone number. Please check and try again.':err.code==='auth/too-many-requests'?'Too many attempts. Please wait and try again.':'Could not send OTP. Please try again.';
+        var msg=err.code==='auth/invalid-phone-number'?'Invalid phone number. Please check and try again.':err.code==='auth/too-many-requests'?'Too many attempts. Please wait and try again.':'Could not send code. Please try again.';
         alert(msg);
       });
-  }catch(e){console.error(e);alert('Verification service unavailable. Please try again shortly.');$('send-otp-btn').textContent='Send OTP';$('send-otp-btn').disabled=false;}
+  }catch(e){console.error(e);alert('Verification service unavailable. Please try again.');$('send-otp-btn').textContent='Send Verification Code';$('send-otp-btn').disabled=false;}
 }
+
 function otpInput(idx){
   var v=$('od'+idx).value.replace(/\D/g,'');$('od'+idx).value=v;
-  if(v&&idx<3)$('od'+(idx+1)).focus();
-  if(idx===3&&getOTPValue().length===4)verifyOTP();
+  if(v&&idx<5)$('od'+(idx+1)).focus();
+  if(idx===5&&getOTPValue().length===6)verifyOTP();
 }
-function getOTPValue(){return[0,1,2,3].map(i=>$('od'+i).value).join('');}
+function getOTPValue(){return[0,1,2,3,4,5].map(i=>$('od'+i).value).join('');}
 function resendOTP(){
-  [0,1,2,3].forEach(i=>$('od'+i).value='');
+  [0,1,2,3,4,5].forEach(i=>{var el=$('od'+i);if(el)el.value=''});
   $('otp-error').classList.remove('on');
   $('otp-step2').style.display='none';$('otp-step1').style.display='block';
   $('phone-inp').value=S.phone;$('send-otp-btn').textContent='Send OTP';$('send-otp-btn').disabled=false;
 }
 function verifyOTP(){
-  var code=getOTPValue();if(code.length<4){alert('Please enter the 4-digit code.');return;}
+  var code=getOTPValue();if(code.length<6){alert('Please enter the 6-digit code.');return;}
   if(!_confirmResult){alert('Session expired. Please request a new OTP.');resendOTP();return;}
   $('verify-btn').textContent='Verifying...';$('verify-btn').disabled=true;
   _confirmResult.confirm(code)
@@ -1816,11 +2029,11 @@ function verifyOTP(){
     .catch(function(err){
       $('verify-btn').textContent='Verify & Unlock';$('verify-btn').disabled=false;
       $('otp-error').classList.add('on');
-      [0,1,2,3].forEach(i=>$('od'+i).value='');$('od0').focus();
+      [0,1,2,3,4,5].forEach(i=>{var el=$('od'+i);if(el)el.value=''});$('od0').focus();
     });
 }
 function saveLead(user){
-  var lead={phone:S.phone,uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+  var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
   if(_fbDb){_fbDb.collection('leads').add(lead).then(function(d){console.log('Lead saved:',d.id);}).catch(function(e){console.warn('Lead save:',e);});}
   else console.log('[LEAD]',lead);
 }
@@ -1842,8 +2055,10 @@ function buildS10(){
   var hc=calcHotelCost();var hotelCost=Math.round(hc.exact);var coordFee=Math.round(hotelCost*0.1);
   var hotelLines=[];var oCities=overnightCities();
   oCities.forEach(function(city){var n=S.nights[city]||smartNights(city);var sc=STAY_COST[S.stayStyle]||{lo:0,hi:0};var mid=Math.round((sc.lo+sc.hi)/2);var hName=S.hotelSel[city]||'Est. avg';hotelLines.push(city+': '+hName+' - '+n+' night'+(n>1?'s':'')+' - '+fmtCFull(mid)+'/night');});
+  /* Driver support: ₹800/night for ALL custom overnight journeys + outside-portfolio curated */
   var nonPort=S.byoCities.filter(function(c){return !PORTFOLIO.has(c);}).length;
-  var supportAllowance=nonPort>0?totalNights()*800:0;
+  var isCustomOvernight=(S.jt==='byo'&&S.wantsOvernight);
+  var supportAllowance=(isCustomOvernight||nonPort>0)?totalNights()*800:0;
   var guideDeduction=(!S.guideOn&&S.tour)?-1500:0;
   var subtotal=jCost+apCost+addCost+hotelCost+coordFee+supportAllowance+guideDeduction;
   var gst=Math.round(subtotal*0.05);var total=subtotal+gst;var pp=pax?Math.round(total/pax):total;
