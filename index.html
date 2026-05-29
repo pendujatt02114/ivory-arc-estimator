@@ -1218,6 +1218,7 @@ input,textarea,select{font-family:inherit}
 </div>
 
 <script>
+
 /* ═══════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════ */
@@ -1456,20 +1457,37 @@ function setTab(t){
 }
 function buildCards(){buildDayCards();buildMultiCards();}
 function cardHTML(tour){
-  const on=S.tour&&S.tour.id===tour.id;
-  return `<div class="dcard ${on?'on':''}" id="card-${tour.id}" onclick="selCard('${tour.id}','${tour.nights>0?'multi':'day'}')">
-    <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <img class="dcard-img" src="${tour.img}" onerror="this.style.background='#222'" alt="${tour.name}"/>
-    <div class="dcard-overlay"></div>
-    <div class="dcard-body">
-      <div class="dcard-name">${tour.name}</div>
-      <div class="dcard-tag">${tour.tag}</div>
-      <div class="dcard-sub">${tour.sub}</div>
-      <div class="dcard-rate">${RATES[tour.id]?fmtCFull(RATES[tour.id])+'/person/day':''}</div>
-    </div>
-  </div>`;}
-function buildDayCards(){$('day-cards').innerHTML=TOURS.day.map(t=>cardHTML(t)).join('');}
-function buildMultiCards(){$('multi-cards').innerHTML=TOURS.multi.map(t=>cardHTML(t)).join('');}
+  var on = S.tour && S.tour.id === tour.id;
+  var div = document.createElement('div');
+  div.className = 'dcard' + (on ? ' on' : '');
+  div.id = 'card-' + tour.id;
+  var type = tour.nights > 0 ? 'multi' : 'day';
+  div.addEventListener('click', (function(id,t){ return function(){ selCard(id,t); }; })(tour.id, type));
+  var chk = document.createElement('div'); chk.className = 'dcard-chk';
+  chk.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+  var img = document.createElement('img'); img.className = 'dcard-img';
+  img.src = tour.img; img.alt = tour.name;
+  img.onerror = function(){ this.style.background='#222'; };
+  var overlay = document.createElement('div'); overlay.className = 'dcard-overlay';
+  var body = document.createElement('div'); body.className = 'dcard-body';
+  var rate = RATES[tour.id] ? fmtCFull(RATES[tour.id]) + '/person/day' : '';
+  body.innerHTML = '<div class="dcard-name">' + tour.name + '</div>'
+    + '<div class="dcard-tag">' + tour.tag + '</div>'
+    + '<div class="dcard-sub">' + tour.sub + '</div>'
+    + '<div class="dcard-rate">' + rate + '</div>';
+  div.appendChild(chk); div.appendChild(img);
+  div.appendChild(overlay); div.appendChild(body);
+  return div;
+}
+
+function buildDayCards(){
+  var w=$('day-cards');w.innerHTML='';
+  TOURS.day.forEach(function(t){w.appendChild(cardHTML(t));});
+}
+function buildMultiCards(){
+  var w=$('multi-cards');w.innerHTML='';
+  TOURS.multi.forEach(function(t){w.appendChild(cardHTML(t));});
+}
 function selCard(id,type){
   const list=type==='day'?TOURS.day:TOURS.multi;
   const tour=list.find(t=>t.id===id);if(!tour)return;
@@ -1536,18 +1554,29 @@ function renderExpPanel(tour,panelId){
   panel.innerHTML=h;
 }
 function addonChipHTML(a){
-  const on=S.addons.has(a.id);
-  const pStr=a.p>0?` - ${fmtCFull(a.p)}${a.t==='pp'?'/pp':'/group'}`:'';
-  return `<div class="chip chip-add ${on?'on':''}" data-id="${a.id}" data-price="${a.p}" data-type="${a.t}" onclick="togAddon(this,'${a.id}',${a.p},'${a.t}')">${on?'&#10003; ':'+ '}${a.l}${pStr}</div>`;
+  var on = S.addons.has(a.id);
+  var div = document.createElement('div');
+  div.className = 'chip chip-add' + (on ? ' on' : '');
+  div.setAttribute('data-id', a.id);
+  var pStr = a.p > 0 ? ' - ' + fmtCFull(a.p) + (a.t === 'pp' ? '/pp' : '/group') : '';
+  div.textContent = (on ? '✓ ' : '+ ') + a.l + pStr;
+  div.addEventListener('click', (function(chip, id, price, type){
+    return function(){ togAddon(chip, id, price, type); };
+  })(div, a.id, a.p, a.t));
+  return div;
 }
-function togAddon(chip,id,price,type){
-  if(S.addons.has(id)){S.addons.delete(id);chip.classList.remove('on');}
-  else{S.addons.add(id);chip.classList.add('on');}
-  calcAddonTotal();recalc();
-  // Refresh chip text
-  const a=S.tour?S.tour.add.find(x=>x.id===id):null;
-  if(a){const on=S.addons.has(id);const pStr=a.p>0?` - ${fmtCFull(a.p)}${a.t==='pp'?'/pp':'/group'}`:'';chip.innerHTML=(on?'&#10003; ':'+ ')+a.l+pStr;}
+
+function togAddon(chip, id, price, type){
+  if(S.addons.has(id)){ S.addons.delete(id); chip.classList.remove('on'); }
+  else { S.addons.add(id); chip.classList.add('on'); }
+  calcAddonTotal(); recalc();
+  var a = S.tour ? S.tour.add.find(function(x){ return x.id===id; }) : null;
+  if(a){
+    var pStr = a.p > 0 ? ' - ' + fmtCFull(a.p) + (a.t==='pp' ? '/pp' : '/group') : '';
+    chip.textContent = (S.addons.has(id) ? '✓ ' : '+ ') + a.l + pStr;
+  }
 }
+
 function calcAddonTotal(){
   if(!S.tour)return;let t=0;
   S.tour.add.forEach(a=>{if(S.addons.has(a.id))t+=a.t==='pp'?a.p*totalPax():a.p;});
@@ -1712,7 +1741,7 @@ function doneS3(){
 }
 function buildS4FromTour(){
   if(!S.tour)return;
-  $('inc-chips').innerHTML=S.tour.inc.map(i=>`<div class="chip chip-inc"><span>&#10003;</span>${i}</div>`).join('');
+  $('inc-chips').innerHTML=S.tour.inc.map(function(i){return '<div class="chip chip-inc"><span>&#10003;</span>'+i+'</div>';}).join('');
   $('add-chips-preview').innerHTML=S.tour.add.slice(0,4).map(a=>addonChipHTML(a)).join('');
   $('view-more-btn').style.display=S.tour.add.length>4?'block':'none';
 }
