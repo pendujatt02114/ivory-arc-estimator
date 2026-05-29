@@ -1146,7 +1146,7 @@ input,textarea,select{font-family:inherit}
 /* ═══════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════ */
-const RATES={agra:7500,mathura:7500,jaipur:8000,rishikesh:8000,amritsar:9000,varanasi:11000,golden:11000,corbett:11000,shimla:13000};
+const RATES={agra:7500,mathura:7500,delhi:7500,jaipur:8000,rishikesh:8000,amritsar:9000,varanasi:11000,golden:11000,corbett:11000,shimla:13000};
 const IMG={
   Delhi:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg',
   Agra:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg',
@@ -1374,6 +1374,9 @@ function setTab(t){
     $('tab-'+x).classList.toggle('on',x===t);
     $('tab-content-'+x).style.display=x===t?'block':'none';
   });
+  // Always ensure cards are built when a tour tab is shown
+  if(t==='day'&&!$('day-cards').children.length) buildDayCards();
+  if(t==='multi'&&!$('multi-cards').children.length) buildMultiCards();
 }
 function buildCards(){buildDayCards();buildMultiCards();}
 function cardHTML(tour){
@@ -1386,7 +1389,7 @@ function cardHTML(tour){
       <div class="dcard-name">${tour.name}</div>
       <div class="dcard-tag">${tour.tag}</div>
       <div class="dcard-sub">${tour.sub}</div>
-      <div class="dcard-rate">${fmtCFull(RATES[tour.id])}/person/day</div>
+      <div class="dcard-rate">${RATES[tour.id]?fmtCFull(RATES[tour.id])+'/person/day':''}</div>
     </div>
   </div>`;}
 function buildDayCards(){$('day-cards').innerHTML=TOURS.day.map(t=>cardHTML(t)).join('');}
@@ -1960,6 +1963,7 @@ function initGoogleMaps(){
 
 updateStepBar(1);
 refreshAllPrices();
+buildCards(); // pre-build so cards show immediately when S3 opens
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=initGoogleMaps&loading=async" async defer></script>
 </body>
