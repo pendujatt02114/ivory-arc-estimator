@@ -511,9 +511,22 @@ input,textarea,select{font-family:inherit}
       <span class="hdr-trust-lbl">Trusted &amp; Verified By</span>
       <div class="hdr-vline"></div>
       <div class="trust-logos">
-        <div class="tlogo tg"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google"/></div>
-        <div class="tlogo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tripadvisor_logo.svg/2560px-Tripadvisor_logo.svg.png" alt="TripAdvisor"/></div>
-        <div class="tlogo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Viator_logo.svg/2560px-Viator_logo.svg.png" alt="Viator"/></div>
+        <div class="tlogo tg">
+          <svg height="17" viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg">
+            <path d="M115.75 46.75c0 12.76-10.35 23.11-23.11 23.11S69.53 59.51 69.53 46.75s10.35-23.11 23.11-23.11 23.11 10.35 23.11 23.11z" fill="#4285F4"/><path d="M92.64 23.64c-12.76 0-23.11 10.35-23.11 23.11s10.35 23.11 23.11 23.11" fill="#EA4335"/><path d="M115.75 46.75H69.53" fill="none"/><text x="0" y="68" font-family="Arial,sans-serif" font-size="68" font-weight="700" fill="#4285F4">G</text><text x="52" y="68" font-family="Arial,sans-serif" font-size="68" fill="#EA4335">o</text><text x="95" y="68" font-family="Arial,sans-serif" font-size="68" fill="#FBBC04">o</text><text x="138" y="68" font-family="Arial,sans-serif" font-size="68" fill="#4285F4">g</text><text x="176" y="68" font-family="Arial,sans-serif" font-size="68" fill="#34A853">l</text><text x="202" y="68" font-family="Arial,sans-serif" font-size="68" fill="#EA4335">e</text>
+          </svg>
+        </div>
+        <div class="tlogo">
+          <svg height="15" viewBox="0 0 180 36" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="18" r="11" fill="#00AA6C"/><circle cx="11" cy="18" r="5" fill="#fff"/><circle cx="8" cy="16" r="2" fill="#333"/><circle cx="14" cy="16" r="2" fill="#333"/>
+            <text x="26" y="25" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#00AA6C">tripadvisor</text>
+          </svg>
+        </div>
+        <div class="tlogo">
+          <svg height="15" viewBox="0 0 100 32" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="26" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#1B6AC9">viator</text>
+          </svg>
+        </div>
       </div>
       <div class="hdr-vline"></div>
       <span class="hdr-cert">GST · MSME · Govt. of India Recognised</span>
@@ -1003,6 +1016,7 @@ input,textarea,select{font-family:inherit}
           <div style="background:var(--blk2);border:1px solid var(--gbd);border-radius:10px;padding:14px 12px;font-family:'Cinzel',serif;font-size:12px;color:var(--gold);white-space:nowrap">+91</div>
           <input type="tel" id="phone-inp" class="otp-inp" maxlength="10" placeholder="10-digit number" oninput="onPhoneInput()"/>
         </div>
+        <div id="recaptcha-container"></div>
         <button class="btn-solid" id="send-otp-btn" onclick="sendOTP()" style="max-width:340px;margin:14px auto 0;display:block">Send OTP →</button>
       </div>
     </div>
@@ -1051,20 +1065,18 @@ input,textarea,select{font-family:inherit}
         <div class="range-items" id="s10-line-items">
           <!-- Rendered by JS -->
         </div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--gbd),transparent);margin:4px 0 14px"></div>
         <div class="range-total" id="s10-total">
           <div>
             <div class="rt-label">Total Journey Investment</div>
-            <div class="rt-pp" id="s10-pp">— per person</div>
+            <div class="rt-pp" id="s10-pp" style="margin-top:3px">— per person</div>
           </div>
           <div style="text-align:right">
             <div class="rt-val" id="s10-total-val">—</div>
-            <div style="font-size:10px;color:var(--mut);margin-top:2px">inc. 5% GST</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:3px">All taxes included</div>
           </div>
         </div>
-
-        <div id="s10-currency-note" style="margin-top:14px;padding:11px 14px;border-radius:10px;border:1px solid var(--bd);font-size:11px;color:var(--mut);display:none">
-          Currency conversion reference: 1 USD = ₹85 &nbsp;·&nbsp; 1 EUR = ₹100. All amounts are indicative.
-        </div>
+        <div id="s10-currency-note" style="margin-top:12px;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);font-size:11px;color:var(--mut);display:none"></div>
 
         <button class="btn-solid" style="margin-top:18px" onclick="doneFinal()">Continue With Concierge Planning →</button>
       </div>
@@ -1604,54 +1616,99 @@ function overnightCities(){
   return[];
 }
 function renderHotelBlocks(){
-  if(!S.stayStyle)return;
-  const cities=overnightCities();
-  if(!cities.length){$('hotel-blocks').innerHTML='';return;}
-  let h='<div style="margin-top:16px">';
-  cities.forEach(city=>{
-    const pool=HOTELS[city];
-    if(!pool)return;
-    // Tier fallback: try selected tier, then adjacent tiers
-    const primary=pool[S.stayStyle]||pool[4]||pool[3]||[];
-    const upgTier=S.stayStyle<5?S.stayStyle+1:null;
-    const upgrade=upgTier&&pool[upgTier]?pool[upgTier].slice(0,2):[];
-    const minN=S.tour&&S.tour.cityNights?S.tour.cityNights[city]||1:smartNights(city);
-    if(!(city in S.nights))S.nights[city]=minN;
-    const cid=city.replace(/\s/g,'_');
-    h+=`<div class="hotel-city">
-      <div class="hcity-hdr">
-        <span class="hcity-name">${city}</span>
-        <div class="nights-ctrl">
-          <span class="nights-lbl">Nights</span>
-          <button class="ns-btn" onclick="adjNights('${city}',-1,${minN})">−</button>
-          <span class="ns-val" id="ns-${cid}">${S.nights[city]}</span>
-          <button class="ns-btn" onclick="adjNights('${city}',1,${minN})">+</button>
-        </div>
-      </div>`;
-    primary.forEach((hh,i)=>{
-      const hid=`${cid}-${i}`;
-      h+=hotelCardHTML(city,hh,hid);
+  var wrap = document.getElementById('hotel-blocks');
+  wrap.innerHTML = '';
+  if(!S.stayStyle) return;
+  var cities = overnightCities();
+  if(!cities.length) return;
+
+  var outer = document.createElement('div');
+  outer.style.marginTop = '16px';
+
+  cities.forEach(function(city){
+    var pool = HOTELS[city];
+    if(!pool) return;
+    var primary = pool[S.stayStyle] || pool[4] || pool[3] || [];
+    var upgTier = S.stayStyle < 5 ? S.stayStyle + 1 : null;
+    var upgrade = (upgTier && pool[upgTier]) ? pool[upgTier].slice(0,2) : [];
+    var minN = (S.tour && S.tour.cityNights) ? (S.tour.cityNights[city] || 1) : smartNights(city);
+    if(!(city in S.nights)) S.nights[city] = minN;
+    var cid = city.replace(/\s/g,'_');
+
+    var cityDiv = document.createElement('div');
+    cityDiv.className = 'hotel-city';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'hcity-hdr';
+    var hdrHTML = '<span class="hcity-name">'+city+'</span>'
+      +'<div class="nights-ctrl">'
+      +'<span class="nights-lbl">Nights</span>';
+    var minusBtn = document.createElement('button');
+    minusBtn.className='ns-btn'; minusBtn.textContent='−';
+    (function(c,m){ minusBtn.onclick=function(){ adjNights(c,-1,m); }; })(city,minN);
+    var nightsSpan = document.createElement('span');
+    nightsSpan.className='ns-val'; nightsSpan.id='ns-'+cid; nightsSpan.textContent=S.nights[city];
+    var plusBtn = document.createElement('button');
+    plusBtn.className='ns-btn'; plusBtn.textContent='+';
+    (function(c,m){ plusBtn.onclick=function(){ adjNights(c,1,m); }; })(city,minN);
+    hdr.innerHTML='<span class="hcity-name">'+city+'</span>';
+    var nc = document.createElement('div'); nc.className='nights-ctrl';
+    var nl = document.createElement('span'); nl.className='nights-lbl'; nl.textContent='Nights';
+    nc.appendChild(nl); nc.appendChild(minusBtn); nc.appendChild(nightsSpan); nc.appendChild(plusBtn);
+    hdr.appendChild(nc);
+    cityDiv.appendChild(hdr);
+
+    primary.forEach(function(hh,i){
+      cityDiv.appendChild(hotelCardHTML(city, hh, cid+'-'+i));
     });
+
     if(upgrade.length){
-      h+=`<div class="upgrade-lbl">Upgrade Options</div>`;
-      upgrade.forEach((hh,i)=>{h+=hotelCardHTML(city,hh,`${cid}-up-${i}`);});
+      var upgLbl = document.createElement('div');
+      upgLbl.className = 'upgrade-lbl';
+      upgLbl.textContent = 'Upgrade Options';
+      cityDiv.appendChild(upgLbl);
+      upgrade.forEach(function(hh,i){
+        cityDiv.appendChild(hotelCardHTML(city, hh, cid+'-up-'+i));
+      });
     }
-    h+=`<div class="hotel-skip"><a onclick="skipHotel('${city}')">Skip — use estimated average</a></div></div>`;
+
+    var skipDiv = document.createElement('div');
+    skipDiv.className = 'hotel-skip';
+    var skipA = document.createElement('a');
+    skipA.textContent = 'Skip — use estimated average';
+    (function(c){ skipA.onclick=function(){ skipHotel(c); }; })(city);
+    skipDiv.appendChild(skipA);
+    cityDiv.appendChild(skipDiv);
+    outer.appendChild(cityDiv);
   });
-  h+='</div>';
-  $('hotel-blocks').innerHTML=h;
+  wrap.appendChild(outer);
 }
 function hotelCardHTML(city,hh,hid){
-  const sel=S.hotelSel[city]===hh.n;
-  return `<div class="hotel-card ${sel?'on':''}" id="hc-${hid}" onclick="selHotel('${city}','${hh.n.replace(/'/g,'\\\'') }','${hid}')">
-    <img class="hotel-img" src="${hh.img}" onerror="this.style.background='#222'" alt="${hh.n}"/>
-    <div class="hotel-info">
-      <div class="hotel-name">${hh.n}</div>
-      <div class="hotel-meta">${hh.m}</div>
-      <div class="hotel-note">${hh.note}</div>
-      <div class="hotel-sel-btn">${sel?'✓ Selected':'Select Stay'}</div>
-    </div>
-  </div>`;
+  var sel = S.hotelSel[city] === hh.n;
+  var div = document.createElement('div');
+  div.className = 'hotel-card' + (sel ? ' on' : '');
+  div.id = 'hc-' + hid;
+  div.dataset.city = city;
+  div.dataset.name = hh.n;
+  div.dataset.hid  = hid;
+  div.addEventListener('click', function(){
+    selHotel(this.dataset.city, this.dataset.name, this.dataset.hid);
+  });
+  var img = document.createElement('img');
+  img.className = 'hotel-img';
+  img.src = hh.img;
+  img.alt = hh.n;
+  img.onerror = function(){ this.style.background='#222'; };
+  var info = document.createElement('div');
+  info.className = 'hotel-info';
+  info.innerHTML =
+    '<div class="hotel-name">'+hh.n+'</div>'
+    +'<div class="hotel-meta">'+hh.m+'</div>'
+    +'<div class="hotel-note">'+hh.note+'</div>'
+    +'<div class="hotel-sel-btn">'+(sel ? '&#10003; Selected' : 'Select Stay')+'</div>';
+  div.appendChild(img);
+  div.appendChild(info);
+  return div;
 }
 function selHotel(city,name,hid){
   S.hotelSel[city]=name;
@@ -1779,123 +1836,273 @@ function onPhoneInput(){
   const v=$('phone-inp').value.replace(/\D/g,'');
   $('phone-inp').value=v;
 }
+/* ═══════════════════════════════════════════════════════
+   FIREBASE INIT
+═══════════════════════════════════════════════════════ */
+var _fbApp, _fbAuth, _fbDb, _confirmResult, _recaptchaVerifier;
+(function initFirebase(){
+  var cfg = {
+    apiKey:            "AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM",
+    authDomain:        "ivory-arc-estimator-8727e.firebaseapp.com",
+    projectId:         "ivory-arc-estimator-8727e",
+    storageBucket:     "ivory-arc-estimator-8727e.firebasestorage.app",
+    messagingSenderId: "551942404838",
+    appId:             "1:551942404838:web:4ca6260483724506271927"
+  };
+  try {
+    _fbApp  = firebase.initializeApp(cfg);
+    _fbAuth = firebase.auth();
+    _fbDb   = firebase.firestore();
+    _fbAuth.useDeviceLanguage();
+  } catch(e) { console.warn('Firebase init:', e); }
+})();
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 9 — OTP via Firebase Phone Auth
+═══════════════════════════════════════════════════════ */
+function onPhoneInput(){
+  var v = $('phone-inp').value.replace(/\D/g,'');
+  $('phone-inp').value = v;
+}
+
 function sendOTP(){
-  const phone=$('phone-inp').value.trim();
-  if(phone.length<10){alert('Please enter a valid 10-digit mobile number.');return;}
-  S.phone=phone;
-  _simOtp=String(Math.floor(1000+Math.random()*9000));
-  console.log('[DEV] OTP:',_simOtp);
-  $('otp-step1').style.display='none';
-  $('otp-step2').style.display='block';
-  $('otp-sent-msg').textContent='A 4-digit code has been sent to +91 '+phone.slice(0,5)+'XXXXX. (Dev mode: '+_simOtp+')';
-  $('od0').focus();
-}
-function otpInput(idx){
-  const v=$('od'+idx).value.replace(/\D/g,'');
-  $('od'+idx).value=v;
-  if(v&&idx<3)$('od'+(idx+1)).focus();
-}
-function getOTPValue(){return[0,1,2,3].map(i=>$('od'+i).value).join('');}
-function resendOTP(){
-  _simOtp=String(Math.floor(1000+Math.random()*9000));
-  console.log('[DEV] Resent OTP:',_simOtp);
-  $('otp-sent-msg').textContent='New code sent. (Dev: '+_simOtp+')';
-  [0,1,2,3].forEach(i=>$('od'+i).value='');
-  $('otp-error').classList.remove('on');
-  $('od0').focus();
-}
-function verifyOTP(){
-  const entered=getOTPValue();
-  if(entered.length<4){alert('Please enter the 4-digit code.');return;}
-  if(entered===_simOtp){
-    $('otp-error').classList.remove('on');
-    $('otp-step2').style.display='none';
-    $('otp-step3').style.display='block';
-    S.otpVerified=true;
-    saveLead();
-    collapseSec(9,'Number Verified · +91 '+S.phone);
-    setTimeout(()=>{buildS10();revealSec(10);},900);
-  } else {
-    $('otp-error').classList.add('on');
-    [0,1,2,3].forEach(i=>$('od'+i).value='');
-    $('od0').focus();
+  var phone = $('phone-inp').value.trim();
+  if(phone.length < 10){ alert('Please enter a valid 10-digit mobile number.'); return; }
+  S.phone = phone;
+  var fullNumber = '+91' + phone;
+
+  $('send-otp-btn').textContent = 'Sending…';
+  $('send-otp-btn').disabled = true;
+
+  try {
+    // Destroy any previous verifier
+    if(_recaptchaVerifier){ try{ _recaptchaVerifier.clear(); }catch(e){} }
+    _recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible',
+      callback: function(){ /* reCAPTCHA solved */ }
+    });
+
+    _fbAuth.signInWithPhoneNumber(fullNumber, _recaptchaVerifier)
+      .then(function(confirmationResult){
+        _confirmResult = confirmationResult;
+        $('otp-step1').style.display = 'none';
+        $('otp-step2').style.display = 'block';
+        $('otp-sent-msg').textContent = 'A verification code has been sent to +91 ' + phone.slice(0,5) + 'XXXXX';
+        $('od0').focus();
+      })
+      .catch(function(err){
+        console.error('OTP send error:', err);
+        $('send-otp-btn').textContent = 'Send OTP →';
+        $('send-otp-btn').disabled = false;
+        try{ _recaptchaVerifier.clear(); }catch(e){}
+        var msg = err.code === 'auth/invalid-phone-number' ? 'Invalid phone number. Please check and try again.'
+                : err.code === 'auth/too-many-requests'   ? 'Too many attempts. Please wait a moment and try again.'
+                : 'Could not send OTP. Please try again. (' + (err.message||err.code) + ')';
+        alert(msg);
+      });
+  } catch(e) {
+    console.error('Firebase error:', e);
+    alert('Verification service unavailable. Please try again shortly.');
+    $('send-otp-btn').textContent = 'Send OTP →';
+    $('send-otp-btn').disabled = false;
   }
 }
-function saveLead(){
-  const lead={
-    phone:S.phone,
-    route:S.tour?S.tour.name:S.byoCities.join(' → '),
-    hotels:JSON.stringify(S.hotelSel),
-    activities:[...S.addons].join(','),
-    travellers:paxStr(),
-    estimate:calcRange(),
-    currency:S.currency,
-    timestamp:new Date().toISOString()
+
+function otpInput(idx){
+  var v = $('od'+idx).value.replace(/\D/g,'');
+  $('od'+idx).value = v;
+  if(v && idx < 3) $('od'+(idx+1)).focus();
+  // Auto-verify when all 4 digits entered
+  if(idx === 3 && getOTPValue().length === 4) verifyOTP();
+}
+
+function getOTPValue(){ return [0,1,2,3].map(function(i){ return $('od'+i).value; }).join(''); }
+
+function resendOTP(){
+  [0,1,2,3].forEach(function(i){ $('od'+i).value=''; });
+  $('otp-error').classList.remove('on');
+  $('otp-step2').style.display = 'none';
+  $('otp-step1').style.display = 'block';
+  $('phone-inp').value = S.phone;
+  $('send-otp-btn').textContent = 'Send OTP →';
+  $('send-otp-btn').disabled = false;
+}
+
+function verifyOTP(){
+  var code = getOTPValue();
+  if(code.length < 4){ alert('Please enter the 4-digit code.'); return; }
+  if(!_confirmResult){ alert('Session expired. Please request a new OTP.'); resendOTP(); return; }
+
+  $('verify-btn').textContent = 'Verifying…';
+  $('verify-btn').disabled = true;
+
+  _confirmResult.confirm(code)
+    .then(function(result){
+      $('otp-error').classList.remove('on');
+      $('otp-step2').style.display = 'none';
+      $('otp-step3').style.display = 'block';
+      S.otpVerified = true;
+      saveLead(result.user);
+      collapseSec(9, 'Verified · +91 ' + S.phone);
+      setTimeout(function(){ buildS10(); revealSec(10); }, 900);
+    })
+    .catch(function(err){
+      $('verify-btn').textContent = 'Verify & Unlock →';
+      $('verify-btn').disabled = false;
+      $('otp-error').classList.add('on');
+      [0,1,2,3].forEach(function(i){ $('od'+i).value=''; });
+      $('od0').focus();
+      console.error('OTP verify error:', err);
+    });
+}
+
+function saveLead(user){
+  var lead = {
+    phone:       S.phone,
+    uid:         user ? user.uid : null,
+    route:       S.tour ? S.tour.name : S.byoCities.join(' → '),
+    journeyType: S.jt,
+    arrivalDate: S.arrivalDate,
+    hotels:      S.hotelSel,
+    activities:  [...S.addons],
+    travellers:  { adults: S.pax.adults, children: S.pax.children, seniors: S.pax.seniors },
+    stayStyle:   S.stayStyle,
+    guideOn:     S.guideOn,
+    airportOpt:  S.apOpt,
+    departure:   S.departure,
+    currency:    S.currency,
+    estimateINR: calcLoHi()[0] + ' – ' + calcLoHi()[1],
+    estimateDisplay: calcRange(),
+    nights:      S.nights,
+    timestamp:   firebase.firestore.FieldValue.serverTimestamp()
   };
-  console.log('[LEAD]',lead);
-  // TODO: Firebase integration
-  // firebase.firestore().collection('leads').add(lead);
+  if(_fbDb){
+    _fbDb.collection('leads').add(lead)
+      .then(function(doc){ console.log('Lead saved:', doc.id); })
+      .catch(function(e){ console.warn('Lead save error:', e); });
+  } else {
+    console.log('[LEAD - Firebase unavailable]', lead);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
    SECTION 10 — DETAILED INVESTMENT
 ═══════════════════════════════════════════════════════ */
 function buildS10(){
-  const pax=totalPax();
-  // Journey cost
-  let jCost=0;
-  if(S.tour){jCost=RATES[S.tour.id]*pax*S.tour.days;}
-  else if(S.byoCities.length){jCost=S.byoCities.length*45000*pax;}
-  const apCost=calcAirport();
-  const addCost=S.addonTotal;
-  const hc=calcHotelCost();
-  const hotelCost=Math.round(hc.exact);
-  const coordFee=Math.round(hotelCost*0.1);
-  // Journey support allowance (BYO outside portfolio only)
-  const nonPortfolio=S.byoCities.filter(c=>!PORTFOLIO.has(c)).length;
-  const supportAllowance=nonPortfolio>0?totalNights()*800:0;
-  const guideDeduction=(!S.guideOn&&S.tour)?-1500:0;
-  const subtotal=jCost+apCost+addCost+hotelCost+coordFee+supportAllowance+guideDeduction;
-  const gst=Math.round(subtotal*0.05);
-  const total=subtotal+gst;
-  const pp=pax?Math.round(total/pax):total;
+  var pax = totalPax();
+  var sym = SYM[S.currency];
 
-  // Route
-  const routeName=S.tour?S.tour.name:S.byoCities.join(' → ');
-  $('s10-route-val').textContent=routeName;
-  $('s10-route-lbl').textContent='Journey';
-
-  // Line items
-  const items=[
-    {l:'Journey Cost'+(S.tour?' ('+RATES[S.tour.id]+'/pp/day × '+pax+' pax × '+S.tour.days+' days)':''),v:jCost},
-    {l:'Airport Assistance',v:apCost,skip:apCost===0},
-    {l:'Activities & Add-ons',v:addCost,skip:addCost===0},
-    {l:'Accommodation',v:hotelCost,skip:hotelCost===0},
-    {l:'Accommodation Coordination (10%)',v:coordFee,skip:coordFee===0,note:'Hotel sourcing, booking & payment management'},
-    {l:'Journey Support Allowance',v:supportAllowance,skip:supportAllowance===0,note:'Driver accommodation & overnight logistics'},
-    {l:'English Guide Deduction',v:guideDeduction,skip:guideDeduction===0,cls:'deduction'},
-    {l:'GST (5%)',v:gst},
-  ];
-  let h='';
-  items.forEach(item=>{
-    if(item.skip)return;
-    const valStr=item.cls==='deduction'?'−'+fmtCFull(-item.v):fmtCFull(item.v);
-    h+=`<div class="range-item">
-      <div class="ri-label">${item.l}${item.note?'<br><span style="font-size:10px;color:var(--mut)">'+item.note+'</span>':''}</div>
-      <div class="ri-val" style="${item.cls==='deduction'?'color:var(--grn)':''}">${valStr}</div>
-    </div>`;
-  });
-  $('s10-line-items').innerHTML=h;
-  $('s10-total-val').textContent=fmtCFull(total);
-  $('s10-pp').textContent=fmtCFull(pp)+' per person';
-
-  // Currency note
-  if(S.currency!=='INR'){
-    $('s10-currency-note').style.display='block';
+  /* ── Journey cost ── */
+  var jCost = 0, jLabel = 'Journey Cost';
+  if(S.tour){
+    var rate = RATES[S.tour.id];
+    jCost  = rate * pax * S.tour.days;
+    jLabel = 'Journey Cost &nbsp;<span style="font-size:10px;color:var(--mut)">'+fmtCFull(rate)+'/pp/day &times; '+pax+' traveller'+(pax>1?'s':'')+' &times; '+S.tour.days+' day'+(S.tour.days>1?'s':'')+'</span>';
+  } else if(S.byoCities.length){
+    jCost  = S.byoCities.length * 45000 * pax;
+    jLabel = 'Journey Cost &nbsp;<span style="font-size:10px;color:var(--mut)">Custom route &ndash; '+S.byoCities.length+' destination'+(S.byoCities.length>1?'s':'')+'</span>';
   }
-  const noteEl=$('s10-cur-note');
-  if(noteEl)noteEl.textContent=S.currency!=='INR'?'All amounts displayed in '+S.currency+'. Conversion: 1 USD = ₹85 · 1 EUR = ₹100':'';
+
+  /* ── Airport assistance ── */
+  var apCost = calcAirport();
+  var apLabels = { none:'No Airport Assistance', pickup:'Airport Pickup', meetgreet:'Airport Pickup + Meet & Greet', porterage:'Full Package + Porterage' };
+  var apVehicle = totalPax() <= 6 ? 'SUV (1–6 pax)' : '10-Seater (7–10 pax)';
+  var apSub = S.apOpt !== 'none' ? apVehicle + (S.airport ? ' &middot; ' + (S.airport==='igi'?'IGI Airport':'Noida Airport') : '') + (S.extraLuggage>0?' &middot; '+S.extraLuggage+' extra piece'+(S.extraLuggage>1?'s':''):'') : '';
+
+  /* ── Activities ── */
+  var addCost = S.addonTotal;
+  var addNames = [];
+  if(S.tour && S.tour.add){
+    S.tour.add.forEach(function(a){ if(S.addons.has(a.id)) addNames.push(a.l); });
+  }
+
+  /* ── Hotels ── */
+  var hc = calcHotelCost();
+  var hotelCost = Math.round(hc.exact);
+  var coordFee  = Math.round(hotelCost * 0.1);
+  var hotelLines = [];
+  var oCities = overnightCities();
+  oCities.forEach(function(city){
+    var n = S.nights[city] || smartNights(city);
+    var sc = STAY_COST[S.stayStyle] || {lo:0,hi:0};
+    var mid = Math.round((sc.lo + sc.hi) / 2);
+    var hotelName = S.hotelSel[city] || ('Est. '+['','Boutique 3★','Premium 4★','Luxury 5★'][S.stayStyle||0]+' avg');
+    hotelLines.push(city + ': ' + hotelName + ' &middot; ' + n + ' night'+(n>1?'s':'') + ' &middot; '+fmtCFull(mid)+'/night');
+  });
+
+  /* ── Journey support allowance (BYO outside portfolio) ── */
+  var nonPort = S.byoCities.filter(function(c){ return !PORTFOLIO.has(c); }).length;
+  var supportAllowance = nonPort > 0 ? totalNights() * 800 : 0;
+
+  /* ── Guide ── */
+  var guideDeduction = (!S.guideOn && S.tour) ? -1500 : 0;
+
+  /* ── GST & totals ── */
+  var subtotal = jCost + apCost + addCost + hotelCost + coordFee + supportAllowance + guideDeduction;
+  var gst      = Math.round(subtotal * 0.05);
+  var total    = subtotal + gst;
+  var pp       = pax ? Math.round(total / pax) : total;
+
+  /* ── Route header ── */
+  var routeName = S.tour ? S.tour.name : S.byoCities.join(' \u2192 ');
+  $('s10-route-val').textContent = routeName;
+  $('s10-route-lbl').textContent = 'Journey';
+
+  /* ── Build line items ── */
+  var rows = [];
+
+  rows.push({ l: jLabel, v: jCost });
+
+  if(apCost > 0)
+    rows.push({ l: (apLabels[S.apOpt]||'Airport Assistance') + (apSub ? ' <span style="font-size:10px;color:var(--mut)">&nbsp;'+apSub+'</span>' : ''), v: apCost });
+
+  if(addCost > 0)
+    rows.push({ l: 'Activities & Experiences' + (addNames.length ? ' <span style="font-size:10px;color:var(--mut)">&nbsp;' + addNames.join(', ') + '</span>' : ''), v: addCost });
+
+  if(hotelCost > 0){
+    rows.push({ l: 'Accommodation' + (hotelLines.length ? '<br><span style="font-size:10px;color:var(--mut);line-height:1.7">' + hotelLines.join('<br>') + '</span>' : ''), v: hotelCost });
+    rows.push({ l: 'Accommodation Coordination Fee <span style="font-size:10px;color:var(--mut)">&nbsp;10% of hotel cost &middot; sourcing, booking &amp; payment</span>', v: coordFee });
+  }
+
+  if(supportAllowance > 0)
+    rows.push({ l: 'Journey Support Allowance <span style="font-size:10px;color:var(--mut)">&nbsp;Driver accommodation &amp; overnight logistics</span>', v: supportAllowance });
+
+  if(guideDeduction < 0)
+    rows.push({ l: 'English Guide Waiver', v: guideDeduction, deduction: true });
+
+  rows.push({ l: 'GST @ 5%', v: gst, dividerBefore: true });
+
+  /* ── Render rows ── */
+  var h = '';
+  rows.forEach(function(row){
+    var dividerStyle = row.dividerBefore ? 'border-top:1px solid var(--bd);padding-top:12px;margin-top:4px;' : '';
+    var valColor = row.deduction ? 'color:var(--grn)' : '';
+    var valStr   = row.deduction ? '&minus;' + fmtCFull(-row.v) : fmtCFull(row.v);
+    h += '<div class="range-item" style="align-items:flex-start;' + dividerStyle + '">'
+       + '<div class="ri-label" style="flex:1;line-height:1.65">' + row.l + '</div>'
+       + '<div class="ri-val" style="' + valColor + ';white-space:nowrap;padding-left:12px">' + valStr + '</div>'
+       + '</div>';
+  });
+  $('s10-line-items').innerHTML = h;
+
+  /* ── Totals ── */
+  $('s10-total-val').textContent = fmtCFull(total);
+  $('s10-pp').textContent        = fmtCFull(pp) + ' per person';
+
+  /* ── Currency note ── */
+  var noteEl = $('s10-cur-note');
+  if(noteEl){
+    if(S.currency !== 'INR'){
+      noteEl.textContent = 'All amounts shown in ' + S.currency + '. Reference rate: 1 USD = \u20b985 \u00b7 1 EUR = \u20b9100. Rates are indicative.';
+      noteEl.style.display = 'block';
+    } else {
+      noteEl.textContent = '';
+    }
+  }
+  var cnEl = $('s10-currency-note');
+  if(cnEl) cnEl.style.display = S.currency !== 'INR' ? 'block' : 'none';
 }
+
 
 /* ═══════════════════════════════════════════════════════
    FLOATING ESTIMATE BAR
@@ -1953,26 +2160,32 @@ function doneFinal(){
    GOOGLE MAPS (Places Autocomplete)
 ═══════════════════════════════════════════════════════ */
 function initGoogleMaps(){
-  const opts={types:['(cities)'],componentRestrictions:{country:'in'},fields:['name']};
-  function mkAC(id,cb){
-    const inp=$(id);if(!inp)return;
-    const ac=new google.maps.places.Autocomplete(inp,opts);
-    ac.addListener('place_changed',()=>{
-      const p=ac.getPlace();
-      if(p&&p.name)cb(p.name.split(',')[0].trim());
-    });
-  }
-  mkAC('byo-dest1',c=>{$(\"byo-dest1\").value='';if(!S.byoCities.includes(c))S.byoCities.push(c);updateRoute();});
-  mkAC('byo-dest2',c=>{$(\"byo-dest2\").value='';if(!S.byoCities.includes(c))S.byoCities.push(c);updateRoute();});
-  mkAC('dep-hotel-inp',c=>{S.depHotel=c;});
+  try{
+    const opts={types:['(cities)'],componentRestrictions:{country:'in'},fields:['name']};
+    function mkAC(inputId,cb){
+      const inp=document.getElementById(inputId);
+      if(!inp)return;
+      const ac=new google.maps.places.Autocomplete(inp,opts);
+      ac.addListener('place_changed',function(){
+        const p=ac.getPlace();
+        if(p&&p.name){
+          inp.value='';
+          cb(p.name.split(',')[0].trim());
+        }
+      });
+    }
+    mkAC('byo-dest1',function(c){if(!S.byoCities.includes(c)){S.byoCities.push(c);updateRoute();}});
+    mkAC('byo-dest2',function(c){if(!S.byoCities.includes(c)){S.byoCities.push(c);updateRoute();}});
+    mkAC('dep-hotel-inp',function(c){S.depHotel=c;});
+  }catch(e){console.log('Maps init:',e);}
 }
-
-/* ═══════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════ */
-updateStepBar(1);
-refreshAllPrices();
 </script>
+</script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- Google Maps -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=initGoogleMaps&loading=async" async defer></script>
 </body>
 </html>
