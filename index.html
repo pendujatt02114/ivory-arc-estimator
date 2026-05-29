@@ -583,7 +583,7 @@ input,textarea,select{font-family:inherit}
       <div class="f-row">
         <div class="f-grp">
           <label class="f-lbl">Arrival Date</label>
-          <input class="f-inp" type="date" id="arrival-date" onchange="onDate()"/>
+          <input class="f-inp" type="date" id="arrival-date" onchange="onDate()" min=""/>
         </div>
       </div>
       <div class="conf-box" id="date-conf">
@@ -894,9 +894,9 @@ input,textarea,select{font-family:inherit}
           <div id="custom-city-nights-wrap"></div>
         </div>
         <div class="stay-cards" style="margin-bottom:0">
-          <div class="stay-card" id="stay-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, boutiques &amp; high-rated guesthouses</div></div>
-          <div class="stay-card" id="stay-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels with elevated comfort</div></div>
-          <div class="stay-card" id="stay-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses</div></div>
+          <div class="stay-card" id="stay-c-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, boutiques &amp; high-rated guesthouses</div></div>
+          <div class="stay-card" id="stay-c-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels with elevated comfort</div></div>
+          <div class="stay-card" id="stay-c-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses</div></div>
         </div>
         <div id="custom-hotel-blocks" style="margin-top:16px"></div>
         <div class="google-note" style="margin-top:10px">🏨 &nbsp;Live rates sourced from Google Hotels. A 10% accommodation convenience fee applies.</div>
@@ -1057,20 +1057,46 @@ input,textarea,select{font-family:inherit}
             <div id="email-error" style="display:none;font-size:10.5px;color:#e08888;margin-top:5px;text-align:left;padding-left:4px">Please enter a valid email address</div>
           </div>
           <div style="display:flex;gap:8px">
-            <select id="country-code" style="background:var(--blk3);border:1px solid var(--gbd);border-radius:9px;color:var(--ivory);padding:11px 8px;font-size:12px;outline:none;flex-shrink:0;cursor:pointer">
+            <select id="country-code" onchange="onCountryCodeChange()" style="background:var(--blk3);border:1px solid var(--gbd);border-radius:9px;color:var(--ivory);padding:11px 8px;font-size:12px;outline:none;flex-shrink:0;cursor:pointer">
               <option value="+1">🇺🇸 United States +1</option>
-              <option value="+44">🇬🇧 United Kingdom +44</option>
               <option value="+91" selected>🇮🇳 India +91</option>
+              <option value="+44">🇬🇧 United Kingdom +44</option>
               <option value="+61">🇦🇺 Australia +61</option>
+              <option value="+1-CA">🇨🇦 Canada +1</option>
+              <option value="+64">🇳🇿 New Zealand +64</option>
               <option value="+49">🇩🇪 Germany +49</option>
               <option value="+33">🇫🇷 France +33</option>
+              <option value="+39">🇮🇹 Italy +39</option>
+              <option value="+34">🇪🇸 Spain +34</option>
+              <option value="+31">🇳🇱 Netherlands +31</option>
+              <option value="+41">🇨🇭 Switzerland +41</option>
               <option value="+971">🇦🇪 UAE +971</option>
+              <option value="+966">🇸🇦 Saudi Arabia +966</option>
+              <option value="+974">🇶🇦 Qatar +974</option>
               <option value="+65">🇸🇬 Singapore +65</option>
+              <option value="+60">🇲🇾 Malaysia +60</option>
+              <option value="+66">🇹🇭 Thailand +66</option>
               <option value="+81">🇯🇵 Japan +81</option>
+              <option value="+82">🇰🇷 South Korea +82</option>
               <option value="+86">🇨🇳 China +86</option>
-              <option value="+1">🇨🇦 Canada +1</option>
-              <option value="+64">🇳🇿 New Zealand +64</option>
+              <option value="+852">🇭🇰 Hong Kong +852</option>
+              <option value="+62">🇮🇩 Indonesia +62</option>
+              <option value="+63">🇵🇭 Philippines +63</option>
+              <option value="+92">🇵🇰 Pakistan +92</option>
+              <option value="+880">🇧🇩 Bangladesh +880</option>
+              <option value="+94">🇱🇰 Sri Lanka +94</option>
+              <option value="+977">🇳🇵 Nepal +977</option>
+              <option value="+27">🇿🇦 South Africa +27</option>
+              <option value="+254">🇰🇪 Kenya +254</option>
+              <option value="+234">🇳🇬 Nigeria +234</option>
+              <option value="+55">🇧🇷 Brazil +55</option>
+              <option value="+52">🇲🇽 Mexico +52</option>
+              <option value="+54">🇦🇷 Argentina +54</option>
+              <option value="+other">✏ Other (enter code manually)</option>
             </select>
+            <input type="text" id="custom-cc" placeholder="+XX" maxlength="5"
+              style="display:none;width:90px;background:var(--blk3);border:1px solid var(--gbd);border-radius:9px;color:var(--ivory);padding:11px 10px;font-size:13px;outline:none;text-align:center"
+              oninput="onCustomCC()"/>
             <input type="tel" id="phone-inp" class="f-inp" placeholder="Mobile number" oninput="onPhoneInput()" style="flex:1"/>
           </div>
         </div>
@@ -1719,7 +1745,12 @@ function doneS4(){
    SECTION 5 — ACCOMMODATION
 ═══════════════════════════════════════════════════════ */
 function selStay(stars){
-  S.stayStyle=stars;[3,4,5].forEach(s=>$('stay-'+s).classList.toggle('on',s===stars));
+  S.stayStyle=stars;
+  /* Toggle both curated and custom stay-card sets */
+  [3,4,5].forEach(function(s){
+    var a=$('stay-'+s);   if(a)a.classList.toggle('on',s===stars);
+    var b=$('stay-c-'+s); if(b)b.classList.toggle('on',s===stars);
+  });
   if(S.jt==='byo'&&S.wantsOvernight){
     renderCustomHotelBlocks();
     $('s5-custom-continue').style.display='block';
@@ -1965,6 +1996,22 @@ var _fbApp,_fbAuth,_fbDb;
    SECTION 9 — OTP VIA FIREBASE PHONE AUTH
 ═══════════════════════════════════════════════════════ */
 function onPhoneInput(){var v=$('phone-inp').value.replace(/\D/g,'');$('phone-inp').value=v;}
+function onCustomCC(){
+  /* Mirror typed custom code into the select value for sendOTP to read */
+  var v=$('custom-cc').value.trim();
+  if(!v.startsWith('+'))$('custom-cc').value='+'+v.replace(/[^0-9]/g,'');
+}
+function onCountryCodeChange(){
+  var sel=$('country-code');
+  var customInp=$('custom-cc');
+  if(!sel||!customInp)return;
+  if(sel.value==='+other'){
+    customInp.style.display='block';
+    customInp.focus();
+  } else {
+    customInp.style.display='none';
+  }
+}
 function validateEmailField(){
   var v=$('cust-email').value.trim();
   var ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -1976,7 +2023,9 @@ function sendOTP(){
   var name=$('cust-name').value.trim();
   var email=$('cust-email').value.trim();
   var phone=$('phone-inp').value.trim();
-  var code=$('country-code').value;
+  var selCode=$('country-code').value;
+  /* Handle Canada +1 alias and custom code */
+  var code=selCode==='+1-CA'?'+1':selCode==='+other'?($('custom-cc').value.trim()||'+1'):selCode;
   if(!name){alert('Please enter your name.');return;}
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('email-error').style.display='block';alert('Please enter a valid email address.');return;}
   if(phone.length<6){alert('Please enter a valid mobile number.');return;}
@@ -2179,6 +2228,12 @@ function initGoogleMaps(){
 updateStepBar(1);
 refreshAllPrices();
 buildCards(); // pre-build so cards show immediately when S3 opens
+/* Set arrival date minimum to tomorrow */
+(function(){
+  var d=new Date(); d.setDate(d.getDate()+1);
+  var s=d.toISOString().split('T')[0];
+  var inp=$('arrival-date'); if(inp)inp.min=s;
+})();
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=initGoogleMaps&loading=async" async defer></script>
 </body>
