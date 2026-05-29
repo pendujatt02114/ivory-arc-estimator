@@ -1,1615 +1,949 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ivory Arc Travels — Plan Your Journey</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
-<style>
-/* ═══════════════════════════════════════════════════════
-   RESET & TOKENS
-═══════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --blk:#09090b; --blk2:#111113; --blk3:#18181b; --blk4:#1f1f23;
-  --ivory:#f5f0e8; --ivory2:#e8e0d0; --ivory3:#d4c9b5;
-  --gold:#c9a84c; --gold2:#e2c06e; --gold3:#a0783a; --gold4:#f0d48a;
-  --gold-bg:rgba(201,168,76,0.07); --gold-bg2:rgba(201,168,76,0.13);
-  --gold-bd:rgba(201,168,76,0.25); --gold-bd2:rgba(201,168,76,0.45);
-  --green:#4d9e72; --green-bg:rgba(77,158,114,0.1); --green-bd:rgba(77,158,114,0.3);
-  --red-bg:rgba(200,80,80,0.08); --red-bd:rgba(200,80,80,0.3);
-  --muted:rgba(245,240,232,0.38); --mid:rgba(245,240,232,0.65);
-  --bd:rgba(245,240,232,0.08); --bd2:rgba(245,240,232,0.14);
-  --radius:14px; --radius-sm:9px; --radius-pill:30px;
-  --shadow:0 8px 32px rgba(0,0,0,0.55);
-  --trans:.22s ease;
-}
-html{scroll-behavior:smooth}
-body{
-  background:var(--blk3); color:var(--ivory);
-  font-family:'Lato',sans-serif; font-weight:300;
-  min-height:100vh; overflow-x:hidden;
-  padding-bottom:80px;
-}
-img{display:block;max-width:100%;}
-button{font-family:inherit;cursor:pointer;}
-input,textarea{font-family:inherit;}
+import { useState, useEffect, useRef, useCallback } from "react";
 
-/* ═══════════════════════════════════════════════════════
-   HEADER
-═══════════════════════════════════════════════════════ */
-#hdr{
-  position:sticky; top:0; z-index:500;
-  background:rgba(9,9,11,0.94);
-  backdrop-filter:blur(18px) saturate(1.4);
-  -webkit-backdrop-filter:blur(18px) saturate(1.4);
-  border-bottom:1px solid rgba(201,168,76,0.1);
-}
-.hdr-inner{
-  display:flex; align-items:center;
-  min-height:68px; padding:0 32px; gap:14px;
-}
-.hdr-logo img{height:40px;width:auto;object-fit:contain;}
-.hdr-sep{flex:1;}
-.hdr-trust{display:flex;align-items:center;gap:14px;}
-.hdr-trust-lbl{
-  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.26em;
-  color:var(--muted); text-transform:uppercase; white-space:nowrap;
-}
-.hdr-vline{width:1px;height:13px;background:var(--bd2);}
-.trust-logos{display:flex;align-items:center;gap:18px;}
-.tlogo{
-  opacity:.68; filter:grayscale(100%) brightness(1.8);
-  transition:opacity var(--trans),filter var(--trans);
-}
-.tlogo:hover{opacity:1;filter:grayscale(0%) brightness(1);}
-.tlogo img{height:15px;width:auto;object-fit:contain;}
-.tlogo.tg img{height:17px;}
-.hdr-cert{
-  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.2em;
-  color:var(--gold); text-transform:uppercase; opacity:.8; white-space:nowrap;
-}
-
-/* Mobile header */
-@media(max-width:680px){
-  .hdr-inner{
-    flex-direction:column; min-height:54px;
-    padding:9px 16px 8px; gap:6px;
-  }
-  .hdr-sep,.hdr-cert,.hdr-vline{display:none;}
-  .hdr-logo img{height:34px;}
-  .hdr-trust{flex-direction:row;gap:10px;justify-content:center;}
-  .hdr-trust-lbl{font-size:7px;}
-  .trust-logos{gap:12px;}
-  .tlogo img{height:12px;}
-  .tlogo.tg img{height:14px;}
-}
-
-/* ═══════════════════════════════════════════════════════
-   STICKY STEP BAR
-═══════════════════════════════════════════════════════ */
-#step-bar{
-  position:sticky; top:68px; z-index:490;
-  background:rgba(9,9,11,0.96); backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--bd); padding:8px 24px 0;
-}
-@media(max-width:680px){#step-bar{top:54px;padding:7px 16px 0;}}
-.sb-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
-.sb-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.22em;color:var(--ivory);text-transform:uppercase;}
-.sb-step{font-size:10px;color:var(--gold);letter-spacing:.08em;}
-.sb-track{height:2px;background:rgba(245,240,232,0.07);border-radius:2px;overflow:hidden;}
-.sb-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold2),var(--gold4));border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;}
-
-/* ═══════════════════════════════════════════════════════
-   NORTH INDIA POSITIONING LINE
-═══════════════════════════════════════════════════════ */
-.position-line{
-  max-width:780px; margin:0 auto; padding:22px 20px 0;
-  text-align:center;
-}
-.position-line p{
-  font-family:'Cormorant Garamond',serif; font-style:italic;
-  font-size:14px; color:var(--muted); letter-spacing:.04em; line-height:1.7;
-}
-.position-line span{color:var(--gold);opacity:.9;}
-
-/* ═══════════════════════════════════════════════════════
-   ESTIMATOR WRAPPER
-═══════════════════════════════════════════════════════ */
-.estimator{max-width:780px;margin:0 auto;padding:28px 20px 50px;}
-
-/* ═══════════════════════════════════════════════════════
-   SECTION BLOCKS — progressive reveal
-═══════════════════════════════════════════════════════ */
-.sec{
-  opacity:0; transform:translateY(18px);
-  transition:opacity .45s ease,transform .45s ease;
-  pointer-events:none; margin-bottom:0;
-}
-.sec.on{opacity:1;transform:none;pointer-events:all;}
-
-/* Collapsed state (accordion) */
-.sec-collapsed{
-  display:none; background:var(--blk2);
-  border:1px solid var(--bd); border-radius:var(--radius);
-  padding:14px 18px; margin-bottom:0;
-  cursor:pointer; transition:border-color var(--trans);
-}
-.sec-collapsed:hover{border-color:var(--gold-bd);}
-.sec-collapsed.on{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.sc-label{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;}
-.sc-summary{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--ivory2);flex:1;padding:0 12px;}
-.sc-edit{font-size:10px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap;}
-.sc-tick{color:var(--gold);font-size:14px;flex-shrink:0;}
-
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-bd),transparent);margin:28px 0;display:none;}
-.divider.on{display:block;}
-
-/* Section headings */
-.sec-label-txt{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:.85;}
-.sec-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:26px;letter-spacing:.03em;color:var(--ivory);margin-bottom:6px;line-height:1.25;}
-.sec-sub{font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.6;letter-spacing:.02em;}
-
-/* ═══════════════════════════════════════════════════════
-   TOUR TYPE PILLS
-═══════════════════════════════════════════════════════ */
-.tpills{display:flex;gap:10px;flex-wrap:wrap;}
-.tpill{
-  display:inline-flex; align-items:center; gap:9px;
-  padding:12px 22px; border-radius:var(--radius-pill);
-  border:1px solid var(--bd); background:var(--blk2);
-  font-family:'Cinzel',serif; font-size:10px; letter-spacing:.18em;
-  color:var(--mid); text-transform:uppercase;
-  cursor:pointer; transition:all var(--trans); white-space:nowrap;
-}
-.tpill:hover{border-color:var(--gold-bd);color:var(--ivory);}
-.tpill.on{
-  border-color:var(--gold); background:var(--gold-bg2); color:var(--gold2);
-  box-shadow:0 0 0 1px var(--gold),0 4px 20px rgba(201,168,76,0.14);
-}
-.tpill-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;transition:all var(--trans);}
-.tpill.on .tpill-dot{background:var(--gold);border-color:var(--gold);}
-@media(max-width:480px){.tpills{flex-direction:column;}.tpill{justify-content:center;}}
-
-/* ═══════════════════════════════════════════════════════
-   DATE BLOCK
-═══════════════════════════════════════════════════════ */
-.date-block{background:var(--blk2);border:1px solid var(--bd);border-radius:var(--radius);padding:22px;}
-.date-row{display:flex;gap:14px;flex-wrap:wrap;}
-.date-field{flex:1;min-width:180px;}
-.d-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;display:block;}
-.d-inp{
-  width:100%; background:var(--blk3); border:1px solid var(--bd);
-  border-radius:var(--radius-sm); padding:12px 14px;
-  color:var(--ivory); font-size:13px; outline:none;
-  transition:border-color var(--trans); color-scheme:dark;
-}
-.d-inp:focus{border-color:var(--gold-bd2);}
-.d-micro{font-size:11px;color:var(--muted);margin-top:10px;font-style:italic;letter-spacing:.03em;}
-.d-confirm{
-  display:none; align-items:center; gap:9px;
-  margin-top:12px; padding:10px 14px;
-  border-radius:var(--radius-sm);
-  background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.2);
-}
-.d-confirm.on{display:flex;}
-.d-ctick{color:var(--gold);font-size:14px;}
-.d-ctxt{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:.16em;color:var(--gold2);text-transform:uppercase;}
-
-/* ═══════════════════════════════════════════════════════
-   DESTINATION CARD SCROLLER
-═══════════════════════════════════════════════════════ */
-.swipe-hint{
-  font-size:10.5px; color:var(--muted); letter-spacing:.08em;
-  margin-bottom:12px; display:flex; align-items:center; gap:6px;
-}
-.swipe-hint::before{content:'↔';color:var(--gold);font-size:12px;}
-.cards-scroller{
-  display:flex; gap:13px; overflow-x:auto;
-  padding-bottom:14px; scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch; scrollbar-width:none;
-}
-.cards-scroller::-webkit-scrollbar{display:none;}
-
-.dcard{
-  min-width:185px; max-width:185px; border-radius:var(--radius);
-  overflow:hidden; background:var(--blk2); border:1px solid var(--bd);
-  cursor:pointer; position:relative; flex-shrink:0; scroll-snap-align:start;
-  transition:border-color var(--trans),box-shadow var(--trans),transform .18s;
-}
-.dcard:hover{border-color:rgba(201,168,76,.32);transform:translateY(-2px);}
-.dcard.on{
-  border-color:var(--gold);
-  box-shadow:0 0 0 1px var(--gold),0 6px 24px rgba(201,168,76,.15);
-}
-.dcard-imgw{overflow:hidden;height:112px;position:relative;}
-.dcard-img{width:100%;height:112px;object-fit:cover;transition:transform .35s;}
-.dcard:hover .dcard-img{transform:scale(1.06);}
-.dcard-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,transparent 40%,rgba(9,9,11,0.7));
-}
-.dcard-body{padding:11px 12px 13px;}
-.dcard-name{
-  font-family:'Cormorant Garamond',serif; font-weight:500;
-  font-size:14.5px; letter-spacing:.03em; color:var(--ivory);
-  margin-bottom:3px; line-height:1.25;
-}
-.dcard-days{font-size:9.5px;color:var(--gold);letter-spacing:.14em;margin-bottom:4px;font-family:'Cinzel',serif;}
-.dcard-tags{font-size:10.5px;color:var(--muted);line-height:1.45;}
-.dcard-chk{
-  position:absolute; top:8px; right:8px;
-  width:22px; height:22px; border-radius:50%;
-  background:var(--gold); display:flex; align-items:center; justify-content:center;
-  opacity:0; transform:scale(.4) rotate(-45deg);
-  transition:opacity .2s,transform .2s;
-}
-.dcard.on .dcard-chk{opacity:1;transform:scale(1) rotate(0deg);}
-.dcard-chk svg{width:11px;height:11px;stroke:#09090b;stroke-width:2.5;fill:none;}
-
-/* ═══════════════════════════════════════════════════════
-   EXPERIENCES ACCORDION PANEL
-═══════════════════════════════════════════════════════ */
-.exp-panel{
-  margin-top:14px; background:var(--blk2); border:1px solid var(--gold-bd);
-  border-radius:var(--radius); overflow:hidden;
-  max-height:0; opacity:0;
-  transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .35s ease;
-}
-.exp-panel.on{max-height:900px;opacity:1;}
-.exp-inner{padding:20px 18px;}
-.exp-sec-ttl{
-  font-family:'Cinzel',serif; font-size:8.5px; letter-spacing:.3em;
-  color:var(--gold); text-transform:uppercase; margin-bottom:11px;
-}
-.exp-sub{margin-bottom:18px;}
-.exp-sub:last-child{margin-bottom:0;}
-.exp-sub-lbl{
-  font-size:10px; color:var(--muted); letter-spacing:.1em;
-  text-transform:uppercase; margin-bottom:9px; padding-bottom:6px;
-  border-bottom:1px solid var(--bd);
-}
-.chips-row{display:flex;flex-wrap:wrap;gap:7px;}
-.chip{
-  display:inline-flex; align-items:center; gap:5px;
-  padding:5px 12px; border-radius:18px; font-size:11.5px;
-  cursor:pointer; transition:all .18s; white-space:nowrap; user-select:none;
-}
-.chip.inc{border:1px solid rgba(245,240,232,.2);color:var(--ivory2);background:rgba(245,240,232,.04);}
-.chip.add{border:1px solid var(--gold-bd);color:var(--mid);background:transparent;}
-.chip.add:hover{border-color:var(--gold-bd2);color:var(--ivory);}
-.chip.add.on{border-color:var(--gold);background:var(--gold-bg2);color:var(--gold2);}
-.view-more-btn{
-  margin-top:10px; font-size:10.5px; color:var(--muted); cursor:pointer;
-  display:inline-flex; align-items:center; gap:5px; letter-spacing:.06em;
-  transition:color var(--trans);
-}
-.view-more-btn:hover{color:var(--gold);}
-
-/* ═══════════════════════════════════════════════════════
-   CUSTOM BUILDER
-═══════════════════════════════════════════════════════ */
-.builder-wrap{
-  background:var(--blk2); border:1px solid var(--bd);
-  border-radius:var(--radius); overflow:hidden;
-  max-height:0; opacity:0;
-  transition:max-height .55s ease,opacity .4s ease;
-}
-.builder-wrap.on{max-height:1800px;opacity:1;}
-.builder-inner{padding:24px 20px;}
-.fgrp{margin-bottom:20px;}
-.fgrp:last-child{margin-bottom:0;}
-.f-lbl{
-  font-family:'Cinzel',serif; font-size:8.5px; letter-spacing:.28em;
-  color:var(--gold); text-transform:uppercase; margin-bottom:9px; display:block;
-}
-.places-wrap{position:relative;}
-.places-ico{
-  position:absolute; left:14px; top:50%; transform:translateY(-50%);
-  color:var(--gold); opacity:.6; font-size:14px; pointer-events:none; z-index:1;
-}
-.places-inp{
-  width:100%; background:var(--blk3); border:1px solid var(--bd);
-  border-radius:var(--radius-sm); padding:12px 14px 12px 40px;
-  color:var(--ivory); font-size:13px; outline:none;
-  transition:border-color var(--trans);
-}
-.places-inp::placeholder{color:var(--muted);}
-.places-inp:focus{border-color:var(--gold-bd2);}
-
-/* City chips */
-.city-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
-.cc{
-  display:inline-flex; align-items:center; gap:6px;
-  padding:8px 15px; border-radius:var(--radius-pill);
-  border:1px solid var(--bd); background:var(--blk3);
-  color:var(--mid); font-size:12.5px; cursor:pointer; transition:all .2s;
-}
-.cc:hover{border-color:var(--gold-bd);color:var(--ivory);}
-.cc.on{border-color:var(--gold);background:var(--gold-bg2);color:var(--gold2);box-shadow:0 0 10px rgba(201,168,76,.15);}
-@keyframes cpop{0%{box-shadow:0 0 0 0 rgba(201,168,76,.5);}70%{box-shadow:0 0 0 10px rgba(201,168,76,0);}100%{box-shadow:0 0 0 0 rgba(201,168,76,0);}}
-.cc.pop{animation:cpop .45s ease;}
-
-/* Route strip */
-.route-wrap{
-  margin-top:18px; background:var(--blk3); border:1px solid var(--gold-bd);
-  border-radius:var(--radius); padding:16px 18px; display:none;
-}
-.route-wrap.on{display:block;}
-.route-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
-.route-strip{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
-.route-strip::-webkit-scrollbar{display:none;}
-@keyframes cin{from{opacity:0;transform:scale(.6) translateY(4px);}to{opacity:1;transform:scale(1) translateY(0);}}
-.r-city{
-  font-family:'Cormorant Garamond',serif; font-weight:500;
-  font-size:17px; color:var(--ivory); white-space:nowrap;
-  animation:cin .35s cubic-bezier(.34,1.56,.64,1) both;
-}
-.r-arr{
-  color:var(--gold); font-size:13px; margin:0 7px; opacity:.6;
-  animation:cin .28s ease both;
-}
-.route-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px solid var(--bd);}
-.rbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:12px;font-size:10.5px;}
-.rbadge.ok{border:1px solid var(--green-bd);background:var(--green-bg);color:#6ec898;}
-.rbadge.warn{border:1px solid var(--gold-bd);background:var(--gold-bg);color:var(--gold2);}
-.rbadge.info{border:1px solid var(--bd2);background:transparent;color:var(--mid);}
-.concierge-box{
-  margin-top:13px; padding:14px 16px; border-radius:var(--radius-sm);
-  border:1px solid var(--gold-bd); background:var(--gold-bg);
-  font-size:12px; color:var(--ivory2); line-height:1.72; font-style:italic;
-  display:none;
-}
-.concierge-box.on{display:block;}
-
-/* PAC dropdown dark override */
-.pac-container{
-  background:var(--blk2)!important; border:1px solid var(--gold-bd)!important;
-  border-radius:10px!important; margin-top:3px!important;
-  font-family:'Lato',sans-serif!important; box-shadow:var(--shadow)!important;
-  overflow:hidden!important;
-}
-.pac-item{padding:9px 15px!important;border-top:1px solid var(--bd)!important;cursor:pointer!important;color:var(--mid)!important;font-size:12.5px!important;}
-.pac-item:hover{background:var(--gold-bg)!important;}
-.pac-item-query{color:var(--ivory)!important;}
-.pac-icon{display:none!important;}
-.pac-matched{color:var(--gold)!important;font-weight:700!important;}
-
-/* ═══════════════════════════════════════════════════════
-   STEPPERS — TRAVELLERS
-═══════════════════════════════════════════════════════ */
-.stepper-block{background:var(--blk2);border:1px solid var(--bd);border-radius:var(--radius);padding:4px 20px;}
-.stepper-row{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 0; border-bottom:1px solid var(--bd);
-}
-.stepper-row:last-child{border-bottom:none;}
-.st-info{}
-.st-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);letter-spacing:.02em;}
-.st-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
-.st-ctrl{display:flex;align-items:center;}
-.st-btn{
-  width:34px;height:34px;border-radius:50%;
-  border:1px solid var(--gold-bd); background:transparent;
-  color:var(--gold); font-size:18px; display:flex;
-  align-items:center;justify-content:center;
-  transition:all var(--trans); flex-shrink:0;
-}
-.st-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
-.st-val{
-  font-family:'Cormorant Garamond',serif; font-size:22px;
-  font-weight:500; color:var(--ivory); width:42px; text-align:center;
-}
-.senior-note{
-  margin-top:10px; padding:11px 15px; border-radius:var(--radius-sm);
-  border:1px solid var(--gold-bd); background:var(--gold-bg);
-  font-size:11.5px; color:var(--ivory2); font-style:italic; display:none;
-}
-.senior-note.on{display:block;}
-
-/* ═══════════════════════════════════════════════════════
-   STAY STYLE CARDS
-═══════════════════════════════════════════════════════ */
-.stay-cards{display:flex;gap:11px;flex-wrap:wrap;}
-.stay-card{
-  flex:1; min-width:150px; border-radius:var(--radius);
-  padding:18px 14px; border:1px solid var(--bd);
-  background:var(--blk2); cursor:pointer; position:relative;
-  transition:all var(--trans); text-align:center;
-}
-.stay-card:hover{border-color:var(--gold-bd);}
-.stay-card.on{
-  border-color:var(--gold); background:var(--gold-bg2);
-  box-shadow:0 0 0 1px var(--gold),0 4px 22px rgba(201,168,76,.13);
-}
-.stay-stars{font-size:12px;color:var(--gold);letter-spacing:.1em;margin-bottom:7px;}
-.stay-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--ivory);margin-bottom:4px;}
-.stay-desc{font-size:10.5px;color:var(--muted);line-height:1.45;}
-.stay-chk{position:absolute;top:9px;right:11px;font-size:12px;color:var(--gold);opacity:0;transition:opacity var(--trans);}
-.stay-card.on .stay-chk{opacity:1;}
-
-/* ═══════════════════════════════════════════════════════
-   HOTEL SECTION
-═══════════════════════════════════════════════════════ */
-.hotel-section{margin-top:24px;display:none;}
-.hotel-section.on{display:block;}
-.hotel-city-block{margin-bottom:28px;}
-.hotel-city-block:last-child{margin-bottom:0;}
-.hcb-header{
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:11px; padding-bottom:9px; border-bottom:1px solid var(--bd);
-}
-.hcb-city{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;}
-.nights-ctrl{display:flex;align-items:center;gap:0;}
-.nights-lbl{font-size:10.5px;color:var(--mid);margin-right:10px;}
-.ns-btn{
-  width:28px;height:28px;border-radius:50%;border:1px solid var(--gold-bd);
-  background:transparent;color:var(--gold);font-size:15px;
-  display:flex;align-items:center;justify-content:center;transition:all var(--trans);
-}
-.ns-btn:hover{border-color:var(--gold);background:var(--gold-bg);}
-.ns-val{
-  font-family:'Cormorant Garamond',serif;font-size:17px;
-  color:var(--ivory);width:32px;text-align:center;
-}
-.hotel-card{
-  display:flex; gap:13px; align-items:flex-start;
-  background:var(--blk2); border:1px solid var(--bd);
-  border-radius:var(--radius); padding:13px; margin-bottom:9px;
-  cursor:pointer; transition:all var(--trans);
-}
-.hotel-card:last-of-type{margin-bottom:0;}
-.hotel-card:hover{border-color:var(--gold-bd);}
-.hotel-card.on{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold);}
-.hotel-img{
-  width:68px;height:68px;border-radius:8px;
-  object-fit:cover;flex-shrink:0;background:var(--blk3);
-}
-.hotel-content{flex:1;}
-.hotel-name{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:14.5px;color:var(--ivory);margin-bottom:3px;}
-.hotel-meta{font-size:10.5px;color:var(--gold);letter-spacing:.05em;margin-bottom:3px;}
-.hotel-note{font-size:10.5px;color:var(--muted);line-height:1.4;margin-bottom:8px;}
-.hotel-sel-btn{
-  padding:4px 12px; border-radius:12px;
-  border:1px solid var(--gold-bd); background:transparent;
-  color:var(--gold); font-family:'Cinzel',serif;
-  font-size:8px; letter-spacing:.18em; text-transform:uppercase;
-  transition:all var(--trans);
-}
-.hotel-sel-btn:hover{background:var(--gold-bg);}
-.hotel-card.on .hotel-sel-btn{background:var(--gold);color:var(--blk);border-color:var(--gold);}
-.hotel-upgrade-lbl{
-  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.25em;
-  color:var(--muted); text-transform:uppercase;
-  margin:12px 0 9px; padding-top:12px; border-top:1px solid var(--bd);
-}
-.hotel-skip{text-align:right;margin-top:6px;}
-.hotel-skip a{font-size:10.5px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color var(--trans);}
-.hotel-skip a:hover{color:var(--ivory2);}
-
-/* ═══════════════════════════════════════════════════════
-   INTERESTS
-═══════════════════════════════════════════════════════ */
-.int-chips{display:flex;flex-wrap:wrap;gap:9px;}
-.int-chip{
-  display:inline-flex; align-items:center; gap:7px;
-  padding:9px 15px; border-radius:var(--radius-pill);
-  border:1px solid var(--bd); background:var(--blk2);
-  color:var(--mid); font-size:12.5px; cursor:pointer;
-  transition:all .22s; user-select:none;
-}
-.int-chip:hover{border-color:var(--gold-bd);color:var(--ivory);}
-.int-chip.on{
-  border-color:var(--gold); background:var(--gold-bg2); color:var(--gold2);
-  box-shadow:0 0 12px rgba(201,168,76,.18);
-}
-.int-chip.on::after{content:' ✓';font-size:10px;color:var(--gold);}
-.int-ico{font-size:14px;}
-
-/* ═══════════════════════════════════════════════════════
-   NOTES
-═══════════════════════════════════════════════════════ */
-.notes-area{
-  width:100%; background:var(--blk2); border:1px solid var(--bd);
-  border-radius:var(--radius); padding:15px 17px;
-  color:var(--ivory); font-size:13px; font-weight:300;
-  line-height:1.7; resize:vertical; min-height:105px;
-  outline:none; transition:border-color var(--trans);
-}
-.notes-area::placeholder{color:var(--muted);font-style:italic;}
-.notes-area:focus{border-color:var(--gold-bd2);}
-
-/* ═══════════════════════════════════════════════════════
-   SMART PREVIEW CARD
-═══════════════════════════════════════════════════════ */
-.preview-card{
-  background:var(--blk2); border:1px solid var(--gold-bd);
-  border-radius:var(--radius); overflow:hidden;
-  box-shadow:0 4px 32px rgba(0,0,0,0.4);
-}
-.prev-hdr{
-  padding:20px 22px 16px;
-  background:linear-gradient(135deg,rgba(201,168,76,0.08),transparent);
-  border-bottom:1px solid var(--bd);
-}
-.prev-hdr-lbl{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:7px;}
-.prev-route-txt{
-  font-family:'Cormorant Garamond',serif; font-size:22px;
-  font-style:italic; color:var(--ivory); letter-spacing:.04em; line-height:1.3;
-}
-.prev-body{padding:18px 22px;}
-.prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
-.prev-stat{background:var(--blk3);border-radius:10px;padding:13px 15px;}
-.prev-stat-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
-.prev-stat-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ivory);font-weight:500;}
-.prev-stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
-.prev-cities{}
-.prev-city-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:11px 0;border-bottom:1px solid var(--bd);
-}
-.prev-city-row:last-child{border-bottom:none;}
-.prev-city-name{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--ivory);}
-.prev-city-hotel{font-size:10.5px;color:var(--muted);margin-top:2px;}
-.prev-city-nights{font-size:10px;color:var(--gold);letter-spacing:.12em;font-family:'Cinzel',serif;white-space:nowrap;}
-.prev-note{
-  margin-top:14px; padding:13px 15px; border-radius:var(--radius-sm);
-  background:var(--gold-bg); border:1px solid var(--gold-bd);
-  font-size:11.5px; color:var(--ivory2); font-style:italic; line-height:1.65; display:none;
-}
-.dist-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:5px 12px;border-radius:12px;font-size:10.5px;margin-top:9px;
-}
-.dist-badge.ok{border:1px solid var(--green-bd);background:var(--green-bg);color:#6ec898;}
-.dist-badge.warn{border:1px solid var(--gold-bd);background:var(--gold-bg);color:var(--gold2);}
-
-/* ═══════════════════════════════════════════════════════
-   FLOATING ESTIMATE BAR
-═══════════════════════════════════════════════════════ */
-#est-bar{
-  position:fixed; bottom:0; left:0; right:0; z-index:600;
-  background:rgba(9,9,11,0.97); backdrop-filter:blur(20px);
-  border-top:1px solid var(--gold-bd); height:64px;
-  display:flex; align-items:center; padding:0 22px;
-  justify-content:space-between; gap:14px;
-}
-.est-left{display:flex;flex-direction:column;gap:1px;}
-.est-micro{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:.26em;color:var(--muted);text-transform:uppercase;}
-.est-range{
-  font-family:'Cormorant Garamond',serif; font-weight:500;
-  font-size:21px; letter-spacing:.03em; color:var(--gold2);
-  transition:all .3s;
-}
-.view-btn{
-  padding:11px 21px; border-radius:var(--radius-pill);
-  background:var(--gold); color:var(--blk);
-  font-family:'Cinzel',serif; font-size:10px; letter-spacing:.2em;
-  text-transform:uppercase; border:none;
-  white-space:nowrap; flex-shrink:0;
-  transition:background var(--trans),transform .15s;
-}
-.view-btn:hover{background:var(--gold2);transform:scale(1.02);}
-.view-btn:active{transform:scale(.97);}
-
-/* ═══════════════════════════════════════════════════════
-   JOURNEY SUMMARY SHEET
-═══════════════════════════════════════════════════════ */
-#jbd{
-  position:fixed;inset:0;background:rgba(0,0,0,0.72);
-  z-index:700;opacity:0;pointer-events:none;transition:opacity .3s;
-}
-#jbd.on{opacity:1;pointer-events:all;}
-#jsheet{
-  position:fixed; bottom:0; left:0; right:0; z-index:800;
-  background:var(--blk2); border-top:1px solid var(--gold-bd);
-  border-radius:20px 20px 0 0; max-height:78vh; overflow-y:auto;
-  transform:translateY(100%);
-  transition:transform .42s cubic-bezier(.4,0,.2,1);
-  padding-bottom:env(safe-area-inset-bottom,20px);
-}
-#jsheet.on{transform:translateY(0);}
-.js-inner{padding:22px 22px;}
-.js-handle{width:36px;height:4px;border-radius:2px;background:var(--bd2);margin:0 auto 18px;}
-.js-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.js-title{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:22px;letter-spacing:.04em;}
-.js-close{
-  width:30px;height:30px;border-radius:50%;
-  border:1px solid var(--bd);background:transparent;
-  color:var(--muted);font-size:14px;display:flex;
-  align-items:center;justify-content:center;transition:all var(--trans);
-}
-.js-close:hover{border-color:var(--gold);color:var(--gold);}
-.js-route{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--gold2);margin-bottom:13px;letter-spacing:.04em;}
-.js-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
-.js-meta-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mid);}
-.js-meta-item span{color:var(--ivory);}
-.js-sec-ttl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:11px;}
-.js-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:12.5px;color:var(--mid);}
-.js-item:last-child{border-bottom:none;}
-.js-tick{color:var(--gold);font-size:12px;}
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════ */
-@media(max-width:520px){
-  .tpills{flex-direction:column;}
-  .tpill{justify-content:center;}
-  .stay-cards{flex-direction:column;}
-  .date-row{flex-direction:column;}
-  .prev-grid{grid-template-columns:1fr;}
-  .estimator{padding:20px 14px 50px;}
-  .sec-title{font-size:22px;}
-}
-</style>
-</head>
-<body>
-
-<!-- ══════════════════════════════════════════════════════
-     HEADER
-══════════════════════════════════════════════════════ -->
-<div id="hdr">
-  <div class="hdr-inner">
-    <div class="hdr-logo">
-      <img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc Travels"/>
-    </div>
-    <div class="hdr-sep"></div>
-    <div class="hdr-trust">
-      <span class="hdr-trust-lbl">Trusted &amp; Verified By</span>
-      <div class="hdr-vline"></div>
-      <div class="trust-logos">
-        <div class="tlogo tg">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google"/>
-        </div>
-        <div class="tlogo">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tripadvisor_logo.svg/2560px-Tripadvisor_logo.svg.png" alt="TripAdvisor"/>
-        </div>
-        <div class="tlogo">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Viator_logo.svg/2560px-Viator_logo.svg.png" alt="Viator"/>
-        </div>
-      </div>
-      <div class="hdr-vline"></div>
-      <span class="hdr-cert">GST · MSME · Govt. of India Recognised</span>
-    </div>
-  </div>
-</div>
-
-<!-- STEP BAR -->
-<div id="step-bar">
-  <div class="sb-row">
-    <span class="sb-title" id="sb-title">Plan Your Journey</span>
-    <span class="sb-step" id="sb-step">Step 1 of 8</span>
-  </div>
-  <div class="sb-track"><div class="sb-fill" id="sb-fill"></div></div>
-</div>
-
-<!-- POSITIONING LINE -->
-<div class="position-line">
-  <p>Our <span>chauffeur-curated journeys</span> are designed around the most rewarding and comfortable overland routes across North India — private, personalised, and built entirely around you.</p>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     ESTIMATOR
-══════════════════════════════════════════════════════ -->
-<div class="estimator">
-
-<!-- ── S0: JOURNEY TYPE ── -->
-<div class="sec on" id="s0">
-  <div class="sec-label-txt">Step 1</div>
-  <div class="sec-title">What kind of journey are you planning?</div>
-  <div class="sec-sub">Every journey is private and chauffeur-driven. Choose the format that suits you best.</div>
-  <div class="tpills">
-    <div class="tpill" id="pill-day"    onclick="selType('day')">   <span class="tpill-dot"></span>Single Day Tour</div>
-    <div class="tpill" id="pill-multi"  onclick="selType('multi')"> <span class="tpill-dot"></span>Multi-Day Journey</div>
-    <div class="tpill" id="pill-custom" onclick="selType('custom')"><span class="tpill-dot"></span>Build My Custom Itinerary</div>
-  </div>
-</div>
-<!-- Collapsed summary for s0 -->
-<div class="sec-collapsed" id="sc0" onclick="editSec(0)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc0-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d01"></div>
-
-<!-- ── S1: DATES ── -->
-<div class="sec" id="s1">
-  <div class="sec-label-txt">Step 2</div>
-  <div class="sec-title" id="s1-title">When would you like to travel?</div>
-  <div class="date-block">
-    <div class="date-row">
-      <div class="date-field">
-        <label class="d-lbl" id="d-start-lbl">Travel Date</label>
-        <input class="d-inp" type="date" id="d-start" onchange="onDate()"/>
-      </div>
-      <div class="date-field" id="d-end-wrap" style="display:none">
-        <label class="d-lbl">End Date</label>
-        <input class="d-inp" type="date" id="d-end" onchange="onDate()"/>
-      </div>
-    </div>
-    <div class="d-micro" id="d-micro">No return date required for this experience.</div>
-    <div class="d-confirm" id="d-conf">
-      <span class="d-ctick">✔</span>
-      <span class="d-ctxt" id="d-conf-txt"></span>
-    </div>
-  </div>
-</div>
-<div class="sec-collapsed" id="sc1" onclick="editSec(1)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc1-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d12"></div>
-
-<!-- ── S2: TOUR / DESTINATION SELECTION ── -->
-<div class="sec" id="s2">
-  <div class="sec-label-txt">Step 3</div>
-  <div class="sec-title" id="s2-title">Choose your experience</div>
-
-  <!-- DAY TOURS — 6 cards -->
-  <div id="day-sec" style="display:none">
-    <div class="swipe-hint">Swipe to explore all day experiences</div>
-    <div class="cards-scroller">
-      <div class="dcard" id="card-agra"      onclick="selCard('agra')">     <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg" alt="Agra"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Agra &amp; the Taj Mahal</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">The wonder that needs no introduction.</div></div></div>
-      <div class="dcard" id="card-jaipur"    onclick="selCard('jaipur')">   <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg" alt="Jaipur"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Jaipur — The Pink City</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Palaces, forts and bazaars in full colour.</div></div></div>
-      <div class="dcard" id="card-rishikesh" onclick="selCard('rishikesh')"><div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg" alt="Rishikesh"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Rishikesh &amp; Haridwar</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Where the Himalayas meet the holy Ganges.</div></div></div>
-      <div class="dcard" id="card-amritsar"  onclick="selCard('amritsar')"> <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg" alt="Amritsar"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Amritsar &amp; Golden Temple</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">India's most breathtaking spiritual landmark.</div></div></div>
-      <div class="dcard" id="card-mathura"   onclick="selCard('mathura')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg" alt="Mathura"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Mathura &amp; Vrindavan</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">The sacred birthplace of Lord Krishna.</div></div></div>
-      <div class="dcard" id="card-delhi"     onclick="selCard('delhi')">    <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Delhi"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Delhi Heritage Day</div><div class="dcard-days">Day Tour</div><div class="dcard-tags">Red Fort, Humayun's Tomb &amp; Old Delhi.</div></div></div>
-    </div>
-    <div class="exp-panel" id="exp-day"></div>
-  </div>
-
-  <!-- MULTI-DAY TOURS — 4 cards -->
-  <div id="multi-sec" style="display:none">
-    <div class="swipe-hint">Swipe to explore all journeys</div>
-    <div class="cards-scroller">
-      <div class="dcard" id="card-golden"   onclick="selCard('golden')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg" alt="Golden Triangle"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">The Golden Triangle</div><div class="dcard-days">5 Days · 4 Nights</div><div class="dcard-tags">Three cities. One unforgettable journey.</div></div></div>
-      <div class="dcard" id="card-varanasi" onclick="selCard('varanasi')"><div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg" alt="Varanasi"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Varanasi — Soul of India</div><div class="dcard-days">3 Days · 2 Nights</div><div class="dcard-tags">Where the Ganges carries every prayer.</div></div></div>
-      <div class="dcard" id="card-shimla"   onclick="selCard('shimla')">  <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg" alt="Shimla Manali"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Shimla &amp; Manali</div><div class="dcard-days">6 Days · 5 Nights</div><div class="dcard-tags">The Himalayan escape from the plains.</div></div></div>
-      <div class="dcard" id="card-corbett"  onclick="selCard('corbett')"> <div class="dcard-chk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="dcard-imgw"><img class="dcard-img" src="https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg" alt="Jim Corbett"/><div class="dcard-overlay"></div></div><div class="dcard-body"><div class="dcard-name">Jim Corbett National Park</div><div class="dcard-days">3 Days · 2 Nights</div><div class="dcard-tags">Tigers, forests and wild North India.</div></div></div>
-    </div>
-    <div class="exp-panel" id="exp-multi"></div>
-  </div>
-
-  <!-- CUSTOM BUILDER -->
-  <div id="custom-sec" style="display:none">
-    <div class="builder-wrap" id="builder-wrap">
-      <div class="builder-inner">
-
-        <div class="fgrp">
-          <label class="f-lbl">Journey Begins From</label>
-          <div class="places-wrap">
-            <span class="places-ico">✈</span>
-            <input class="places-inp" id="inp-pickup" type="text" placeholder="City, airport or hotel you're arriving into…"/>
-          </div>
-        </div>
-
-        <div class="fgrp">
-          <label class="f-lbl">Where would you like to go?</label>
-          <div class="city-chips" id="city-chips">
-            <div class="cc" data-city="Delhi"    onclick="togCity(this)">🏛 Delhi</div>
-            <div class="cc" data-city="Agra"     onclick="togCity(this)">🕌 Agra</div>
-            <div class="cc" data-city="Jaipur"   onclick="togCity(this)">🏰 Jaipur</div>
-            <div class="cc" data-city="Rishikesh" onclick="togCity(this)">🙏 Rishikesh</div>
-            <div class="cc" data-city="Varanasi" onclick="togCity(this)">🪔 Varanasi</div>
-            <div class="cc" data-city="Amritsar" onclick="togCity(this)">⭐ Amritsar</div>
-          </div>
-          <div class="places-wrap">
-            <span class="places-ico">🔍</span>
-            <input class="places-inp" id="inp-dest1" type="text" placeholder="Something else on your mind? Search a city or region…"/>
-          </div>
-        </div>
-
-        <div class="fgrp">
-          <label class="f-lbl">Add another destination</label>
-          <div class="places-wrap">
-            <span class="places-ico">📍</span>
-            <input class="places-inp" id="inp-dest2" type="text" placeholder="Add one more destination to your route…"/>
-          </div>
-        </div>
-
-        <div class="fgrp">
-          <label class="f-lbl">Journey Ends At</label>
-          <div class="places-wrap">
-            <span class="places-ico">🏁</span>
-            <input class="places-inp" id="inp-drop" type="text" placeholder="Hotel, airport or city you're departing from…"/>
-          </div>
-        </div>
-
-        <div class="route-wrap" id="route-wrap">
-          <div class="route-lbl">Your Route</div>
-          <div class="route-strip" id="route-strip"></div>
-          <div class="route-badges" id="route-badges"></div>
-          <div class="concierge-box" id="concierge-box">✦ &nbsp;This journey spans an extended route across North India. Our concierge team will personally review your selections, suggest the most comfortable sequence, and where relevant recommend seamless internal flight connections — so every transition feels effortless rather than exhausting. We'll be in touch to craft the perfect version of this journey for you.</div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-<div class="sec-collapsed" id="sc2" onclick="editSec(2)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc2-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d23"></div>
-
-<!-- ── S3: WHO'S TRAVELLING ── -->
-<div class="sec" id="s3">
-  <div class="sec-label-txt">Step 4</div>
-  <div class="sec-title">Who's travelling?</div>
-  <div class="stepper-block">
-    <div class="stepper-row">
-      <div class="st-info"><div class="st-name">Adults</div><div class="st-sub">Age 18 and above</div></div>
-      <div class="st-ctrl"><button class="st-btn" onclick="adj('adults',-1)">−</button><div class="st-val" id="v-adults">2</div><button class="st-btn" onclick="adj('adults',1)">+</button></div>
-    </div>
-    <div class="stepper-row">
-      <div class="st-info"><div class="st-name">Children</div><div class="st-sub">Age 2 – 17</div></div>
-      <div class="st-ctrl"><button class="st-btn" onclick="adj('children',-1)">−</button><div class="st-val" id="v-children">0</div><button class="st-btn" onclick="adj('children',1)">+</button></div>
-    </div>
-    <div class="stepper-row">
-      <div class="st-info"><div class="st-name">Seniors</div><div class="st-sub">Age 60 and above</div></div>
-      <div class="st-ctrl"><button class="st-btn" onclick="adj('seniors',-1)">−</button><div class="st-val" id="v-seniors">0</div><button class="st-btn" onclick="adj('seniors',1)">+</button></div>
-    </div>
-  </div>
-  <div class="senior-note" id="senior-note">🌿 &nbsp;Comfort-focused routing will be prioritised — gentler pace, ground-floor rooms where possible, and rest stops built into every transfer.</div>
-</div>
-<div class="sec-collapsed" id="sc3" onclick="editSec(3)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc3-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d34"></div>
-
-<!-- ── S4: STAY STYLE + HOTELS ── -->
-<div class="sec" id="s4">
-  <div class="sec-label-txt">Step 5</div>
-  <div class="sec-title">What's your preferred stay style?</div>
-  <div class="stay-cards">
-    <div class="stay-card" id="stay-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, characterful boutiques and high-rated guesthouses</div></div>
-    <div class="stay-card" id="stay-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels and boutique properties with elevated comfort</div></div>
-    <div class="stay-card" id="stay-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses in North India</div></div>
-  </div>
-  <div class="hotel-section" id="hotel-section">
-    <div class="sec-label-txt" style="margin-top:22px;margin-bottom:14px;">Suggested Stays for Your Route</div>
-    <div id="hotel-cities-wrap"></div>
-  </div>
-</div>
-<div class="sec-collapsed" id="sc4" onclick="editSec(4)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc4-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d45"></div>
-
-<!-- ── S5: SPECIAL INTERESTS ── -->
-<div class="sec" id="s5">
-  <div class="sec-label-txt">Step 6</div>
-  <div class="sec-title">What draws you most?</div>
-  <div class="sec-sub">Select all that resonate — we'll curate your experiences accordingly.</div>
-  <div class="int-chips">
-    <div class="int-chip" onclick="togInt(this)" data-int="Spiritual">  <span class="int-ico">🕌</span>Spiritual</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Heritage">   <span class="int-ico">🏛</span>Heritage</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Food">       <span class="int-ico">🍛</span>Food &amp; Culture</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Photography"><span class="int-ico">📸</span>Photography</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Wellness">   <span class="int-ico">🧘</span>Wellness</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Nature">     <span class="int-ico">⛰</span>Nature</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Architecture"><span class="int-ico">🏰</span>Architecture</div>
-    <div class="int-chip" onclick="togInt(this)" data-int="Luxury">     <span class="int-ico">🥂</span>Luxury</div>
-  </div>
-</div>
-<div class="sec-collapsed" id="sc5" onclick="editSec(5)">
-  <span class="sc-tick">✔</span>
-  <div class="sc-summary" id="sc5-txt">—</div>
-  <span class="sc-edit">Edit</span>
-</div>
-
-<div class="divider" id="d56"></div>
-
-<!-- ── S6: FLEXIBLE NOTES ── -->
-<div class="sec" id="s6">
-  <div class="sec-label-txt">Step 7</div>
-  <div class="sec-title">Anything else we should know?</div>
-  <div class="sec-sub">Share your pace preference, special occasions, mobility needs, or anything that matters to you. Our concierge reads every word.</div>
-  <textarea class="notes-area" id="journey-notes" rows="5"
-    placeholder="We are looking for a slower-paced journey with spiritual experiences, boutique stays and comfortable driving durations. We have two elderly parents joining us and would prefer avoiding long steps and stairs where possible…"
-    oninput="onNotes()"></textarea>
-</div>
-
-<div class="divider" id="d67"></div>
-
-<!-- ── S7: SMART JOURNEY PREVIEW ── -->
-<div class="sec" id="s7">
-  <div class="sec-label-txt">Step 8 · Your Journey at a Glance</div>
-  <div class="sec-title">Here's what we've built for you</div>
-  <div class="preview-card">
-    <div class="prev-hdr">
-      <div class="prev-hdr-lbl">Estimated Route</div>
-      <div class="prev-route-txt" id="prev-route">—</div>
-      <div id="prev-dist-badge"></div>
-    </div>
-    <div class="prev-body">
-      <div class="prev-grid">
-        <div class="prev-stat"><div class="prev-stat-lbl">Journey Duration</div><div class="prev-stat-val" id="prev-dur">—</div><div class="prev-stat-sub" id="prev-dur-sub"></div></div>
-        <div class="prev-stat"><div class="prev-stat-lbl">Driving Coverage</div><div class="prev-stat-val" id="prev-km">—</div><div class="prev-stat-sub">Private AC vehicle throughout</div></div>
-        <div class="prev-stat"><div class="prev-stat-lbl">Travellers</div><div class="prev-stat-val" id="prev-pax">2 Adults</div><div class="prev-stat-sub" id="prev-pax-sub"></div></div>
-        <div class="prev-stat"><div class="prev-stat-lbl">Stay Preference</div><div class="prev-stat-val" id="prev-stay">—</div><div class="prev-stat-sub">Curated by Ivory Arc</div></div>
-      </div>
-      <div id="prev-cities" class="prev-cities"></div>
-      <div class="prev-note" id="prev-note"></div>
-    </div>
-  </div>
-</div>
-
-</div><!-- /estimator -->
-
-<!-- ESTIMATE BAR -->
-<div id="est-bar">
-  <div class="est-left">
-    <span class="est-micro">Estimated Range</span>
-    <span class="est-range" id="est-range">Select your journey</span>
-  </div>
-  <button class="view-btn" onclick="openSheet()">View Journey</button>
-</div>
-
-<!-- JOURNEY SHEET -->
-<div id="jbd" onclick="closeSheet()"></div>
-<div id="jsheet">
-  <div class="js-inner">
-    <div class="js-handle"></div>
-    <div class="js-top">
-      <div class="js-title">Your Journey</div>
-      <button class="js-close" onclick="closeSheet()">✕</button>
-    </div>
-    <div class="js-route" id="js-route">—</div>
-    <div class="js-meta">
-      <div class="js-meta-item">📅 <span id="js-days">—</span></div>
-      <div class="js-meta-item">👥 <span id="js-pax">2 Adults</span></div>
-    </div>
-    <div class="js-sec-ttl">Always Included</div>
-    <div class="js-item"><span class="js-tick">✔</span>Private Chauffeur &amp; AC Vehicle</div>
-    <div class="js-item"><span class="js-tick">✔</span>4★ Handpicked Stays (Multi-Day)</div>
-    <div class="js-item"><span class="js-tick">✔</span>Airport Pickup &amp; Drop</div>
-    <div class="js-item"><span class="js-tick">✔</span>Dedicated Travel Manager</div>
-    <div class="js-item"><span class="js-tick">✔</span>All Monument Entries (Included Sites)</div>
-    <div id="js-int-wrap" style="display:none;margin-top:16px;"><div class="js-sec-ttl">Your Interests</div><div id="js-int-list"></div></div>
-    <div id="js-add-wrap" style="display:none;margin-top:16px;"><div class="js-sec-ttl">Add-ons Selected</div><div id="js-add-list"></div></div>
-  </div>
-</div>
-
-<script>
-/* ═══════════════════════════════════════════
-   DATA
-═══════════════════════════════════════════ */
-const TOURS = {
-  agra:     {t:'day',  name:'Agra & the Taj Mahal',      days:'Day Tour',          route:'Agra',                   km:null, nights:[], base:[18000,28000],
-    inc:['Taj Mahal','Agra Fort'],
-    add:[{id:'sunrise-taj',l:'Sunrise Taj'},{id:'vip-entry',l:'VIP Entry'},{id:'baby-taj',l:'Baby Taj'},{id:'heritage-walk',l:'Heritage Walk'},{id:'photographer',l:'Photographer'},{id:'mughal-dinner',l:'Mughal Dinner'},{id:'petha',l:'Petha Making'},{id:'tonga',l:'Tonga Ride'}]},
-  jaipur:   {t:'day',  name:'Jaipur — The Pink City',    days:'Day Tour',          route:'Jaipur',                 km:null, nights:[], base:[16000,24000],
-    inc:['City Palace','Hawa Mahal','Jantar Mantar'],
-    add:[{id:'amber',l:'Amber Fort'},{id:'balloon',l:'Balloon Sunrise'},{id:'royal-dinner',l:'Royal Dinner'},{id:'block-print',l:'Block Printing'},{id:'turban',l:'Turban Tying'},{id:'camel',l:'Camel Ride'},{id:'jewellery',l:'Jewellery Walk'}]},
-  rishikesh:{t:'day',  name:'Rishikesh & Haridwar',      days:'Day Tour',          route:'Rishikesh & Haridwar',   km:null, nights:[], base:[14000,22000],
-    inc:['Laxman Jhula','Har Ki Pauri','Ganga Aarti'],
-    add:[{id:'rafting',l:'River Rafting G1–3'},{id:'rafting4',l:'Rafting G4'},{id:'bungee',l:'Bungee Jumping'},{id:'yoga',l:'Yoga Session'},{id:'ganga-seat',l:'Ganga Aarti Seating'},{id:'camping',l:'Riverside Camping'},{id:'neelkanth',l:'Neelkanth Temple'}]},
-  amritsar: {t:'day',  name:'Amritsar & Golden Temple',  days:'Day Tour',          route:'Amritsar',               km:null, nights:[], base:[14000,22000],
-    inc:['Golden Temple','Jallianwala Bagh','Wagah Border'],
-    add:[{id:'wagah-vip',l:'Wagah VIP Access'},{id:'food-walk',l:'Food Walk'},{id:'turban',l:'Turban Tying'},{id:'partition',l:'Partition Museum'},{id:'langar',l:'Langar Experience'},{id:'gobindgarh',l:'Gobindgarh Fort'}]},
-  mathura:  {t:'day',  name:'Mathura & Vrindavan',       days:'Day Tour',          route:'Mathura & Vrindavan',    km:null, nights:[], base:[12000,20000],
-    inc:['Janmabhoomi','Dwarkadhish','Banke Bihari'],
-    add:[{id:'iskcon',l:'ISKCON Visit'},{id:'boat-ride',l:'Boat Ride'},{id:'flower',l:'Flower Ceremony'},{id:'puja-kit',l:'Puja Kit'},{id:'erickshaw',l:'E-Rickshaw Tour'},{id:'holi',l:'Holi Colour Experience'}]},
-  delhi:    {t:'day',  name:'Delhi Heritage Day',        days:'Day Tour',          route:'Delhi',                  km:null, nights:[], base:[12000,18000],
-    inc:["Red Fort","Humayun's Tomb",'India Gate'],
-    add:[{id:'old-delhi',l:'Old Delhi Walk'},{id:'rickshaw',l:'Rickshaw Ride'},{id:'food-walk',l:'Food Walk'},{id:'photographer',l:'Photographer'},{id:'dilli-haat',l:'Dilli Haat'},{id:'qutub',l:'Qutub Minar'},{id:'akshardham',l:'Akshardham Temple'}]},
-  golden:   {t:'multi',name:'The Golden Triangle',       days:'5 Days / 4 Nights', route:'Delhi → Agra → Jaipur', km:780,
-    nights:[{city:'Delhi',n:1,min:1},{city:'Agra',n:1,min:1},{city:'Jaipur',n:2,min:1}], base:[120000,165000],
-    inc:['Red Fort','Humayun Tomb','Taj Mahal','Agra Fort','Amber Fort','City Palace','Hawa Mahal'],
-    add:[{id:'balloon',l:'Balloon Sunrise'},{id:'sunrise-taj',l:'Sunrise Taj'},{id:'royal-dinner',l:'Royal Dinner'},{id:'old-delhi',l:'Old Delhi Walk'},{id:'rickshaw',l:'Rickshaw Ride'},{id:'photographer',l:'Photographer'},{id:'vip-entry',l:'VIP Taj Entry'},{id:'mughal-dinner',l:'Mughal Dinner'}]},
-  varanasi: {t:'multi',name:'Varanasi — Soul of India',  days:'3 Days / 2 Nights', route:'Varanasi',               km:820,
-    nights:[{city:'Varanasi',n:2,min:2}], base:[55000,80000],
-    inc:['Dasaswamedh Ghat','Manikarnika Ghat','Kashi Vishwanath Temple'],
-    add:[{id:'boat-dawn',l:'Dawn Boat Experience'},{id:'silk',l:'Silk Workshop'},{id:'aarti-seat',l:'Ganga Aarti Seating'},{id:'blessing',l:'Blessing Ceremony'},{id:'cooking',l:'Cooking Class'},{id:'pind-daan',l:'Pind Daan Ritual'},{id:'overnight',l:'Overnight Ganges Experience'},{id:'photo-tour',l:'Photography Tour'}]},
-  shimla:   {t:'multi',name:'Shimla & Manali',           days:'6 Days / 5 Nights', route:'Shimla → Manali',        km:570,
-    nights:[{city:'Shimla',n:2,min:1},{city:'Manali',n:3,min:2}], base:[110000,155000],
-    inc:['Mall Road Shimla','Solang Valley','Hadimba Temple','Rohtang Pass (seasonal)'],
-    add:[{id:'paragliding',l:'Paragliding'},{id:'snow',l:'Snow Sports'},{id:'spa',l:'Himalayan Spa'},{id:'camping',l:'Mountain Camping'},{id:'biking',l:'Mountain Biking'},{id:'home-meal',l:'Local Home Meal'}]},
-  corbett:  {t:'multi',name:'Jim Corbett National Park', days:'3 Days / 2 Nights', route:'Jim Corbett',            km:260,
-    nights:[{city:'Jim Corbett',n:2,min:2}], base:[65000,95000],
-    inc:['Dhikala Safari','Nature Walk','Forest Jeep Safari'],
-    add:[{id:'bijrani',l:'Bijrani Safari'},{id:'elephant',l:'Elephant Safari'},{id:'night-safari',l:'Night Safari'},{id:'birdwatch',l:'Birdwatching'},{id:'fishing',l:'Fishing'},{id:'camp-stay',l:'Luxury Camp Stay'},{id:'photo-tour',l:'Wildlife Photography Tour'}]},
+/* ─────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────── */
+const C = {
+  blk: "#09090b", blk2: "#111113", blk3: "#18181b", blk4: "#222226",
+  ivory: "#f5f0e8", ivory2: "#e8e0d0", ivory3: "#c8bfaf",
+  gold: "#c9a84c", gold2: "#e2c06e", gold3: "#a0783a", gold4: "#f0d48a",
+  green: "#4d9e72", muted: "rgba(245,240,232,0.38)", mid: "rgba(245,240,232,0.65)",
+  bd: "rgba(245,240,232,0.08)", bd2: "rgba(245,240,232,0.15)",
+  goldBd: "rgba(201,168,76,0.25)", goldBd2: "rgba(201,168,76,0.5)",
+  goldBg: "rgba(201,168,76,0.07)", goldBg2: "rgba(201,168,76,0.13)",
 };
+
+const S = {
+  cinzel: "'Cinzel', serif",
+  cg: "'Cormorant Garamond', serif",
+  lato: "'Lato', sans-serif",
+};
+
+/* ─────────────────────────────────────────
+   DATA
+───────────────────────────────────────── */
+const CITY_IMAGES = {
+  Delhi: "https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg",
+  Agra: "https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg",
+  Jaipur: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg",
+  Rishikesh: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg",
+  Amritsar: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg",
+  Mathura: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg",
+  Varanasi: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg",
+  "Jim Corbett": "https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg",
+  Shimla: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg",
+  Manali: "https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg",
+};
+
+const DAY_TOURS = [
+  { id: "agra", name: "Agra & the Taj Mahal", tag: "Day Tour", sub: "The wonder that needs no introduction.", img: CITY_IMAGES.Agra, base: [18000, 28000], inc: ["Taj Mahal", "Agra Fort"], add: ["Sunrise Taj", "VIP Entry", "Baby Taj", "Heritage Walk", "Photographer", "Mughal Dinner"] },
+  { id: "jaipur", name: "Jaipur — The Pink City", tag: "Day Tour", sub: "Palaces, forts and bazaars in full colour.", img: CITY_IMAGES.Jaipur, base: [16000, 24000], inc: ["City Palace", "Hawa Mahal", "Jantar Mantar"], add: ["Amber Fort", "Balloon Sunrise", "Royal Dinner", "Block Printing", "Turban Tying", "Camel Ride"] },
+  { id: "rishikesh", name: "Rishikesh & Haridwar", tag: "Day Tour", sub: "Where the Himalayas meet the holy Ganges.", img: CITY_IMAGES.Rishikesh, base: [14000, 22000], inc: ["Laxman Jhula", "Har Ki Pauri", "Ganga Aarti"], add: ["River Rafting", "Bungee Jumping", "Yoga Session", "Aarti Seating", "Camping"] },
+  { id: "amritsar", name: "Amritsar & Golden Temple", tag: "Day Tour", sub: "India's most breathtaking spiritual landmark.", img: CITY_IMAGES.Amritsar, base: [14000, 22000], inc: ["Golden Temple", "Jallianwala Bagh", "Wagah Border"], add: ["Wagah VIP", "Food Walk", "Turban Tying", "Partition Museum"] },
+  { id: "mathura", name: "Mathura & Vrindavan", tag: "Day Tour", sub: "The sacred birthplace of Lord Krishna.", img: CITY_IMAGES.Mathura, base: [12000, 20000], inc: ["Janmabhoomi", "Dwarkadhish", "Banke Bihari"], add: ["ISKCON Visit", "Boat Ride", "Flower Ceremony", "E-Rickshaw Tour"] },
+  { id: "delhi", name: "Delhi Heritage Day", tag: "Day Tour", sub: "Red Fort, Humayun's Tomb & Old Delhi.", img: CITY_IMAGES.Delhi, base: [12000, 18000], inc: ["Red Fort", "Humayun's Tomb", "India Gate"], add: ["Old Delhi Walk", "Rickshaw Ride", "Food Walk", "Qutub Minar", "Akshardham"] },
+];
+
+const MULTI_TOURS = [
+  { id: "golden", name: "The Golden Triangle", tag: "5 Days · 4 Nights", sub: "Three cities. One unforgettable journey.", img: CITY_IMAGES.Delhi, base: [120000, 165000], km: 780, nights: [{ city: "Delhi", n: 1, min: 1 }, { city: "Agra", n: 1, min: 1 }, { city: "Jaipur", n: 2, min: 1 }], inc: ["Red Fort", "Humayun Tomb", "Taj Mahal", "Agra Fort", "Amber Fort", "City Palace", "Hawa Mahal"], add: ["Balloon Sunrise", "Sunrise Taj", "Royal Dinner", "Old Delhi Walk", "Rickshaw Ride", "Photographer", "VIP Taj Entry"] },
+  { id: "varanasi", name: "Varanasi — Soul of India", tag: "3 Days · 2 Nights", sub: "Where the Ganges carries every prayer.", img: CITY_IMAGES.Varanasi, base: [55000, 80000], km: 820, nights: [{ city: "Varanasi", n: 2, min: 2 }], inc: ["Dasaswamedh Ghat", "Manikarnika Ghat", "Kashi Vishwanath"], add: ["Dawn Boat", "Silk Workshop", "Aarti Seating", "Blessing Ceremony", "Cooking Class", "Overnight Ganges"] },
+  { id: "shimla", name: "Shimla & Manali", tag: "6 Days · 5 Nights", sub: "The Himalayan escape from the plains.", img: CITY_IMAGES.Shimla, base: [110000, 155000], km: 570, nights: [{ city: "Shimla", n: 2, min: 1 }, { city: "Manali", n: 3, min: 2 }], inc: ["Mall Road", "Solang Valley", "Hadimba Temple", "Rohtang Pass"], add: ["Paragliding", "Snow Sports", "Himalayan Spa", "Mountain Camping", "Mountain Biking"] },
+  { id: "corbett", name: "Jim Corbett National Park", tag: "3 Days · 2 Nights", sub: "Tigers, forests and wild North India.", img: CITY_IMAGES["Jim Corbett"], base: [65000, 95000], km: 260, nights: [{ city: "Jim Corbett", n: 2, min: 2 }], inc: ["Dhikala Safari", "Nature Walk", "Forest Jeep Safari"], add: ["Bijrani Safari", "Elephant Safari", "Night Safari", "Birdwatching", "Camp Stay"] },
+];
 
 const HOTELS = {
-  Delhi:{
-    3:[{name:'The Lutyens Bungalow',meta:'★★★ · Diplomatic Enclave',note:'A beloved heritage bungalow set in lush gardens',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
-       {name:'Bloomrooms @ Janpath',meta:'★★★ · Connaught Place',note:'Design-forward boutique in the heart of New Delhi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],
-    4:[{name:'The Imperial New Delhi',meta:'★★★★ · Janpath',note:'A 1936 landmark beloved by discerning travellers worldwide',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
-       {name:'Claridges Hotel',meta:'★★★★ · Lutyens Delhi',note:'Colonial charm and impeccable service since 1950',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}],
-    5:[{name:'The Oberoi New Delhi',meta:'★★★★★ · Dr Zakir Hussain Marg',note:"Uninterrupted views of Humayun's Tomb — an icon of refinement",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'},
-       {name:'ITC Maurya',meta:'★★★★★ · Sardar Patel Marg',note:'The preferred address of heads of state visiting India',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg'}]
+  Delhi: {
+    3: [{ name: "The Lutyens Bungalow", meta: "★★★ · Diplomatic Enclave", note: "Heritage bungalow in lush gardens", img: CITY_IMAGES.Delhi }, { name: "Bloomrooms @ Janpath", meta: "★★★ · Connaught Place", note: "Design-forward boutique hotel", img: CITY_IMAGES.Delhi }],
+    4: [{ name: "The Imperial New Delhi", meta: "★★★★ · Janpath", note: "A 1936 landmark beloved by discerning travellers", img: CITY_IMAGES.Delhi }, { name: "Claridges Hotel", meta: "★★★★ · Lutyens Delhi", note: "Colonial charm and impeccable service since 1950", img: CITY_IMAGES.Delhi }],
+    5: [{ name: "The Oberoi New Delhi", meta: "★★★★★ · Dr Zakir Hussain Marg", note: "Uninterrupted views of Humayun's Tomb", img: CITY_IMAGES.Delhi }, { name: "ITC Maurya", meta: "★★★★★ · Sardar Patel Marg", note: "Preferred address of heads of state", img: CITY_IMAGES.Delhi }],
   },
-  Agra:{
-    3:[{name:'Crystal Sarovar Premiere',meta:'★★★ · Taj Nagri',note:'Clean, comfortable and well-positioned near the Taj',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],
-    4:[{name:'Courtyard by Marriott Agra',meta:'★★★★ · Fatehabad Road',note:'Polished comfort steps from the Taj precinct',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},
-       {name:'Radisson Hotel Agra',meta:'★★★★ · Taj East Gate',note:'Elegant rooms with partial Taj views at sunrise',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}],
-    5:[{name:'The Oberoi Amarvilas',meta:'★★★★★ · Taj East Gate Road',note:"Every room faces the Taj Mahal — the world's most coveted view",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'},
-       {name:'Taj Hotel & Convention Centre',meta:'★★★★★ · Fatehabad Road',note:'The heritage address for luxury travellers in Agra',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg'}]
+  Agra: {
+    3: [{ name: "Crystal Sarovar Premiere", meta: "★★★ · Taj Nagri", note: "Comfortable and well-positioned near the Taj", img: CITY_IMAGES.Agra }],
+    4: [{ name: "Courtyard by Marriott", meta: "★★★★ · Fatehabad Road", note: "Polished comfort near the Taj precinct", img: CITY_IMAGES.Agra }, { name: "Radisson Hotel Agra", meta: "★★★★ · Taj East Gate", note: "Elegant rooms with partial Taj views", img: CITY_IMAGES.Agra }],
+    5: [{ name: "The Oberoi Amarvilas", meta: "★★★★★ · Taj East Gate Road", note: "Every room faces the Taj Mahal", img: CITY_IMAGES.Agra }, { name: "Taj Hotel Agra", meta: "★★★★★ · Fatehabad Road", note: "The heritage luxury address in Agra", img: CITY_IMAGES.Agra }],
   },
-  Jaipur:{
-    3:[{name:'Alsisar Haveli',meta:'★★★ · Sansar Chandra Road',note:'An 1892 noble mansion turned intimate heritage hotel',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],
-    4:[{name:'Samode Haveli',meta:'★★★★ · Old City',note:"One of Jaipur's most beautiful painted havelis",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},
-       {name:'ITC Rajputana',meta:'★★★★ · Palace Road',note:'Rajasthani grandeur with refined ITC hospitality',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}],
-    5:[{name:'Rambagh Palace',meta:'★★★★★ · Bhawani Singh Road',note:'Once the residence of the Maharaja of Jaipur — pure royalty',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'},
-       {name:'Jai Mahal Palace',meta:'★★★★★ · Jacob Road',note:'A Taj property within a 250-year-old palace and 18-acre gardens',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg'}]
+  Jaipur: {
+    3: [{ name: "Alsisar Haveli", meta: "★★★ · Sansar Chandra Road", note: "1892 noble mansion turned heritage hotel", img: CITY_IMAGES.Jaipur }],
+    4: [{ name: "Samode Haveli", meta: "★★★★ · Old City", note: "One of Jaipur's most beautiful painted havelis", img: CITY_IMAGES.Jaipur }, { name: "ITC Rajputana", meta: "★★★★ · Palace Road", note: "Rajasthani grandeur with refined hospitality", img: CITY_IMAGES.Jaipur }],
+    5: [{ name: "Rambagh Palace", meta: "★★★★★ · Bhawani Singh Road", note: "Once the residence of the Maharaja", img: CITY_IMAGES.Jaipur }, { name: "Jai Mahal Palace", meta: "★★★★★ · Jacob Road", note: "A Taj property within a 250-year-old palace", img: CITY_IMAGES.Jaipur }],
   },
-  Varanasi:{
-    3:[{name:'Hotel Surya',meta:'★★★ · The Mall',note:'Classic Varanasi stay with warm service and rooftop Ganga views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],
-    4:[{name:'BrijRama Palace',meta:'★★★★ · Darbhanga Ghat',note:'A 250-year-old palace perched directly on the Ganges',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'},
-       {name:'Ramada Plaza Varanasi',meta:'★★★★ · The Mall Road',note:'Contemporary comfort with attentive service near the ghats',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}],
-    5:[{name:'Taj Ganges',meta:'★★★★★ · Nadesar Palace Grounds',note:'Set in 40 acres of landscaped gardens — the finest address in Varanasi',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg'}]
+  Varanasi: {
+    3: [{ name: "Hotel Surya", meta: "★★★ · The Mall", note: "Rooftop Ganga views and warm service", img: CITY_IMAGES.Varanasi }],
+    4: [{ name: "BrijRama Palace", meta: "★★★★ · Darbhanga Ghat", note: "250-year-old palace on the Ganges", img: CITY_IMAGES.Varanasi }],
+    5: [{ name: "Taj Ganges", meta: "★★★★★ · Nadesar Palace Grounds", note: "40 acres of gardens — finest in Varanasi", img: CITY_IMAGES.Varanasi }],
   },
-  Shimla:{
-    3:[{name:'Hotel Willow Banks',meta:'★★★ · Shimla',note:'Heritage property with valley views and colonial character',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
-    4:[{name:'Woodville Palace Hotel',meta:'★★★★ · Himachal Pradesh',note:'Former home of the Rana of Jubbal — grand Himalayan heritage',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
-    5:[{name:'Wildflower Hall',meta:'★★★★★ · Mashobra, 8,250 ft',note:"Oberoi's most romantic mountain retreat — cedar forests and snow peaks",img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]
+  Shimla: {
+    3: [{ name: "Hotel Willow Banks", meta: "★★★ · Shimla", note: "Heritage property with valley views", img: CITY_IMAGES.Shimla }],
+    4: [{ name: "Woodville Palace", meta: "★★★★ · Himachal Pradesh", note: "Former home of the Rana of Jubbal", img: CITY_IMAGES.Shimla }],
+    5: [{ name: "Wildflower Hall", meta: "★★★★★ · Mashobra, 8,250 ft", note: "Oberoi's most romantic mountain retreat", img: CITY_IMAGES.Shimla }],
   },
-  Manali:{
-    3:[{name:'Holiday Inn Manali',meta:'★★★ · The Mall',note:'Comfortable base with mountain views and Mall Road access',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
-    4:[{name:'Span Resort & Spa',meta:'★★★★ · Kullu-Manali Highway',note:'Riverside luxury in the Beas Valley with an award-winning spa',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}],
-    5:[{name:'The Himalayan',meta:'★★★★★ · Duff Dunbar Estate',note:'Colonial estate above Manali with panoramic Kullu Valley views',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg'}]
+  Manali: {
+    3: [{ name: "Holiday Inn Manali", meta: "★★★ · The Mall", note: "Mountain views and Mall Road access", img: CITY_IMAGES.Manali }],
+    4: [{ name: "Span Resort & Spa", meta: "★★★★ · Beas Valley", note: "Award-winning spa beside the river", img: CITY_IMAGES.Manali }],
+    5: [{ name: "The Himalayan", meta: "★★★★★ · Duff Dunbar Estate", note: "Colonial estate above Manali", img: CITY_IMAGES.Manali }],
   },
-  'Jim Corbett':{
-    3:[{name:'Corbett Riverside Resort',meta:'★★★ · Dhela',note:'Peaceful riverside retreat inside the buffer zone',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],
-    4:[{name:'Solluna Resort',meta:'★★★★ · Dhikala Road',note:'Premium jungle lodge with naturalist-led safaris',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}],
-    5:[{name:'The Riverview Retreat',meta:'★★★★★ · Ramnagar',note:'Luxury tented camp on the Kosi River — intimate and extraordinary',img:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg'}]
-  }
+  "Jim Corbett": {
+    3: [{ name: "Corbett Riverside Resort", meta: "★★★ · Dhela", note: "Peaceful riverside retreat", img: CITY_IMAGES["Jim Corbett"] }],
+    4: [{ name: "Solluna Resort", meta: "★★★★ · Dhikala Road", note: "Premium jungle lodge", img: CITY_IMAGES["Jim Corbett"] }],
+    5: [{ name: "The Riverview Retreat", meta: "★★★★★ · Ramnagar", note: "Luxury tented camp on the Kosi River", img: CITY_IMAGES["Jim Corbett"] }],
+  },
 };
 
-const STAY_COST={3:{lo:4000,hi:7000},4:{lo:8000,hi:14000},5:{lo:18000,hi:35000}};
-const CITY_LL={'Delhi':{lat:28.6139,lng:77.209},'Agra':{lat:27.1767,lng:78.0081},'Jaipur':{lat:26.9124,lng:75.7873},'Rishikesh':{lat:30.0869,lng:78.2676},'Varanasi':{lat:25.3176,lng:82.9739},'Amritsar':{lat:31.634,lng:74.8723}};
+const STAY_COST = { 3: { lo: 4000, hi: 7000 }, 4: { lo: 8000, hi: 14000 }, 5: { lo: 18000, hi: 35000 } };
+const INTERESTS = [
+  { id: "Spiritual", ico: "🕌" }, { id: "Heritage", ico: "🏛" },
+  { id: "Food & Culture", ico: "🍛" }, { id: "Photography", ico: "📸" },
+  { id: "Wellness", ico: "🧘" }, { id: "Nature", ico: "⛰" },
+  { id: "Architecture", ico: "🏰" }, { id: "Luxury", ico: "🥂" },
+];
+const CUSTOM_CHIPS = ["Delhi", "Agra", "Jaipur", "Rishikesh", "Varanasi", "Amritsar"];
+const CITY_LL = { Delhi: { lat: 28.6139, lng: 77.209 }, Agra: { lat: 27.1767, lng: 78.008 }, Jaipur: { lat: 26.9124, lng: 75.787 }, Rishikesh: { lat: 30.0869, lng: 78.267 }, Varanasi: { lat: 25.3176, lng: 82.973 }, Amritsar: { lat: 31.634, lng: 74.872 } };
 
-/* ═══════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════ */
-let TYPE=null, TOUR=null, addons=new Set(), addonTotal=0, base=[0,0];
-let pax={adults:2,children:0,seniors:0};
-let stayStyle=null, interests=new Set();
-let nights={}, hotelSel={}, cities=[];
-let mapsOk=false, distSvc=null;
-const SECS=['s0','s1','s2','s3','s4','s5','s6','s7'];
-const DIVS=['d01','d12','d23','d34','d45','d56','d67'];
-
-/* ═══════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════ */
-const $=id=>document.getElementById(id);
-function show(id){const e=$(id);if(e)e.classList.add('on');}
-function hide(id){const e=$(id);if(e)e.classList.remove('on');}
-function el(id){return $(id);}
-function fmt(v){return v>=100000?'₹'+(v/100000).toFixed(1)+'L':'₹'+(v/1000).toFixed(0)+'K';}
-function paxStr(){
-  let p=[];
-  if(pax.adults)p.push(pax.adults+' Adult'+(pax.adults>1?'s':''));
-  if(pax.children)p.push(pax.children+' Child'+(pax.children>1?'ren':''));
-  if(pax.seniors)p.push(pax.seniors+' Senior'+(pax.seniors>1?'s':''));
-  return p.join(', ')||'—';
+/* ─────────────────────────────────────────
+   UTILS
+───────────────────────────────────────── */
+function fmt(v) { return v >= 100000 ? "₹" + (v / 100000).toFixed(1) + "L" : "₹" + (v / 1000).toFixed(0) + "K"; }
+function haverKm(a, b) {
+  const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)) * 1.35);
 }
-function totalNights(){return Object.values(nights).reduce((a,b)=>a+b,0);}
+function smartNights(city) { return { Rishikesh: 2, Varanasi: 2, Shimla: 2, Manali: 3, "Jim Corbett": 2 }[city] || 1; }
 
-/* ═══════════════════════════════════════════
-   STEP BAR
-═══════════════════════════════════════════ */
-function setStep(n,title){
-  $('sb-step').textContent='Step '+n+' of 8';
-  $('sb-title').textContent=title;
-  $('sb-fill').style.width=(n/8*100)+'%';
+/* ─────────────────────────────────────────
+   SMALL COMPONENTS
+───────────────────────────────────────── */
+function Divider() {
+  return <div style={{ height: 1, background: `linear-gradient(90deg,transparent,${C.goldBd},transparent)`, margin: "24px 0" }} />;
 }
 
-/* ═══════════════════════════════════════════
-   SECTION PROGRESSION — accordion collapse
-═══════════════════════════════════════════ */
-function revealSec(id,scrollTo){
-  const e=$(id);
-  if(!e||e.classList.contains('on'))return;
-  e.classList.add('on');
-  if(scrollTo!==false){
-    setTimeout(()=>e.scrollIntoView({behavior:'smooth',block:'start'}),160);
-  }
+function SectionLabel({ text }) {
+  return <div style={{ fontFamily: S.cinzel, fontSize: 9, letterSpacing: "0.35em", color: C.gold, textTransform: "uppercase", marginBottom: 6, opacity: 0.85 }}>{text}</div>;
 }
 
-function collapseSec(secId,scId,summaryTxt){
-  hide(secId);
-  const sc=$(scId);
-  if(sc){
-    sc.classList.add('on');
-    const st=$(scId+'-txt');
-    if(st)st.textContent=summaryTxt;
-  }
+function SectionTitle({ children }) {
+  return <div style={{ fontFamily: S.cg, fontSize: 24, fontWeight: 400, letterSpacing: "0.03em", color: C.ivory, marginBottom: 16, lineHeight: 1.25 }}>{children}</div>;
 }
 
-function editSec(idx){
-  // Re-open the section, hide the collapsed version
-  const secId=SECS[idx];
-  const scId='sc'+idx;
-  hide(scId);
-  revealSec(secId,true);
-}
-
-function showDiv(id){show(id);}
-
-/* ═══════════════════════════════════════════
-   S0: TOUR TYPE
-═══════════════════════════════════════════ */
-function selType(t){
-  TYPE=t;
-  ['day','multi','custom'].forEach(x=>
-    $('pill-'+x).classList.toggle('on',x===t)
+function CollapsedSection({ label, summary, onEdit }) {
+  return (
+    <div onClick={onEdit} style={{ display: "flex", alignItems: "center", gap: 12, background: C.blk2, border: `1px solid ${C.bd2}`, borderRadius: 12, padding: "13px 18px", cursor: "pointer", marginBottom: 0 }}>
+      <span style={{ color: C.gold, fontSize: 14 }}>✔</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.22em", color: C.gold, textTransform: "uppercase", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontFamily: S.cg, fontSize: 15, color: C.ivory2 }}>{summary}</div>
+      </div>
+      <span style={{ fontFamily: S.cinzel, fontSize: 9, letterSpacing: "0.14em", color: C.muted, textTransform: "uppercase" }}>Edit</span>
+    </div>
   );
-  // Configure date UI
-  const endW=$('d-end-wrap'), micro=$('d-micro');
-  $('d-start').value='';
-  if($('d-end'))$('d-end').value='';
-  hide('d-conf');
-  if(t==='day'){
-    endW.style.display='none';
-    micro.style.display='block';
-    $('d-start-lbl').textContent='Travel Date';
-    $('s1-title').textContent='When would you like to visit?';
-  } else {
-    endW.style.display='block';
-    micro.style.display='none';
-    $('d-start-lbl').textContent='Start Date';
-    $('s1-title').textContent='Select your preferred travel dates';
-  }
-  // Collapse s0, show summary
-  const names={day:'Single Day Tour',multi:'Multi-Day Journey',custom:'Build Custom Itinerary'};
-  collapseSec('s0','sc0',names[t]);
-  showDiv('d01');
-  revealSec('s1');
-  setStep(2,'Select Your Dates');
 }
 
-/* ═══════════════════════════════════════════
-   S1: DATES
-═══════════════════════════════════════════ */
-function onDate(){
-  const sv=$('d-start').value;
-  const ev=$('d-end')?$('d-end').value:'';
-  const conf=$('d-conf'), txt=$('d-conf-txt');
-  if(TYPE==='day'){
-    if(!sv)return;
-    const d=new Date(sv);
-    txt.textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    show('d-conf');
-    afterDates(sv,'Day Tour');
-  } else {
-    if(!sv||!ev)return;
-    const s=new Date(sv), e=new Date(ev);
-    if(e<=s){txt.textContent='End date must be after start date';show('d-conf');return;}
-    const n=Math.round((e-s)/86400000), d=n+1;
-    txt.textContent=d+' Day'+(d>1?'s':'')+' / '+n+' Night'+(n>1?'s':'')+' Selected';
-    show('d-conf');
-    afterDates(sv,txt.textContent);
-  }
+function Stepper({ label, sub, value, onChange, min = 0 }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px 0", borderBottom: `1px solid ${C.bd}` }}>
+      <div>
+        <div style={{ fontFamily: S.cg, fontSize: 17, color: C.ivory }}>{label}</div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        <button onClick={() => onChange(Math.max(min, value - 1))} style={{ width: 34, height: 34, borderRadius: "50%", border: `1px solid ${C.goldBd}`, background: "transparent", color: C.gold, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+        <div style={{ fontFamily: S.cg, fontSize: 22, color: C.ivory, width: 40, textAlign: "center" }}>{value}</div>
+        <button onClick={() => onChange(value + 1)} style={{ width: 34, height: 34, borderRadius: "50%", border: `1px solid ${C.goldBd}`, background: "transparent", color: C.gold, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+      </div>
+    </div>
+  );
 }
 
-function afterDates(sv,summary){
-  collapseSec('s1','sc1',summary);
-  showDiv('d12');
-  // Show correct sub-section
-  $('day-sec').style.display   =TYPE==='day'   ?'block':'none';
-  $('multi-sec').style.display =TYPE==='multi' ?'block':'none';
-  $('custom-sec').style.display=TYPE==='custom'?'block':'none';
-  if(TYPE==='custom')setTimeout(()=>$('builder-wrap').classList.add('on'),80);
-  $('s2-title').textContent=TYPE==='day'?'Choose your day experience':TYPE==='multi'?'Choose your journey':'Build your custom route';
-  revealSec('s2');
-  setStep(3,'Choose Your Experience');
+function DestCard({ tour, selected, onClick }) {
+  const [imgOk, setImgOk] = useState(true);
+  return (
+    <div onClick={onClick} style={{ minWidth: 180, maxWidth: 180, borderRadius: 12, overflow: "hidden", background: C.blk2, border: `1px solid ${selected ? C.gold : C.bd}`, cursor: "pointer", position: "relative", flexShrink: 0, boxShadow: selected ? `0 0 0 1px ${C.gold},0 6px 24px rgba(201,168,76,0.16)` : "none", transform: selected ? "translateY(-2px)" : "none", transition: "all 0.2s" }}>
+      {/* Image strip */}
+      <div style={{ height: 110, overflow: "hidden", position: "relative" }}>
+        {imgOk ? (
+          <img src={tour.img} alt={tour.name} onError={() => setImgOk(false)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", background: C.blk4, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontSize: 11 }}>{tour.name}</div>
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,transparent 40%,rgba(9,9,11,0.65))" }} />
+        {selected && (
+          <div style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: "50%", background: C.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: C.blk }}>✓</div>
+        )}
+      </div>
+      <div style={{ padding: "11px 12px 13px" }}>
+        <div style={{ fontFamily: S.cg, fontSize: 14.5, fontWeight: 500, color: C.ivory, marginBottom: 3, lineHeight: 1.25 }}>{tour.name}</div>
+        <div style={{ fontFamily: S.cinzel, fontSize: 9.5, color: C.gold, letterSpacing: "0.12em", marginBottom: 4 }}>{tour.tag}</div>
+        <div style={{ fontSize: 10.5, color: C.muted, lineHeight: 1.45 }}>{tour.sub}</div>
+      </div>
+    </div>
+  );
 }
 
-/* ═══════════════════════════════════════════
-   S2A: DESTINATION CARD SELECTION
-═══════════════════════════════════════════ */
-function selCard(key){
-  const data=TOURS[key];if(!data)return;
-  if(TOUR&&TOUR!==key){const p=$('card-'+TOUR);if(p)p.classList.remove('on');}
-  $('card-'+key).classList.add('on');
-  TOUR=key; addons.clear(); addonTotal=0; base=data.base;
-  nights={};
-  data.nights.forEach(c=>{ nights[c.city]=c.n; });
-  recalc();
-  $('js-route').textContent=data.route;
-  $('js-days').textContent=data.days;
-  renderExp(data);
-  setStep(4,'Personalise Your Experience');
-  // after picking card, show travellers
-  collapseSec('s2','sc2',data.name+' · '+data.days);
-  showDiv('d23');
-  revealSec('s3');
-  setStep(4,"Who's Travelling?");
+function Chip({ label, state, onClick }) {
+  // state: 'inc' | 'idle' | 'on'
+  const styles = {
+    inc: { border: `1px solid rgba(245,240,232,0.2)`, background: "rgba(245,240,232,0.05)", color: C.ivory2 },
+    idle: { border: `1px solid ${C.goldBd}`, background: "transparent", color: C.mid },
+    on: { border: `1px solid ${C.gold}`, background: C.goldBg2, color: C.gold2 },
+  };
+  return (
+    <div onClick={state !== "inc" ? onClick : undefined} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 18, fontSize: 11.5, cursor: state !== "inc" ? "pointer" : "default", transition: "all 0.18s", whiteSpace: "nowrap", userSelect: "none", ...styles[state] }}>
+      {state === "inc" && <span>✓</span>}
+      {state === "on" && <span>✓</span>}
+      {state === "idle" && <span style={{ fontSize: 10 }}>+</span>}
+      {label}
+    </div>
+  );
 }
 
-function renderExp(data){
-  const pid=data.t==='day'?'exp-day':'exp-multi';
-  const panel=$(pid);
-  const MAX_VISIBLE=5;
-  let h='<div class="exp-inner">';
-  if(data.inc&&data.inc.length){
-    h+='<div class="exp-sub"><div class="exp-sec-ttl">Included in Your Tour</div><div class="exp-sub-lbl">Part of every booking — no extra cost</div><div class="chips-row">';
-    data.inc.forEach(l=>{ h+='<div class="chip inc"><span>✓</span>'+l+'</div>'; });
-    h+='</div></div>';
-  }
-  if(data.add&&data.add.length){
-    h+='<div class="exp-sub" style="margin-top:16px"><div class="exp-sec-ttl">Enhance Your Experience</div><div class="exp-sub-lbl">Tap to add — estimate updates automatically</div><div class="chips-row" id="add-chips-'+pid+'">';
-    data.add.slice(0,MAX_VISIBLE).forEach(a=>{
-      h+='<div class="chip add" data-id="'+a.id+'" onclick="togAddon(this,\''+a.l+'\')">'+a.l+'</div>';
-    });
-    h+='</div>';
-    if(data.add.length>MAX_VISIBLE){
-      h+='<div class="view-more-btn" onclick="showMoreAddons(\''+pid+'\',\''+key+'\')" id="vmb-'+pid+'">↓ View '+(data.add.length-MAX_VISIBLE)+' more experiences</div>';
-      h+='<div id="more-chips-'+pid+'" style="display:none"><div class="chips-row" style="margin-top:7px">';
-      data.add.slice(MAX_VISIBLE).forEach(a=>{
-        h+='<div class="chip add" data-id="'+a.id+'" onclick="togAddon(this,\''+a.l+'\')">'+a.l+'</div>';
-      });
-      h+='</div></div>';
+function HotelCard({ hotel, selected, onSelect }) {
+  const [imgOk, setImgOk] = useState(true);
+  return (
+    <div style={{ display: "flex", gap: 12, background: C.blk2, border: `1px solid ${selected ? C.gold : C.bd}`, borderRadius: 12, padding: 12, marginBottom: 8, cursor: "pointer", transition: "all 0.2s", boxShadow: selected ? `0 0 0 1px ${C.gold}` : "none" }} onClick={onSelect}>
+      {imgOk ? (
+        <img src={hotel.img} alt={hotel.name} onError={() => setImgOk(false)} style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+      ) : (
+        <div style={{ width: 64, height: 64, borderRadius: 8, background: C.blk4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: C.muted }}>Hotel</div>
+      )}
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: S.cg, fontSize: 14.5, color: C.ivory, marginBottom: 2 }}>{hotel.name}</div>
+        <div style={{ fontSize: 10.5, color: C.gold, marginBottom: 3 }}>{hotel.meta}</div>
+        <div style={{ fontSize: 10.5, color: C.muted, marginBottom: 8, lineHeight: 1.4 }}>{hotel.note}</div>
+        <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 10, border: `1px solid ${selected ? C.gold : C.goldBd}`, background: selected ? C.gold : "transparent", color: selected ? C.blk : C.gold, fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+          {selected ? "✓ Selected" : "Select Stay"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   ROUTE STRIP
+───────────────────────────────────────── */
+function RouteStrip({ cities, distInfo }) {
+  if (!cities.length) return null;
+  return (
+    <div style={{ marginTop: 16, background: C.blk3, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: "14px 16px" }}>
+      <div style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.3em", color: C.gold, textTransform: "uppercase", marginBottom: 10 }}>Your Route</div>
+      <div style={{ display: "flex", alignItems: "center", overflowX: "auto", paddingBottom: 4 }}>
+        {cities.map((c, i) => (
+          <span key={c} style={{ display: "flex", alignItems: "center" }}>
+            {i > 0 && <span style={{ color: C.gold, margin: "0 7px", opacity: 0.6, fontSize: 13 }}>→</span>}
+            <span style={{ fontFamily: S.cg, fontSize: 17, color: C.ivory, whiteSpace: "nowrap" }}>{c}</span>
+          </span>
+        ))}
+      </div>
+      {distInfo && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.bd}`, display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {distInfo.ok ? (
+            <>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 10, border: `1px solid rgba(77,158,114,0.3)`, background: "rgba(77,158,114,0.1)", color: "#6ec898", fontSize: 10.5 }}>✔ Comfortable overland route · ~{distInfo.km} km from Delhi</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 10, border: `1px solid ${C.bd2}`, color: C.mid, fontSize: 10.5 }}>📍 {cities.length} destinations selected</span>
+            </>
+          ) : (
+            <>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 10, border: `1px solid ${C.goldBd}`, background: C.goldBg, color: C.gold2, fontSize: 10.5 }}>✦ Extended route — concierge will personally optimise</span>
+              <div style={{ width: "100%", marginTop: 8, padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.goldBd}`, background: C.goldBg, fontSize: 11.5, color: C.ivory2, fontStyle: "italic", lineHeight: 1.7 }}>
+                ✦ This journey spans an extended route across North India. Our concierge team will review your selections, suggest the most comfortable sequence, and where relevant recommend internal flight connections — so every transition feels effortless.
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   JOURNEY SUMMARY SHEET
+───────────────────────────────────────── */
+function JourneySheet({ open, onClose, summary }) {
+  return (
+    <>
+      {open && <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 800 }} />}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 900, background: C.blk2, border: `1px solid ${C.goldBd}`, borderRadius: "20px 20px 0 0", maxHeight: "75vh", overflowY: "auto", transform: open ? "translateY(0)" : "translateY(100%)", transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)", paddingBottom: 24 }}>
+        <div style={{ padding: "20px 22px" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: C.bd2, margin: "0 auto 18px" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ fontFamily: S.cg, fontSize: 22, color: C.ivory }}>Your Journey</div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${C.bd}`, background: "transparent", color: C.muted, cursor: "pointer", fontSize: 14 }}>✕</button>
+          </div>
+          <div style={{ fontFamily: S.cg, fontSize: 17, fontStyle: "italic", color: C.gold2, marginBottom: 12 }}>{summary.route || "—"}</div>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
+            <span style={{ fontSize: 12.5, color: C.mid }}>📅 <span style={{ color: C.ivory }}>{summary.days || "—"}</span></span>
+            <span style={{ fontSize: 12.5, color: C.mid }}>👥 <span style={{ color: C.ivory }}>{summary.pax}</span></span>
+          </div>
+          {[{ label: "Always Included", items: ["Private Chauffeur & AC Vehicle", "Airport Pickup & Drop", "Dedicated Travel Manager", "All Monument Entries (Included Sites)", "4★ Handpicked Stays (Multi-Day)"] }].map(sec => (
+            <div key={sec.label}>
+              <div style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 10 }}>{sec.label}</div>
+              {sec.items.map(item => (
+                <div key={item} style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 0", borderBottom: `1px solid ${C.bd}`, fontSize: 12.5, color: C.mid }}>
+                  <span style={{ color: C.gold }}>✔</span>{item}
+                </div>
+              ))}
+            </div>
+          ))}
+          {summary.interests?.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 10 }}>Your Interests</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {summary.interests.map(i => <span key={i} style={{ padding: "4px 11px", borderRadius: 12, border: `1px solid ${C.goldBd}`, background: C.goldBg, color: C.gold2, fontSize: 11 }}>{i}</span>)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────
+   MAIN APP
+───────────────────────────────────────── */
+export default function App() {
+  // ── Core flow state ──
+  const [tourType, setTourType] = useState(null); // 'day' | 'multi' | 'custom'
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [addons, setAddons] = useState(new Set());
+  const [showMoreAddons, setShowMoreAddons] = useState(false);
+
+  // ── Custom builder ──
+  const [customCities, setCustomCities] = useState([]);
+  const [distInfo, setDistInfo] = useState(null);
+
+  // ── Travellers ──
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [seniors, setSeniors] = useState(0);
+
+  // ── Stay ──
+  const [stayStyle, setStayStyle] = useState(null);
+  const [hotelSel, setHotelSel] = useState({}); // city → hotel name
+  const [nights, setNights] = useState({}); // city → nights
+
+  // ── Interests + Notes ──
+  const [interests, setInterests] = useState(new Set());
+  const [notes, setNotes] = useState("");
+
+  // ── Section visibility ──
+  const [visibleSecs, setVisibleSecs] = useState({ s0: true });
+  const [collapsedSecs, setCollapsedSecs] = useState({});
+
+  // ── UI ──
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [addonsExpanded, setAddonsExpanded] = useState(false);
+
+  // ── Refs for auto-scroll ──
+  const secRefs = { s1: useRef(), s2: useRef(), s3: useRef(), s4: useRef(), s5: useRef(), s6: useRef(), s7: useRef() };
+
+  const scrollTo = (key) => setTimeout(() => secRefs[key]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+
+  const revealNext = (key) => {
+    setVisibleSecs(v => ({ ...v, [key]: true }));
+    scrollTo(key);
+  };
+
+  const collapseSec = (key) => setCollapsedSecs(v => ({ ...v, [key]: true }));
+  const editSec = (key) => { setCollapsedSecs(v => ({ ...v, [key]: false })); scrollTo(key); };
+
+  // ── Estimate calculation ──
+  const estimate = useCallback(() => {
+    let lo = 0, hi = 0;
+    if (tourType === "day" && selectedTour) {
+      [lo, hi] = selectedTour.base;
+    } else if (tourType === "multi" && selectedTour) {
+      [lo, hi] = selectedTour.base;
+      if (stayStyle) {
+        const tn = Object.values(nights).reduce((a, b) => a + b, 0);
+        const sc = STAY_COST[stayStyle];
+        lo += sc.lo * tn; hi += sc.hi * tn;
+      }
+    } else if (tourType === "custom" && customCities.length) {
+      const n = customCities.length;
+      lo = n * 38000; hi = n * 58000;
+      if (stayStyle) {
+        const tn = customCities.reduce((a, c) => a + (nights[c] || smartNights(c)), 0);
+        const sc = STAY_COST[stayStyle];
+        lo += sc.lo * tn; hi += sc.hi * tn;
+      }
     }
-    h+='</div>';
-  }
-  h+='</div>';
-  panel.innerHTML=h;
-  panel.classList.add('on');
-  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),120);
-}
+    const addonCost = addons.size * 3500;
+    const mul = (adults + children + Math.ceil(seniors * 1.1)) <= 2 ? 1 : 1 + ((adults + children + seniors - 2) * 0.35);
+    lo = Math.round((lo + addonCost) * mul);
+    hi = Math.round((hi + addonCost) * mul);
+    const hasHotel = Object.keys(hotelSel).length > 0;
+    if (!lo) return "Select your journey";
+    return hasHotel ? `Starting from ${fmt(lo)}` : `${fmt(lo)} – ${fmt(hi)}`;
+  }, [tourType, selectedTour, addons, adults, children, seniors, stayStyle, nights, hotelSel, customCities]);
 
-function showMoreAddons(pid,key){
-  const more=$('more-chips-'+pid);
-  const btn=$('vmb-'+pid);
-  if(more){more.style.display='block';}
-  if(btn){btn.style.display='none';}
-}
+  // ── Distance check for custom route ──
+  useEffect(() => {
+    if (customCities.length < 2) { setDistInfo(null); return; }
+    const delhi = { lat: 28.6139, lng: 77.209 };
+    let maxKm = 0;
+    customCities.forEach(c => { const ll = CITY_LL[c]; if (ll) maxKm = Math.max(maxKm, haverKm(delhi, ll)); });
+    setDistInfo({ ok: maxKm < 1000, km: maxKm });
+  }, [customCities]);
 
-function togAddon(chip,label){
-  const id=chip.getAttribute('data-id');
-  if(addons.has(id)){addons.delete(id);addonTotal=Math.max(0,addonTotal-3500);chip.classList.remove('on');chip.textContent=label;}
-  else{addons.add(id);addonTotal+=3500;chip.classList.add('on');chip.textContent='✓ '+label;}
-  recalc();
-  const w=$('js-add-wrap'),l=$('js-add-list');
-  if(!addons.size){w.style.display='none';}
-  else{w.style.display='block';l.innerHTML=[...addons].map(id=>'<div class="js-item"><span class="js-tick">✓</span>'+id+'</div>').join('');}
-}
+  // ── Hotels when stay style selected ──
+  const overnightCities = () => {
+    if (tourType === "multi" && selectedTour) return selectedTour.nights.map(n => n.city);
+    if (tourType === "custom") return customCities;
+    return [];
+  };
 
-/* ═══════════════════════════════════════════
-   S3: TRAVELLERS
-═══════════════════════════════════════════ */
-function adj(who,delta){
-  const mins={adults:1,children:0,seniors:0};
-  pax[who]=Math.max(mins[who],pax[who]+delta);
-  $('v-'+who).textContent=pax[who];
-  pax.seniors>0?show('senior-note'):hide('senior-note');
-  $('js-pax').textContent=paxStr();
-  $('prev-pax').textContent=(pax.adults+pax.children+pax.seniors)+' Travellers';
-  $('prev-pax-sub').textContent=paxStr();
-  recalc();
-  if(!$('s4').classList.contains('on')){
-    collapseSec('s3','sc3',paxStr());
-    showDiv('d34');revealSec('s4');setStep(5,'Preferred Stay Style');
-  }
-}
+  const getHotels = (city) => {
+    const pool = HOTELS[city];
+    if (!pool) return { primary: [], upgrade: [] };
+    const primary = pool[stayStyle] || pool[4] || pool[3] || [];
+    const upgrade = stayStyle < 5 ? (pool[stayStyle + 1] || []).slice(0, 2) : [];
+    return { primary, upgrade };
+  };
 
-/* ═══════════════════════════════════════════
-   S4: STAY STYLE + HOTELS
-═══════════════════════════════════════════ */
-function selStay(stars){
-  stayStyle=stars;
-  [3,4,5].forEach(s=>$('stay-'+s).classList.toggle('on',s===stars));
-  const snames={3:'Boutique Comfort (3★)',4:'Premium Stay (4★)',5:'Luxury Collection (5★)'};
-  $('prev-stay').textContent=snames[stars];
-  recalc();
-  const hs=$('hotel-section');
-  if(TYPE==='day'){ hs.classList.remove('on'); }
-  else { hs.classList.add('on'); renderHotels(); }
-  if(!$('s5').classList.contains('on')){
-    collapseSec('s4','sc4',snames[stars]);
-    showDiv('d45');revealSec('s5');setStep(6,'Your Interests');
-  }
-}
+  // ── Handlers ──
+  const handleTourType = (t) => {
+    setTourType(t);
+    setSelectedTour(null); setAddons(new Set()); setCustomCities([]);
+    setNights({}); setHotelSel({});
+    setAddonsExpanded(false);
+    collapseSec("s0");
+    revealNext("s1");
+  };
 
-function renderHotels(){
-  const wrap=$('hotel-cities-wrap'); wrap.innerHTML='';
-  let cityList=[];
-  if(TYPE==='multi'&&TOUR&&TOURS[TOUR]){
-    cityList=TOURS[TOUR].nights.map(n=>n.city);
-    TOURS[TOUR].nights.forEach(n=>{ if(!nights[n.city])nights[n.city]=n.n; });
-  } else if(TYPE==='custom'){
-    cityList=cities.filter(Boolean);
-    cityList.forEach(c=>{ if(!nights[c])nights[c]=2; });
-  }
-  if(!cityList.length)return;
-  cityList.forEach(city=>{
-    const ch=HOTELS[city]||HOTELS['Jim Corbett']||null;
-    if(!ch)return;
-    const primary=ch[stayStyle]||ch[4]||ch[3]||[];
-    const upgrade=stayStyle<5?(ch[stayStyle+1]||[]).slice(0,2):[];
-    const tourN=TOURS[TOUR]?TOURS[TOUR].nights.find(n=>n.city===city):null;
-    const minN=tourN?tourN.min:1;
-    const curN=nights[city]||minN;
-    const cid=city.replace(/\s/g,'_');
-    let h='<div class="hotel-city-block">';
-    h+='<div class="hcb-header">';
-    h+='<div class="hcb-city">'+city+'</div>';
-    h+='<div class="nights-ctrl"><span class="nights-lbl">Nights</span>';
-    h+='<button class="ns-btn" onclick="adjN(\''+city+'\','+(-1)+','+minN+')">−</button>';
-    h+='<div class="ns-val" id="ns-'+cid+'">'+curN+'</div>';
-    h+='<button class="ns-btn" onclick="adjN(\''+city+'\',1,'+minN+')">+</button>';
-    h+='</div></div>';
-    primary.forEach((hh,i)=>{
-      const hid=city+'-'+i;
-      h+='<div class="hotel-card" id="hc-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,"\\'")+ '\',\''+hid+'\','+hh.name.replace(/'/g,"\\'")+'")'
-       +'>'
-       +'<img class="hotel-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
-       +'<div class="hotel-content"><div class="hotel-name">'+hh.name+'</div><div class="hotel-meta">'+hh.meta+'</div><div class="hotel-note">'+hh.note+'</div>'
-       +'<button class="hotel-sel-btn">Select Stay</button></div></div>';
-    });
-    if(upgrade.length){
-      h+='<div class="hotel-upgrade-lbl">Upgrade Options</div>';
-      upgrade.forEach((hh,i)=>{
-        const hid=city+'-up-'+i;
-        h+='<div class="hotel-card" id="hc-'+hid+'" onclick="selHotel(\''+city+'\',\''+hh.name.replace(/'/g,"\\'")+ '\',\''+hid+'\',\''+hh.name.replace(/'/g,"\\'")+'\',true)">'
-         +'<img class="hotel-img" src="'+hh.img+'" onerror="this.src=\'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg\'" alt="'+hh.name+'"/>'
-         +'<div class="hotel-content"><div class="hotel-name">'+hh.name+'</div><div class="hotel-meta">'+hh.meta+'</div><div class="hotel-note">'+hh.note+'</div>'
-         +'<button class="hotel-sel-btn">Select Stay</button></div></div>';
-      });
+  const handleDates = () => {
+    if (tourType === "day" && !startDate) return;
+    if (tourType !== "day" && (!startDate || !endDate)) return;
+    collapseSec("s1");
+    revealNext("s2");
+  };
+
+  const handleCardSelect = (tour) => {
+    setSelectedTour(tour);
+    setAddons(new Set());
+    setAddonsExpanded(false);
+    // initialise nights from tour definition
+    const n = {};
+    if (tour.nights) tour.nights.forEach(c => { n[c.city] = c.n; });
+    setNights(n);
+    collapseSec("s2");
+    revealNext("s3");
+  };
+
+  const toggleAddon = (a) => {
+    setAddons(prev => { const s = new Set(prev); s.has(a) ? s.delete(a) : s.add(a); return s; });
+  };
+
+  const handleAdjNights = (city, delta, min) => {
+    setNights(prev => ({ ...prev, [city]: Math.max(min, (prev[city] || min) + delta) }));
+  };
+
+  const handleTravellers = () => {
+    if (!visibleSecs.s4) { collapseSec("s3"); revealNext("s4"); }
+  };
+
+  const handleStay = (stars) => {
+    setStayStyle(stars);
+    if (tourType !== "day") {
+      if (!visibleSecs.s4) { collapseSec("s3"); revealNext("s4"); }
+    } else {
+      collapseSec("s4"); revealNext("s5");
     }
-    h+='<div class="hotel-skip"><a onclick="skipHotel(\''+city+'\')">Skip — use estimated average</a></div>';
-    h+='</div>';
-    wrap.innerHTML+=h;
-  });
-}
+  };
 
-function selHotel(city,name,cardId){
-  document.querySelectorAll('[id^="hc-'+city.replace(/\s/g,'_')+'"]').forEach(c=>c.classList.remove('on'));
-  document.querySelectorAll('[id^="hc-'+city+'"]').forEach(c=>c.classList.remove('on'));
-  const el=$('hc-'+cardId);if(el)el.classList.add('on');
-  hotelSel[city]=name;
-  recalc();updatePreview();
-}
-function skipHotel(city){delete hotelSel[city];updatePreview();}
+  const handleHotelSelect = (city, name) => {
+    setHotelSel(prev => ({ ...prev, [city]: name }));
+    if (!visibleSecs.s5) { collapseSec("s4"); revealNext("s5"); }
+  };
 
-function adjN(city,delta,min){
-  nights[city]=Math.max(min,(nights[city]||min)+delta);
-  const el=$('ns-'+city.replace(/\s/g,'_'));
-  if(el)el.textContent=nights[city];
-  const tn=totalNights();
-  $('js-days').textContent=(tn+1)+' Days / '+tn+' Nights';
-  recalc();updatePreview();
-}
+  const handleInterest = (i) => {
+    setInterests(prev => { const s = new Set(prev); s.has(i) ? s.delete(i) : s.add(i); return s; });
+    if (!visibleSecs.s6) { collapseSec("s5"); revealNext("s6"); }
+  };
 
-/* ═══════════════════════════════════════════
-   S5: INTERESTS
-═══════════════════════════════════════════ */
-function togInt(chip){
-  const v=chip.getAttribute('data-int');
-  chip.classList.toggle('on');
-  chip.classList.contains('on')?interests.add(v):interests.delete(v);
-  const w=$('js-int-wrap'),l=$('js-int-list');
-  interests.size?(w.style.display='block',l.innerHTML=[...interests].map(x=>'<div class="js-item"><span class="js-tick">✦</span>'+x+'</div>').join('')):(w.style.display='none');
-  if(!$('s6').classList.contains('on')){
-    collapseSec('s5','sc5',[...interests].join(' · ')||'—');
-    showDiv('d56');revealSec('s6');setStep(7,'Any Special Requests?');
-  }
-}
+  const handleNotes = () => {
+    if (!visibleSecs.s7) { collapseSec("s6"); revealNext("s7"); }
+  };
 
-/* ═══════════════════════════════════════════
-   S6: NOTES → PREVIEW
-═══════════════════════════════════════════ */
-function onNotes(){
-  if(!$('s7').classList.contains('on')){
-    showDiv('d67');revealSec('s7');setStep(8,'Your Journey at a Glance');
-    updatePreview();
-  }
-}
+  const toggleCity = (city) => {
+    setCustomCities(prev => prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]);
+    if (!visibleSecs.s3) { collapseSec("s2"); revealNext("s3"); }
+  };
 
-/* ═══════════════════════════════════════════
-   SMART PREVIEW
-═══════════════════════════════════════════ */
-function updatePreview(){
-  if(!$('s7').classList.contains('on'))return;
-  let route='—',dur='—',km='—',durSub='';
-  if(TYPE==='custom'){
-    route=cities.length?cities.join(' → '):'Your custom route';
-    const tn=totalNights()||cities.length*2;
-    dur=(tn+1)+' Days'; durSub='/ '+tn+' Nights'; km='See route below';
-  } else if(TOUR){
-    const d=TOURS[TOUR];
-    route=d.route;
-    const tn=totalNights();
-    const dy=tn>0?tn+1:parseInt(d.days)||1;
-    dur=dy+' Day'+(dy>1?'s':''); durSub=tn>0?'/ '+tn+' Night'+(tn>1?'s':''):'';
-    km=d.km?'~'+d.km+' km':'—';
-  }
-  $('prev-route').textContent=route;
-  $('prev-dur').textContent=dur;
-  $('prev-dur-sub').textContent=durSub;
-  $('prev-km').textContent=km;
-  $('prev-pax').textContent=(pax.adults+pax.children+pax.seniors)+' Travellers';
-  $('prev-pax-sub').textContent=paxStr();
-  let cityList=[];
-  if(TYPE==='multi'&&TOUR)cityList=TOURS[TOUR].nights.map(n=>n.city);
-  else if(TYPE==='custom')cityList=cities.filter(Boolean);
-  const ce=$('prev-cities');
-  if(cityList.length){
-    ce.innerHTML=cityList.map(c=>
-      '<div class="prev-city-row">'
-      +'<div><div class="prev-city-name">'+c+'</div>'
-      +'<div class="prev-city-hotel">'+(hotelSel[c]||'Hotel TBC — based on stay preference')+'</div></div>'
-      +'<div class="prev-city-nights">'+(nights[c]||1)+' Night'+((nights[c]||1)>1?'s':'')+'</div>'
-      +'</div>'
-    ).join('');
-  } else { ce.innerHTML=''; }
-  // dist badge for preset tours
-  const be=$('prev-dist-badge');
-  if(TOUR&&TOURS[TOUR]&&TOURS[TOUR].km!==null){
-    const kmv=TOURS[TOUR].km;
-    be.innerHTML='<div class="dist-badge '+(kmv<1000?'ok':'warn')+'">'+(kmv<1000?'✔ Comfortable overland route · ~'+kmv+' km':'✦ Extended route — concierge will optimise')+'</div>';
-  } else {be.innerHTML='';}
-  // interests note
-  const ni=$('prev-note');
-  if(interests.size){ni.style.display='block';ni.textContent='Your journey will be curated around: '+[...interests].join(' · ')+'.';}
-  else {ni.style.display='none';}
-}
+  const paxStr = () => {
+    const p = [];
+    if (adults) p.push(`${adults} Adult${adults > 1 ? "s" : ""}`);
+    if (children) p.push(`${children} Child${children > 1 ? "ren" : ""}`);
+    if (seniors) p.push(`${seniors} Senior${seniors > 1 ? "s" : ""}`);
+    return p.join(", ") || "—";
+  };
 
-/* ═══════════════════════════════════════════
-   ESTIMATE CALCULATION
-═══════════════════════════════════════════ */
-function recalc(){
-  const erEl=$('est-range');
-  if(!base[0]&&TYPE!=='custom'){erEl.textContent='Select your journey';return;}
-  let sLo=0,sHi=0;
-  if(stayStyle&&TYPE!=='day'){
-    const sc=STAY_COST[stayStyle];
-    const tn=totalNights();
-    if(tn){sLo=sc.lo*tn;sHi=sc.hi*tn;}
-  }
-  const p=pax.adults+pax.children+Math.ceil(pax.seniors*1.1);
-  const mul=p<=2?1:1+(p-2)*0.38;
-  const lo=Math.round((base[0]+addonTotal+sLo)*mul);
-  const hi=Math.round((base[1]+addonTotal+sHi)*mul);
-  // If hotel specifically selected, tighten range
-  const hotelCount=Object.keys(hotelSel).length;
-  if(hotelCount>0){
-    erEl.textContent='Starting from '+fmt(lo);
-  } else {
-    erEl.textContent=fmt(lo)+' – '+fmt(hi);
-  }
-  updatePreview();
-}
+  const totalNights = () => Object.values(nights).reduce((a, b) => a + b, 0);
 
-/* ═══════════════════════════════════════════
-   CUSTOM ROUTE BUILDER
-═══════════════════════════════════════════ */
-function togCity(chip){
-  const city=chip.getAttribute('data-city');
-  chip.classList.toggle('on');
-  chip.classList.add('pop');
-  setTimeout(()=>chip.classList.remove('pop'),500);
-  chip.classList.contains('on')?(cities.includes(city)||cities.push(city)):(cities=cities.filter(c=>c!==city));
-  renderRoute();updateCustomEst();
-}
-function addCity(city){
-  if(city&&!cities.includes(city)){cities.push(city);renderRoute();updateCustomEst();}
-}
+  const datesConfirm = () => {
+    if (tourType === "day" && startDate) {
+      return new Date(startDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+    if (startDate && endDate) {
+      const n = Math.round((new Date(endDate) - new Date(startDate)) / 86400000);
+      const d = n + 1;
+      return `${d} Day${d > 1 ? "s" : ""} / ${n} Night${n > 1 ? "s" : ""} Selected`;
+    }
+    return null;
+  };
 
-function renderRoute(){
-  const wrap=$('route-wrap'),strip=$('route-strip'),badges=$('route-badges'),conc=$('concierge-box');
-  if(!cities.length){wrap.classList.remove('on');return;}
-  wrap.classList.add('on');
-  // Progressive append
-  const existing=[...strip.querySelectorAll('.r-city')].map(e=>e.textContent);
-  const removed=existing.filter(c=>!cities.includes(c));
-  if(removed.length){
-    strip.innerHTML='';
-    cities.forEach((c,i)=>{
-      if(i>0){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}
-      const s=document.createElement('span');s.className='r-city';s.textContent=c;s.style.animationDelay=(i*0.06)+'s';strip.appendChild(s);
-    });
-  } else {
-    cities.filter(c=>!existing.includes(c)).forEach(city=>{
-      if(strip.children.length){const a=document.createElement('span');a.className='r-arr';a.textContent='→';strip.appendChild(a);}
-      const s=document.createElement('span');s.className='r-city';s.textContent=city;strip.appendChild(s);
-    });
-  }
-  if(cities.length>=2){
-    mapsOk&&distSvc?runDistMatrix(cities,badges,conc):runHaversine(cities,badges,conc);
-  } else {badges.innerHTML='';conc.classList.remove('on');}
-}
+  const currentTours = tourType === "day" ? DAY_TOURS : MULTI_TOURS;
 
-function updateCustomEst(){
-  const n=cities.length;
-  if(!n){$('est-range').textContent='Add destinations to estimate';return;}
-  base=[n*38000,n*58000];recalc();
-  $('js-route').textContent=cities.join(' → ');
-  const tn=cities.reduce((a,c)=>(nights[c]||2)+a,0);
-  $('js-days').textContent=(tn+1)+' Days / '+tn+' Nights (approx)';
-  if(!$('s3').classList.contains('on')){
-    showDiv('d23');revealSec('s3');setStep(4,"Who's Travelling?");
-  }
-  if(stayStyle)renderHotels();
-}
+  // ── Summary for sheet ──
+  const sheetSummary = {
+    route: selectedTour?.nights ? selectedTour.nights.map(n => n.city).join(" → ") : (selectedTour?.name || customCities.join(" → ") || "—"),
+    days: selectedTour ? selectedTour.tag : `${totalNights() + 1} Days / ${totalNights()} Nights`,
+    pax: paxStr(),
+    interests: [...interests],
+  };
 
-/* ═══════════════════════════════════════════
-   DISTANCE LOGIC
-═══════════════════════════════════════════ */
-function haverKm(a,b){
-  const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-function runHaversine(cs,be,ce){
-  const dlh={lat:28.6139,lng:77.209};
-  let m=0;
-  cs.forEach(c=>{const ll=CITY_LL[c];if(ll)m=Math.max(m,haverKm(dlh,ll)*1.35);});
-  showDist(m,cs.length,be,ce);
-}
-function runDistMatrix(cs,be,ce){
-  distSvc.getDistanceMatrix({
-    origins:['New Delhi, India'],
-    destinations:cs.map(c=>c+', India'),
-    travelMode:google.maps.TravelMode.DRIVING,
-    unitSystem:google.maps.UnitSystem.METRIC
-  },(res,st)=>{
-    if(st!=='OK'){runHaversine(cs,be,ce);return;}
-    let m=0;
-    try{res.rows[0].elements.forEach(el=>{if(el.status==='OK')m=Math.max(m,el.distance.value/1000);});}
-    catch(e){runHaversine(cs,be,ce);return;}
-    showDist(m,cs.length,be,ce);
-  });
-}
-function showDist(km,n,be,ce){
-  be.innerHTML='';ce.classList.remove('on');
-  if(km>0&&km<1000){
-    be.innerHTML='<div class="rbadge ok">✔ &nbsp;Comfortable overland route confirmed</div>'
-      +'<div class="rbadge info">🚗 &nbsp;Furthest destination ~'+Math.round(km)+' km · Private AC vehicle throughout</div>';
-  } else if(km>=1000){
-    be.innerHTML='<div class="rbadge warn">✦ &nbsp;Extended route — our concierge will personally optimise this for you</div>';
-    ce.classList.add('on');
-  }
-  if(n>=3)be.innerHTML+='<div class="rbadge info">📍 &nbsp;'+n+' destinations selected</div>';
-  if(n>=4)be.innerHTML+='<div class="rbadge warn">✈ &nbsp;Internal flights available on select legs</div>';
-}
+  /* ─────────────────────────────────────────
+     RENDER
+  ───────────────────────────────────────── */
+  const wrap = { maxWidth: 760, margin: "0 auto", padding: "28px 16px 90px" };
+  const secStyle = { marginBottom: 0 };
+  const blockStyle = { background: C.blk2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: "20px 18px", marginBottom: 0 };
 
-/* ═══════════════════════════════════════════
-   JOURNEY SHEET
-═══════════════════════════════════════════ */
-function openSheet(){show('jbd');show('jsheet');}
-function closeSheet(){hide('jbd');hide('jsheet');}
+  return (
+    <div style={{ background: C.blk3, minHeight: "100vh", color: C.ivory, fontFamily: S.lato, fontWeight: 300 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Lato:wght@300;400;700&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{display:none}
+        input[type=date]{color-scheme:dark}
+        input,textarea,button{font-family:inherit}
+        .scroller{display:flex;gap:13px;overflow-x:auto;padding-bottom:14px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+        .scroller>*{scroll-snap-align:start}
+      `}</style>
 
-/* ═══════════════════════════════════════════
-   GOOGLE MAPS INIT
-═══════════════════════════════════════════ */
-function initGoogleMaps(){
-  mapsOk=true;
-  distSvc=new google.maps.DistanceMatrixService();
-  const opIN={componentRestrictions:{country:'in'},types:['(cities)'],fields:['name','formatted_address']};
-  const opGL={types:['(cities)'],fields:['name','formatted_address']};
-  function mkAC(id,opts,cb){
-    const inp=$(id);if(!inp)return;
-    const ac=new google.maps.places.Autocomplete(inp,opts);
-    ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p&&p.name)cb(p);});
-  }
-  mkAC('inp-pickup',opGL,p=>{$('inp-pickup').value=p.formatted_address||p.name;});
-  mkAC('inp-dest1',opIN,p=>{const c=p.name.split(',')[0].trim();$('inp-dest1').value='';addCity(c);});
-  mkAC('inp-dest2',opIN,p=>{const c=p.name.split(',')[0].trim();$('inp-dest2').value='';addCity(c);});
-  mkAC('inp-drop',opGL,p=>{$('inp-drop').value=p.formatted_address||p.name;});
+      {/* ── HEADER ── */}
+      <div style={{ background: "rgba(9,9,11,0.96)", backdropFilter: "blur(18px)", borderBottom: `1px solid rgba(201,168,76,0.1)`, position: "sticky", top: 0, zIndex: 500 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", minHeight: 62, padding: "0 24px", gap: 14 }}>
+          <img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc" style={{ height: 38, width: "auto", objectFit: "contain" }} />
+          <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.24em", color: C.muted, textTransform: "uppercase" }}>Trusted By</span>
+            {[
+              { src: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg", h: 16, alt: "Google" },
+              { src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tripadvisor_logo.svg/2560px-Tripadvisor_logo.svg.png", h: 14, alt: "TripAdvisor" },
+              { src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Viator_logo.svg/2560px-Viator_logo.svg.png", h: 14, alt: "Viator" },
+            ].map(l => <img key={l.alt} src={l.src} alt={l.alt} style={{ height: l.h, width: "auto", opacity: 0.7, filter: "grayscale(100%) brightness(1.8)" }} />)}
+            <span style={{ width: 1, height: 14, background: C.bd2 }} />
+            <span style={{ fontFamily: S.cinzel, fontSize: 7.5, letterSpacing: "0.18em", color: C.gold, textTransform: "uppercase", opacity: 0.85 }}>GST · MSME · Govt. Recognised</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── STEP BAR ── */}
+      <div style={{ position: "sticky", top: 62, zIndex: 490, background: "rgba(9,9,11,0.97)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${C.bd}`, padding: "8px 22px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
+          <span style={{ fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.22em", color: C.ivory, textTransform: "uppercase" }}>
+            {!tourType ? "Plan Your Journey" : tourType === "day" ? "Single Day Tour" : tourType === "multi" ? "Multi-Day Journey" : "Custom Itinerary"}
+          </span>
+          <span style={{ fontSize: 10, color: C.gold }}>
+            {!tourType ? "Step 1 of 8" : !visibleSecs.s2 ? "Step 2 of 8" : !visibleSecs.s3 ? "Step 3 of 8" : !visibleSecs.s4 ? "Step 4 of 8" : !visibleSecs.s5 ? "Step 5 of 8" : !visibleSecs.s6 ? "Step 6 of 8" : !visibleSecs.s7 ? "Step 7 of 8" : "Step 8 of 8"}
+          </span>
+        </div>
+        <div style={{ height: 2, background: "rgba(245,240,232,0.07)", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ height: "100%", background: `linear-gradient(90deg,${C.gold3},${C.gold2})`, borderRadius: 2, transition: "width 0.5s ease", width: `${(!tourType ? 1 : !visibleSecs.s2 ? 2 : !visibleSecs.s3 ? 3 : !visibleSecs.s4 ? 4 : !visibleSecs.s5 ? 5 : !visibleSecs.s6 ? 6 : !visibleSecs.s7 ? 7 : 8) / 8 * 100}%` }} />
+        </div>
+      </div>
+
+      <div style={wrap}>
+        {/* Positioning line */}
+        <div style={{ textAlign: "center", padding: "18px 0 4px", marginBottom: 22 }}>
+          <p style={{ fontFamily: S.cg, fontStyle: "italic", fontSize: 13.5, color: C.muted, lineHeight: 1.7 }}>
+            Our <span style={{ color: C.gold }}>chauffeur-curated journeys</span> are designed around the most rewarding and comfortable overland routes across North India — private, personalised, built entirely around you.
+          </p>
+        </div>
+
+        {/* ── S0: TOUR TYPE ── */}
+        {collapsedSecs.s0
+          ? <CollapsedSection label="Journey Type" summary={{ day: "Single Day Tour", multi: "Multi-Day Journey", custom: "Build Custom Itinerary" }[tourType]} onEdit={() => editSec("s0")} />
+          : visibleSecs.s0 && (
+            <div style={secStyle}>
+              <SectionLabel text="Step 1" />
+              <SectionTitle>What kind of journey are you planning?</SectionTitle>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[["day", "Single Day Tour"], ["multi", "Multi-Day Journey"], ["custom", "Build My Custom Itinerary"]].map(([t, label]) => (
+                  <div key={t} onClick={() => handleTourType(t)} style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "12px 22px", borderRadius: 30, border: `1px solid ${tourType === t ? C.gold : C.bd}`, background: tourType === t ? C.goldBg2 : C.blk2, color: tourType === t ? C.gold2 : C.mid, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.22s", boxShadow: tourType === t ? `0 0 0 1px ${C.gold},0 4px 18px rgba(201,168,76,0.12)` : "none" }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", border: `1.5px solid currentColor`, background: tourType === t ? C.gold : "transparent" }} />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {/* ── S1: DATES ── */}
+        {visibleSecs.s1 && <Divider />}
+        {visibleSecs.s1 && (
+          collapsedSecs.s1
+            ? <CollapsedSection label="Travel Dates" summary={datesConfirm() || "—"} onEdit={() => editSec("s1")} />
+            : <div ref={secRefs.s1} style={secStyle}>
+              <SectionLabel text="Step 2" />
+              <SectionTitle>{tourType === "day" ? "When would you like to visit?" : "Select your preferred travel dates"}</SectionTitle>
+              <div style={blockStyle}>
+                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 180 }}>
+                    <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 8, display: "block" }}>
+                      {tourType === "day" ? "Travel Date" : "Start Date"}
+                    </label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                  </div>
+                  {tourType !== "day" && (
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 8, display: "block" }}>End Date</label>
+                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                    </div>
+                  )}
+                </div>
+                {tourType === "day" && <div style={{ fontSize: 11, color: C.muted, marginTop: 10, fontStyle: "italic" }}>No return date required for this experience.</div>}
+                {datesConfirm() && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 12, padding: "10px 14px", borderRadius: 9, background: C.goldBg, border: `1px solid rgba(201,168,76,0.2)` }}>
+                    <span style={{ color: C.gold, fontSize: 14 }}>✔</span>
+                    <span style={{ fontFamily: S.cinzel, fontSize: 9.5, letterSpacing: "0.16em", color: C.gold2, textTransform: "uppercase" }}>{datesConfirm()}</span>
+                  </div>
+                )}
+                {datesConfirm() && !collapsedSecs.s1 && (
+                  <button onClick={handleDates} style={{ marginTop: 14, width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${C.gold}`, background: C.goldBg, color: C.gold2, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}>
+                    Continue →
+                  </button>
+                )}
+              </div>
+            </div>
+        )}
+
+        {/* ── S2: TOUR SELECTION ── */}
+        {visibleSecs.s2 && <Divider />}
+        {visibleSecs.s2 && (
+          collapsedSecs.s2
+            ? <CollapsedSection label="Experience" summary={selectedTour ? `${selectedTour.name} · ${selectedTour.tag}` : customCities.length ? customCities.join(" → ") : "—"} onEdit={() => editSec("s2")} />
+            : <div ref={secRefs.s2} style={secStyle}>
+              <SectionLabel text="Step 3" />
+              <SectionTitle>{tourType === "custom" ? "Build your custom route" : tourType === "day" ? "Choose your day experience" : "Choose your journey"}</SectionTitle>
+
+              {/* DAY / MULTI cards */}
+              {tourType !== "custom" && (
+                <>
+                  <div style={{ fontSize: 10.5, color: C.muted, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>↔ Swipe to explore all {tourType === "day" ? "day experiences" : "journeys"}</div>
+                  <div className="scroller">
+                    {currentTours.map(t => (
+                      <DestCard key={t.id} tour={t} selected={selectedTour?.id === t.id} onClick={() => handleCardSelect(t)} />
+                    ))}
+                  </div>
+
+                  {/* Experiences accordion */}
+                  {selectedTour && (
+                    <div style={{ marginTop: 14, background: C.blk2, border: `1px solid ${C.goldBd}`, borderRadius: 12, padding: "18px 16px" }}>
+                      {/* Included */}
+                      <div style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.3em", color: C.gold, textTransform: "uppercase", marginBottom: 10 }}>Included in Your Tour</div>
+                      <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 9, paddingBottom: 6, borderBottom: `1px solid ${C.bd}` }}>Part of every booking — no extra cost</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+                        {selectedTour.inc.map(a => <Chip key={a} label={a} state="inc" />)}
+                      </div>
+
+                      {/* Add-ons */}
+                      <div style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.3em", color: C.gold, textTransform: "uppercase", marginBottom: 10, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.bd}` }}>Enhance Your Experience</div>
+                      <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 9, paddingBottom: 6, borderBottom: `1px solid ${C.bd}` }}>Tap to add — estimate updates automatically</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                        {(addonsExpanded ? selectedTour.add : selectedTour.add.slice(0, 5)).map(a => (
+                          <Chip key={a} label={a} state={addons.has(a) ? "on" : "idle"} onClick={() => toggleAddon(a)} />
+                        ))}
+                      </div>
+                      {selectedTour.add.length > 5 && !addonsExpanded && (
+                        <div onClick={() => setAddonsExpanded(true)} style={{ marginTop: 10, fontSize: 10.5, color: C.muted, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                          ↓ View {selectedTour.add.length - 5} more experiences
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* CUSTOM BUILDER */}
+              {tourType === "custom" && (
+                <div style={{ background: C.blk2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: "20px 18px" }}>
+                  {/* Journey Begins From */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 9, display: "block" }}>Journey Begins From</label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: C.gold, opacity: 0.6, fontSize: 14, pointerEvents: "none" }}>✈</span>
+                      <input type="text" placeholder="City, airport or hotel you're arriving into…" style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px 12px 40px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                    </div>
+                  </div>
+
+                  {/* City chips */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 9, display: "block" }}>Where Would You Like To Go?</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                      {CUSTOM_CHIPS.map(city => (
+                        <div key={city} onClick={() => toggleCity(city)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 15px", borderRadius: 24, border: `1px solid ${customCities.includes(city) ? C.gold : C.bd}`, background: customCities.includes(city) ? C.goldBg2 : C.blk3, color: customCities.includes(city) ? C.gold2 : C.mid, fontSize: 12.5, cursor: "pointer", transition: "all 0.2s", boxShadow: customCities.includes(city) ? `0 0 10px rgba(201,168,76,0.15)` : "none" }}>
+                          {{ Delhi: "🏛", Agra: "🕌", Jaipur: "🏰", Rishikesh: "🙏", Varanasi: "🪔", Amritsar: "⭐" }[city]} {city}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: C.gold, opacity: 0.6, fontSize: 14, pointerEvents: "none" }}>🔍</span>
+                      <input type="text" placeholder="Something else on your mind? Search a city…" style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px 12px 40px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                    </div>
+                  </div>
+
+                  {/* Add another destination */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 9, display: "block" }}>Add Another Destination</label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: C.gold, opacity: 0.6, fontSize: 14, pointerEvents: "none" }}>📍</span>
+                      <input type="text" placeholder="Add one more destination to your route…" style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px 12px 40px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                    </div>
+                  </div>
+
+                  {/* Journey Ends At */}
+                  <div>
+                    <label style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.28em", color: C.gold, textTransform: "uppercase", marginBottom: 9, display: "block" }}>Journey Ends At</label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: C.gold, opacity: 0.6, fontSize: 14, pointerEvents: "none" }}>🏁</span>
+                      <input type="text" placeholder="Hotel, airport or city you're departing from…" style={{ width: "100%", background: C.blk3, border: `1px solid ${C.bd}`, borderRadius: 9, padding: "12px 14px 12px 40px", color: C.ivory, fontSize: 13, outline: "none" }} />
+                    </div>
+                  </div>
+
+                  {/* Route strip */}
+                  <RouteStrip cities={customCities} distInfo={distInfo} />
+                </div>
+              )}
+            </div>
+        )}
+
+        {/* ── S3: TRAVELLERS ── */}
+        {visibleSecs.s3 && <Divider />}
+        {visibleSecs.s3 && (
+          collapsedSecs.s3
+            ? <CollapsedSection label="Travellers" summary={paxStr()} onEdit={() => editSec("s3")} />
+            : <div ref={secRefs.s3} style={secStyle}>
+              <SectionLabel text="Step 4" />
+              <SectionTitle>Who's travelling?</SectionTitle>
+              <div style={blockStyle}>
+                <Stepper label="Adults" sub="Age 18 and above" value={adults} onChange={v => { setAdults(v); handleTravellers(); }} min={1} />
+                <Stepper label="Children" sub="Age 2 – 17" value={children} onChange={v => { setChildren(v); handleTravellers(); }} />
+                <Stepper label="Seniors" sub="Age 60 and above" value={seniors} onChange={v => { setSeniors(v); handleTravellers(); }} />
+              </div>
+              {seniors > 0 && (
+                <div style={{ marginTop: 10, padding: "11px 15px", borderRadius: 10, border: `1px solid ${C.goldBd}`, background: C.goldBg, fontSize: 11.5, color: C.ivory2, fontStyle: "italic" }}>
+                  🌿 Comfort-focused routing will be prioritised — gentler pace, ground-floor rooms where possible, and rest stops built into every transfer.
+                </div>
+              )}
+              {children > 0 && adults === 0 && (
+                <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(200,80,80,0.3)", background: "rgba(200,80,80,0.08)", fontSize: 11.5, color: "#e08888" }}>
+                  ⚠ At least one adult must accompany children on the journey.
+                </div>
+              )}
+              <button onClick={() => { collapseSec("s3"); revealNext("s4"); }} style={{ marginTop: 14, width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${C.gold}`, background: C.goldBg, color: C.gold2, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}>
+                Continue →
+              </button>
+            </div>
+        )}
+
+        {/* ── S4: STAY STYLE + PER-CITY HOTELS ── */}
+        {visibleSecs.s4 && <Divider />}
+        {visibleSecs.s4 && (
+          collapsedSecs.s4
+            ? <CollapsedSection label="Stay Preference" summary={stayStyle ? { 3: "Boutique Comfort (3★)", 4: "Premium Stay (4★)", 5: "Luxury Collection (5★)" }[stayStyle] : "—"} onEdit={() => editSec("s4")} />
+            : <div ref={secRefs.s4} style={secStyle}>
+              <SectionLabel text="Step 5" />
+              <SectionTitle>What's your preferred stay style?</SectionTitle>
+
+              {/* Stay style cards */}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: stayStyle && tourType !== "day" ? 28 : 0 }}>
+                {[{ stars: 3, name: "Boutique Comfort", desc: "Heritage havelis, boutiques & high-rated guesthouses" }, { stars: 4, name: "Premium Stay", desc: "Premium hotels with elevated comfort" }, { stars: 5, name: "Luxury Collection", desc: "Oberoi, Taj, ITC — the finest addresses" }].map(s => (
+                  <div key={s.stars} onClick={() => handleStay(s.stars)} style={{ flex: 1, minWidth: 140, borderRadius: 12, padding: "16px 14px", border: `1px solid ${stayStyle === s.stars ? C.gold : C.bd}`, background: stayStyle === s.stars ? C.goldBg2 : C.blk2, cursor: "pointer", textAlign: "center", position: "relative", boxShadow: stayStyle === s.stars ? `0 0 0 1px ${C.gold}` : "none", transition: "all 0.22s" }}>
+                    {stayStyle === s.stars && <span style={{ position: "absolute", top: 9, right: 11, fontSize: 11, color: C.gold }}>✔</span>}
+                    <div style={{ fontSize: 11, color: C.gold, letterSpacing: "0.1em", marginBottom: 7 }}>{"★".repeat(s.stars)}</div>
+                    <div style={{ fontFamily: S.cg, fontSize: 16, color: C.ivory, marginBottom: 4 }}>{s.name}</div>
+                    <div style={{ fontSize: 10.5, color: C.muted, lineHeight: 1.45 }}>{s.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Per-city hotel blocks — hidden for day tours */}
+              {stayStyle && tourType !== "day" && overnightCities().length > 0 && (
+                <div>
+                  <div style={{ fontFamily: S.cinzel, fontSize: 9, letterSpacing: "0.3em", color: C.gold, textTransform: "uppercase", marginBottom: 16 }}>Suggested Stays for Your Route</div>
+                  {overnightCities().map(city => {
+                    const { primary, upgrade } = getHotels(city);
+                    const tourNight = selectedTour?.nights?.find(n => n.city === city);
+                    const minN = tourNight?.min || 1;
+                    const curN = nights[city] || minN;
+                    return (
+                      <div key={city} style={{ marginBottom: 26 }}>
+                        {/* City header with nights stepper */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, paddingBottom: 9, borderBottom: `1px solid ${C.bd}` }}>
+                          <span style={{ fontFamily: S.cinzel, fontSize: 9.5, letterSpacing: "0.26em", color: C.gold, textTransform: "uppercase" }}>{city}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                            <span style={{ fontSize: 10.5, color: C.mid, marginRight: 10 }}>Nights</span>
+                            <button onClick={() => handleAdjNights(city, -1, minN)} style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${C.goldBd}`, background: "transparent", color: C.gold, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                            <span style={{ fontFamily: S.cg, fontSize: 17, color: C.ivory, width: 32, textAlign: "center" }}>{curN}</span>
+                            <button onClick={() => handleAdjNights(city, 1, minN)} style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${C.goldBd}`, background: "transparent", color: C.gold, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                          </div>
+                        </div>
+
+                        {/* Primary hotels */}
+                        {primary.map((h, i) => (
+                          <HotelCard key={i} hotel={h} selected={hotelSel[city] === h.name} onSelect={() => handleHotelSelect(city, h.name)} />
+                        ))}
+
+                        {/* Upgrade options */}
+                        {upgrade.length > 0 && (
+                          <>
+                            <div style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.25em", color: C.muted, textTransform: "uppercase", margin: "12px 0 9px", paddingTop: 12, borderTop: `1px solid ${C.bd}` }}>Upgrade Options</div>
+                            {upgrade.map((h, i) => (
+                              <HotelCard key={i} hotel={h} selected={hotelSel[city] === h.name} onSelect={() => handleHotelSelect(city, h.name)} />
+                            ))}
+                          </>
+                        )}
+
+                        {/* Skip */}
+                        <div style={{ textAlign: "right", marginTop: 6 }}>
+                          <span onClick={() => setHotelSel(prev => { const n = { ...prev }; delete n[city]; return n; })} style={{ fontSize: 10.5, color: C.muted, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
+                            Skip — use estimated average
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <button onClick={() => { collapseSec("s4"); revealNext("s5"); }} style={{ width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${C.gold}`, background: C.goldBg, color: C.gold2, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}>
+                    Continue →
+                  </button>
+                </div>
+              )}
+              {(tourType === "day" || !overnightCities().length) && stayStyle && (
+                <button onClick={() => { collapseSec("s4"); revealNext("s5"); }} style={{ marginTop: 14, width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${C.gold}`, background: C.goldBg, color: C.gold2, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}>
+                  Continue →
+                </button>
+              )}
+            </div>
+        )}
+
+        {/* ── S5: INTERESTS ── */}
+        {visibleSecs.s5 && <Divider />}
+        {visibleSecs.s5 && (
+          collapsedSecs.s5
+            ? <CollapsedSection label="Interests" summary={interests.size ? [...interests].join(" · ") : "—"} onEdit={() => editSec("s5")} />
+            : <div ref={secRefs.s5} style={secStyle}>
+              <SectionLabel text="Step 6" />
+              <SectionTitle>What draws you most?</SectionTitle>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 18, lineHeight: 1.6 }}>Select all that resonate — we'll curate your experiences accordingly.</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
+                {INTERESTS.map(({ id, ico }) => (
+                  <div key={id} onClick={() => handleInterest(id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 15px", borderRadius: 24, border: `1px solid ${interests.has(id) ? C.gold : C.bd}`, background: interests.has(id) ? C.goldBg2 : C.blk2, color: interests.has(id) ? C.gold2 : C.mid, fontSize: 12.5, cursor: "pointer", transition: "all 0.22s", boxShadow: interests.has(id) ? `0 0 12px rgba(201,168,76,0.18)` : "none", userSelect: "none" }}>
+                    <span style={{ fontSize: 14 }}>{ico}</span>{id}{interests.has(id) && <span style={{ fontSize: 10, color: C.gold }}> ✓</span>}
+                  </div>
+                ))}
+              </div>
+              {interests.size > 0 && (
+                <button onClick={() => { collapseSec("s5"); revealNext("s6"); }} style={{ marginTop: 18, width: "100%", padding: "12px", borderRadius: 10, border: `1px solid ${C.gold}`, background: C.goldBg, color: C.gold2, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}>
+                  Continue →
+                </button>
+              )}
+            </div>
+        )}
+
+        {/* ── S6: NOTES ── */}
+        {visibleSecs.s6 && <Divider />}
+        {visibleSecs.s6 && (
+          <div ref={secRefs.s6} style={secStyle}>
+            <SectionLabel text="Step 7" />
+            <SectionTitle>Anything else we should know?</SectionTitle>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>Share your pace preference, special occasions, or anything that matters. Our concierge reads every word.</div>
+            <textarea value={notes} onChange={e => { setNotes(e.target.value); handleNotes(); }} rows={5} placeholder="We are looking for a slower-paced journey with spiritual experiences, boutique stays and comfortable driving durations. We have two elderly parents joining us and would prefer avoiding long steps and stairs where possible…" style={{ width: "100%", background: C.blk2, border: `1px solid ${C.bd}`, borderRadius: 12, padding: "14px 16px", color: C.ivory, fontSize: 13, fontWeight: 300, lineHeight: 1.7, resize: "vertical", minHeight: 100, outline: "none" }} />
+          </div>
+        )}
+
+        {/* ── S7: SMART JOURNEY PREVIEW ── */}
+        {visibleSecs.s7 && <Divider />}
+        {visibleSecs.s7 && (
+          <div ref={secRefs.s7} style={secStyle}>
+            <SectionLabel text="Step 8 · Your Journey at a Glance" />
+            <SectionTitle>Here's what we've built for you</SectionTitle>
+            <div style={{ background: C.blk2, border: `1px solid ${C.goldBd}`, borderRadius: 14, overflow: "hidden" }}>
+              {/* Header */}
+              <div style={{ padding: "20px 22px 16px", background: `linear-gradient(135deg,${C.goldBg},transparent)`, borderBottom: `1px solid ${C.bd}` }}>
+                <div style={{ fontFamily: S.cinzel, fontSize: 8.5, letterSpacing: "0.3em", color: C.gold, textTransform: "uppercase", marginBottom: 7 }}>Estimated Route</div>
+                <div style={{ fontFamily: S.cg, fontSize: 22, fontStyle: "italic", color: C.ivory, lineHeight: 1.3 }}>
+                  {selectedTour ? selectedTour.nights ? selectedTour.nights.map(n => n.city).join(" → ") : selectedTour.name : customCities.length ? customCities.join(" → ") : "—"}
+                </div>
+                {/* Distance badge for preset tours */}
+                {selectedTour?.km && (
+                  <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 11px", borderRadius: 10, border: `1px solid ${selectedTour.km < 1000 ? "rgba(77,158,114,0.3)" : C.goldBd}`, background: selectedTour.km < 1000 ? "rgba(77,158,114,0.1)" : C.goldBg, color: selectedTour.km < 1000 ? "#6ec898" : C.gold2, fontSize: 10.5 }}>
+                    {selectedTour.km < 1000 ? `✔ Comfortable overland route · ~${selectedTour.km} km` : `✦ Extended route — concierge will optimise`}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats grid */}
+              <div style={{ padding: "18px 22px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                  {[
+                    { lbl: "Journey Duration", val: selectedTour ? selectedTour.tag : `${totalNights() + 1} Days / ${totalNights()} Nights`, sub: "" },
+                    { lbl: "Driving Coverage", val: selectedTour?.km ? `~${selectedTour.km} km` : customCities.length >= 2 && distInfo ? `~${distInfo.km} km` : "—", sub: "Private AC vehicle" },
+                    { lbl: "Travellers", val: `${adults + children + seniors}`, sub: paxStr() },
+                    { lbl: "Stay Preference", val: stayStyle ? { 3: "Boutique 3★", 4: "Premium 4★", 5: "Luxury 5★" }[stayStyle] : "—", sub: "Curated by Ivory Arc" },
+                  ].map(s => (
+                    <div key={s.lbl} style={{ background: C.blk3, borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ fontFamily: S.cinzel, fontSize: 8, letterSpacing: "0.24em", color: C.gold, textTransform: "uppercase", marginBottom: 5 }}>{s.lbl}</div>
+                      <div style={{ fontFamily: S.cg, fontSize: 18, color: C.ivory, fontWeight: 500 }}>{s.val}</div>
+                      {s.sub && <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{s.sub}</div>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Per-city nights breakdown */}
+                {overnightCities().length > 0 && (
+                  <div>
+                    {overnightCities().map(city => (
+                      <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.bd}` }}>
+                        <div>
+                          <div style={{ fontFamily: S.cg, fontSize: 15, color: C.ivory }}>{city}</div>
+                          <div style={{ fontSize: 10.5, color: C.muted, marginTop: 2 }}>{hotelSel[city] || "Hotel TBC — based on stay preference"}</div>
+                        </div>
+                        <div style={{ fontFamily: S.cinzel, fontSize: 9.5, color: C.gold, letterSpacing: "0.12em", whiteSpace: "nowrap" }}>{nights[city] || smartNights(city)} Night{(nights[city] || smartNights(city)) > 1 ? "s" : ""}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Interests curation note */}
+                {interests.size > 0 && (
+                  <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, background: C.goldBg, border: `1px solid ${C.goldBd}`, fontSize: 11.5, color: C.ivory2, fontStyle: "italic", lineHeight: 1.65 }}>
+                    Your journey will be curated around: {[...interests].join(" · ")}.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── FLOATING ESTIMATE BAR ── */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 600, background: "rgba(9,9,11,0.97)", backdropFilter: "blur(20px)", borderTop: `1px solid ${C.goldBd}`, height: 64, display: "flex", alignItems: "center", padding: "0 22px", justifyContent: "space-between", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <span style={{ fontFamily: S.cinzel, fontSize: 7.5, letterSpacing: "0.26em", color: C.muted, textTransform: "uppercase" }}>Estimated Range</span>
+          <span style={{ fontFamily: S.cg, fontWeight: 500, fontSize: 21, letterSpacing: "0.03em", color: C.gold2, transition: "all 0.3s" }}>{estimate()}</span>
+        </div>
+        <button onClick={() => setSheetOpen(true)} style={{ padding: "11px 21px", borderRadius: 26, background: C.gold, color: C.blk, fontFamily: S.cinzel, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+          View Journey
+        </button>
+      </div>
+
+      {/* ── JOURNEY SUMMARY SHEET ── */}
+      <JourneySheet open={sheetOpen} onClose={() => setSheetOpen(false)} summary={sheetSummary} />
+    </div>
+  );
 }
-
-setStep(1,'Plan Your Journey');
-</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso&libraries=places&callback=initGoogleMaps" async defer></script>
-</body>
-</html>
