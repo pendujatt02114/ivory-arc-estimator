@@ -1219,6 +1219,7 @@ input,textarea,select{font-family:inherit}
 
 <script>
 
+
 /* ═══════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════ */
@@ -1555,15 +1556,12 @@ function renderExpPanel(tour,panelId){
 }
 function addonChipHTML(a){
   var on = S.addons.has(a.id);
-  var div = document.createElement('div');
-  div.className = 'chip chip-add' + (on ? ' on' : '');
-  div.setAttribute('data-id', a.id);
-  var pStr = a.p > 0 ? ' - ' + fmtCFull(a.p) + (a.t === 'pp' ? '/pp' : '/group') : '';
-  div.textContent = (on ? '✓ ' : '+ ') + a.l + pStr;
-  div.addEventListener('click', (function(chip, id, price, type){
-    return function(){ togAddon(chip, id, price, type); };
-  })(div, a.id, a.p, a.t));
-  return div;
+  var pStr = a.p > 0 ? ' - ' + fmtCFull(a.p) + (a.t==='pp' ? '/pp' : '/group') : '';
+  return '<div class="chip chip-add' + (on?' on':'') + '"'
+    + ' data-id="' + a.id + '"'
+    + ' onclick="togAddon(this,\'' + a.id + '\',' + a.p + ',\'' + a.t + '\')">'
+    + (on ? '\u2713 ' : '+ ') + a.l + pStr
+    + '</div>';
 }
 
 function togAddon(chip, id, price, type){
