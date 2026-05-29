@@ -889,17 +889,21 @@ input,textarea,select{font-family:inherit}
         </div>
       </div>
       <div id="custom-overnight-wrap" style="display:none">
-        <div class="block" style="margin-bottom:14px">
-          <div class="f-lbl" style="display:block;margin-bottom:12px">Nights per destination <span style="font-size:10px;color:var(--mut);font-family:'Lato',sans-serif;letter-spacing:.04em;text-transform:none;font-weight:300">(maximum 2 nights per city)</span></div>
-          <div id="custom-city-nights-wrap"></div>
+        <div class="block" style="margin-bottom:16px">
+          <div class="f-lbl" style="display:block;margin-bottom:12px">Which destination would you like to stay in?</div>
+          <div id="custom-stay-cities" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div id="custom-stay-empty" style="font-size:12px;color:var(--mut);padding:8px 0;font-style:italic;display:none">Add your destinations in Section 3 to choose your overnight stays.</div>
         </div>
-        <div class="stay-cards" style="margin-bottom:0">
-          <div class="stay-card" id="stay-c-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, boutiques &amp; high-rated guesthouses</div></div>
-          <div class="stay-card" id="stay-c-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels with elevated comfort</div></div>
-          <div class="stay-card" id="stay-c-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses</div></div>
+        <div id="custom-city-nights-wrap" style="margin-bottom:4px"></div>
+        <div id="custom-stay-style-block" style="display:none">
+          <div class="f-lbl" style="display:block;margin:14px 0 12px">Preferred stay style</div>
+          <div class="stay-cards" style="margin-bottom:0">
+            <div class="stay-card" id="stay-c-3" onclick="selStay(3)"><span class="stay-chk">✔</span><div class="stay-stars">★★★</div><div class="stay-name">Boutique Comfort</div><div class="stay-desc">Heritage havelis, boutiques &amp; high-rated guesthouses</div></div>
+            <div class="stay-card" id="stay-c-4" onclick="selStay(4)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★</div><div class="stay-name">Premium Stay</div><div class="stay-desc">Premium hotels with elevated comfort</div></div>
+            <div class="stay-card" id="stay-c-5" onclick="selStay(5)"><span class="stay-chk">✔</span><div class="stay-stars">★★★★★</div><div class="stay-name">Luxury Collection</div><div class="stay-desc">Oberoi, Taj, ITC — the finest addresses</div></div>
+          </div>
         </div>
         <div id="custom-hotel-blocks" style="margin-top:16px"></div>
-        <div class="google-note" style="margin-top:10px">🏨 &nbsp;Live rates sourced from Google Hotels. A 10% accommodation convenience fee applies.</div>
         <button class="btn-gold" id="s5-custom-continue" onclick="doneS5()" style="display:none;margin-top:14px">Continue to Guide Preference →</button>
       </div>
       <button class="btn-gold" id="s5-no-continue" onclick="doneS5()" style="display:none;margin-top:14px">Continue →</button>
@@ -930,7 +934,7 @@ input,textarea,select{font-family:inherit}
       <div id="hotel-blocks"></div>
 
       <div class="google-note" style="margin-top:6px">
-        🏨 &nbsp;Live rates sourced from Google Hotels. A 10% accommodation coordination fee applies.
+        🏨 &nbsp;<b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — live pricing sourced from Google Hotels and subject to change until booking confirmation. A 10% accommodation coordination fee applies.
       </div>
 
       <button class="btn-gold" id="s5-continue" onclick="doneS5()" style="display:none">Continue to Guide Preference →</button>
@@ -1330,6 +1334,7 @@ const S={
   byoCities:[],byoPickup:'',byoDrop:'',isOneWay:null,
   addons:new Set(),addonTotal:0,
   stayStyle:null,hotelSel:{},nights:{},
+  staySelCities:[],stayDate:{},routeKm:0,
   guideOn:true,wantsOvernight:null,departure:null,depHotel:'',customerName:'',customerEmail:'',
   phone:'',otpVerified:false,section:1
 };
@@ -1673,6 +1678,7 @@ function setOneWay(isOneWay){
 }
 
 function showDistBadges(km,duration,nodeCount,badgesEl,concEl){
+  if(km>0)S.routeKm=km;
   badgesEl.innerHTML='';concEl.classList.remove('on');
   const allIn=S.byoCities.every(c=>PORTFOLIO.has(c));
   if(km>0&&km<1200&&allIn){
@@ -1685,6 +1691,7 @@ function showDistBadges(km,duration,nodeCount,badgesEl,concEl){
     concEl.classList.add('on');
     concEl.textContent='Our concierge team will personally review your selections, suggest the most comfortable sequence, and recommend seamless internal flight connections where relevant.';
   }
+  recalc();
 }
 function calcRouteDistance(nodes,badgesEl,concEl){
   if(!window.google||!google.maps||!google.maps.DistanceMatrixService){haversineFallback(nodes,badgesEl,concEl);return;}
@@ -1756,8 +1763,14 @@ function doneS4(){
   if(S.jt==='byo'){
     $('s5-custom').style.display='block';
     /* Reset any previous overnight choice */
-    S.wantsOvernight=null;
+    S.wantsOvernight=null;S.staySelCities=[];S.stayStyle=null;
+    [3,4,5].forEach(function(s){var b=$('stay-c-'+s);if(b)b.classList.remove('on');});
     ['ovn-yes','ovn-no'].forEach(function(id){var el=$(id);if(el)el.classList.remove('on');});
+    var cs=$('custom-stay-cities');if(cs)cs.innerHTML='';
+    var cn=$('custom-city-nights-wrap');if(cn)cn.innerHTML='';
+    var hb=$('custom-hotel-blocks');if(hb)hb.innerHTML='';
+    var ssb=$('custom-stay-style-block');if(ssb)ssb.style.display='none';
+    $('s5-custom-continue').style.display='none';
     $('custom-overnight-wrap').style.display='none';
     $('s5-no-continue').style.display='none';
   } else if(S.tour&&S.tour.nights===0){
@@ -1786,73 +1799,152 @@ function selStay(stars){
   }
   recalc();
 }
-function renderCustomHotelBlocks(){
-  var wrap=$('custom-hotel-blocks');if(!wrap)return;
-  wrap.innerHTML='';
-  if(!S.stayStyle)return;
-  var cities=S.byoCities.filter(function(c){return HOTELS[c]&&(S.nights[c]||0)>0;});
-  if(!cities.length)return;
-  var outer=document.createElement('div');
-  cities.forEach(function(city){
-    var pool=HOTELS[city];if(!pool)return;
-    var primary=pool[S.stayStyle]||pool[4]||pool[3]||[];
-    var upgrade=S.stayStyle<5&&pool[S.stayStyle+1]?pool[S.stayStyle+1].slice(0,1):[];
-    var cid=city.replace(/\s/g,'_');
-    var n=S.nights[city]||1;
-    var nightly=HOTEL_NIGHTLY[S.stayStyle]||11000;
-    var cityDiv=document.createElement('div');cityDiv.className='hotel-city';
-    var hdr=document.createElement('div');hdr.className='hcity-hdr';
-    hdr.innerHTML='<span class="hcity-name">'+city+'</span>'
-      +'<span style="font-size:11px;color:var(--mut)">'+n+' night'+(n>1?'s':'')+' · est. '+fmtCFull(nightly)+'/night</span>';
-    cityDiv.appendChild(hdr);
-    primary.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-'+i));});
-    if(upgrade.length){
-      var ul=document.createElement('div');ul.className='upgrade-lbl';ul.textContent='Upgrade Option';
-      cityDiv.appendChild(ul);
-      cityDiv.appendChild(hotelCardHTML(city,upgrade[0],cid+'-up-0'));
-    }
-    outer.appendChild(cityDiv);
-  });
-  wrap.appendChild(outer);
+/* Candidate overnight cities = the start point, destinations and end point chosen in Section 3 */
+function routeStayCities(){
+  var list=[];
+  function add(v){if(!v)return;var name=(''+v).split(',')[0].trim();if(name&&list.indexOf(name)<0)list.push(name);}
+  add(S.byoPickup);
+  S.byoCities.forEach(add);
+  add(S.byoDrop);
+  return list;
 }
+function cidOf(city){return city.replace(/[^a-zA-Z0-9]/g,'_');}
+
 function setCustomOvernight(yes){
   S.wantsOvernight=yes;
   $('ovn-yes').classList.toggle('on',yes);
   $('ovn-no').classList.toggle('on',!yes);
   $('custom-overnight-wrap').style.display=yes?'block':'none';
   $('s5-no-continue').style.display=!yes?'block':'none';
-  if(yes) renderCustomCityNights();
+  if(yes) renderStayCities();
 }
+
+/* Quick-select of the cities the customer already chose in Section 3 */
+function renderStayCities(){
+  var wrap=$('custom-stay-cities');if(!wrap)return;
+  var cities=routeStayCities();
+  var empty=$('custom-stay-empty');
+  /* drop any previously-selected city no longer on the route */
+  S.staySelCities=S.staySelCities.filter(function(c){return cities.indexOf(c)>=0;});
+  if(!cities.length){wrap.innerHTML='';if(empty)empty.style.display='block';renderCustomCityNights();updateStayStyleVisibility();return;}
+  if(empty)empty.style.display='none';
+  wrap.innerHTML=cities.map(function(c){
+    var on=S.staySelCities.indexOf(c)>=0;
+    return '<div class="cc'+(on?' on':'')+'" onclick="toggleStayCity(\''+c.replace(/'/g,"\\'")+'\')">&#128205; '+c+'</div>';
+  }).join('');
+  renderCustomCityNights();
+  updateStayStyleVisibility();
+}
+function toggleStayCity(city){
+  var i=S.staySelCities.indexOf(city);
+  if(i>=0){S.staySelCities.splice(i,1);}
+  else{
+    S.staySelCities.push(city);
+    if(!S.nights[city])S.nights[city]=1;
+    if(!S.stayDate[city])S.stayDate[city]=S.arrivalDate||'';
+  }
+  renderStayCities();
+  if(S.stayStyle)renderCustomHotelBlocks();
+  recalc();
+}
+function updateStayStyleVisibility(){
+  var hasCity=S.staySelCities.length>0;
+  var blk=$('custom-stay-style-block');if(blk)blk.style.display=hasCity?'block':'none';
+  if(!hasCity){
+    var hb=$('custom-hotel-blocks');if(hb)hb.innerHTML='';
+    var cb=$('s5-custom-continue');if(cb)cb.style.display='none';
+  } else if(S.stayStyle){renderCustomHotelBlocks();$('s5-custom-continue').style.display='block';}
+}
+
+/* For each chosen city: a check-in date (no earlier than the tour start date) + a 1–2 night stepper */
 function renderCustomCityNights(){
   var wrap=$('custom-city-nights-wrap');if(!wrap)return;
-  var cities=S.byoCities.filter(function(city){return HOTELS[city];});
-  if(!cities.length){
-    wrap.innerHTML='<div style="font-size:12px;color:var(--mut);padding:10px 0;font-style:italic">No supported destinations selected yet. Add cities from Step 3 and return here.</div>';
-    return;
-  }
+  if(!S.staySelCities.length){wrap.innerHTML='';return;}
+  var minDate=S.arrivalDate||'';
   var h='<div style="background:var(--blk2);border:1px solid var(--bd);border-radius:12px;padding:4px 18px;">';
-  cities.forEach(function(city){
-    var cid=city.replace(/\s/g,'_');
-    if(!(city in S.nights))S.nights[city]=1;
+  S.staySelCities.forEach(function(city){
+    var cid=cidOf(city);
+    if(!S.nights[city])S.nights[city]=1;
     var cur=S.nights[city];
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--bd)">';
-    h+='<div><div style="font-size:16px;color:var(--ivory)">'+city+'</div>';
-    h+='<div style="font-size:10px;color:var(--mut);margin-top:2px">Max 2 nights</div></div>';
+    var dval=S.stayDate[city]||minDate;
+    h+='<div style="padding:16px 0;border-bottom:1px solid var(--bd)">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+    h+='<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;color:var(--ivory)">'+city+'</div>';
     h+='<div style="display:flex;align-items:center">';
-    h+='<button class="ns-btn" onclick="adjNights(\''+city+'\',-1,0,2)">&#8722;</button>';
-    h+='<span id="s3-ns-'+cid+'" style="font-family:\'Cormorant Garamond\',serif;font-size:18px;color:var(--ivory);width:44px;text-align:center">'+(cur===0?'Skip':cur)+'</span>';
-    h+='<button class="ns-btn" onclick="adjNights(\''+city+'\',1,0,2)">+</button>';
+    h+='<button class="ns-btn" onclick="adjStayNights(\''+city.replace(/'/g,"\\'")+'\',-1)">&#8722;</button>';
+    h+='<span id="sn-'+cid+'" class="ns-val" style="width:80px;text-align:center;font-size:14px">'+cur+' night'+(cur>1?'s':'')+'</span>';
+    h+='<button class="ns-btn" onclick="adjStayNights(\''+city.replace(/'/g,"\\'")+'\',1)">+</button>';
     h+='</div></div>';
+    h+='<div style="display:flex;align-items:center;gap:10px">';
+    h+='<span class="f-lbl" style="margin:0">Check-in</span>';
+    h+='<input type="date" class="f-inp" style="flex:1;max-width:230px" value="'+dval+'"'+(minDate?(' min="'+minDate+'"'):'')+' onchange="onStayDate(\''+city.replace(/'/g,"\\'")+'\',this.value)"/>';
+    h+='</div>';
+    h+='<div style="font-size:10px;color:var(--mut);margin-top:7px">Up to 2 nights · earliest check-in is your tour start date</div>';
+    h+='</div>';
   });
   h+='</div>';
   wrap.innerHTML=h;
+}
+function adjStayNights(city,d){
+  var cur=S.nights[city]||1;
+  var next=Math.max(1,Math.min(2,cur+d));
+  S.nights[city]=next;
+  var el=$('sn-'+cidOf(city));if(el)el.textContent=next+' night'+(next>1?'s':'');
+  if(S.stayStyle)renderCustomHotelBlocks();
+  recalc();
+}
+function onStayDate(city,val){
+  if(S.arrivalDate&&val&&val<S.arrivalDate)val=S.arrivalDate;
+  S.stayDate[city]=val;
+  renderCustomCityNights();
+  if(S.stayStyle)renderCustomHotelBlocks();
+  recalc();
+}
+
+/* Hotels for any city — uses the curated list when we have it, otherwise live-sourced placeholders */
+function genericHotelPool(city,tier){
+  var sets={
+    3:[{n:'Heritage Boutique '+city,m:'3 Stars · '+city,note:'Characterful, well-rated stay with warm local hospitality'},
+       {n:city+' Comfort Residency',m:'3 Stars · '+city,note:'Comfortable, centrally located rooms'}],
+    4:[{n:'The '+city+' Grand',m:'4 Stars · '+city,note:'Premium hotel with elevated comfort and service'},
+       {n:'Regenta Central '+city,m:'4 Stars · '+city,note:'Contemporary 4-star with full amenities'}],
+    5:[{n:city+' — Luxury Collection',m:'5 Stars · '+city,note:'The finest luxury address available in '+city}]
+  };
+  return (sets[tier]||sets[4]).map(function(h){h.img='';return h;});
+}
+function renderCustomHotelBlocks(){
+  var wrap=$('custom-hotel-blocks');if(!wrap)return;
+  wrap.innerHTML='';
+  if(!S.stayStyle)return;
+  var cities=S.staySelCities.filter(function(c){return (S.nights[c]||0)>0;});
+  if(!cities.length)return;
+  var outer=document.createElement('div');
+  var note=document.createElement('div');
+  note.className='google-note';note.style.margin='0 0 16px';
+  note.innerHTML='&#127976;&nbsp; <b style="color:var(--ivory2);font-weight:400;letter-spacing:.02em">Hotel Rates</b> — live pricing sourced from Google Hotels and subject to change until booking confirmation.';
+  outer.appendChild(note);
+  cities.forEach(function(city){
+    var pool=(HOTELS[city]&&HOTELS[city][S.stayStyle])?HOTELS[city][S.stayStyle]:genericHotelPool(city,S.stayStyle);
+    var cid=cidOf(city);
+    var n=S.nights[city]||1;
+    var nightly=HOTEL_NIGHTLY[S.stayStyle]||11000;
+    var dstr=S.stayDate[city]?(' · check-in '+new Date(S.stayDate[city]).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
+    var cityDiv=document.createElement('div');cityDiv.className='hotel-city';
+    var hdr=document.createElement('div');hdr.className='hcity-hdr';
+    hdr.innerHTML='<span class="hcity-name">'+city+'</span>'
+      +'<span style="font-size:11px;color:var(--mut)">'+n+' night'+(n>1?'s':'')+dstr+' · est. '+fmtCFull(nightly)+'/night</span>';
+    cityDiv.appendChild(hdr);
+    pool.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-'+i));});
+    outer.appendChild(cityDiv);
+  });
+  wrap.appendChild(outer);
 }
 
 function overnightCities(){
   if(S.tour&&S.tour.cityNights)return Object.keys(S.tour.cityNights).filter(c=>(S.nights[c]||0)>0);
   if(S.jt==='byo'){
     if(!S.wantsOvernight)return[];
-    return S.byoCities.filter(c=>HOTELS[c]&&(S.nights[c]||0)>0);
+    return S.staySelCities.filter(c=>(S.nights[c]||0)>0);
   }
   return[];
 }
@@ -1862,10 +1954,18 @@ function hotelCardHTML(city,hh,hid){
   div.className='hotel-card'+(sel?' on':'');div.id='hc-'+hid;
   div.dataset.city=city;div.dataset.name=hh.n;div.dataset.hid=hid;
   div.addEventListener('click',function(){selHotel(this.dataset.city,this.dataset.name,this.dataset.hid);});
-  var img=document.createElement('img');img.className='hotel-img';img.src=hh.img;img.alt=hh.n;img.onerror=function(){this.style.background='#222';};
+  if(hh.img){
+    var img=document.createElement('img');img.className='hotel-img';img.src=hh.img;img.alt=hh.n;img.onerror=function(){this.style.background='#222';this.removeAttribute('src');};
+    div.appendChild(img);
+  } else {
+    var ph=document.createElement('div');ph.className='hotel-img';
+    ph.style.cssText='display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1c1c20,#26221a);color:var(--gold3);font-family:\'Cinzel\',serif;font-size:7.5px;letter-spacing:.16em;text-align:center;line-height:1.4';
+    ph.textContent='IVORY ARC';
+    div.appendChild(ph);
+  }
   var info=document.createElement('div');info.className='hotel-info';
   info.innerHTML='<div class="hotel-name">'+hh.n+'</div><div class="hotel-meta">'+hh.m+'</div><div class="hotel-note">'+hh.note+'</div><div class="hotel-sel-btn">'+(sel?'✓ Selected':'Select Stay')+'</div>';
-  div.appendChild(img);div.appendChild(info);return div;
+  div.appendChild(info);return div;
 }
 function renderHotelBlocks(){
   var wrap=$('hotel-blocks');wrap.innerHTML='';
@@ -1941,6 +2041,7 @@ function doneS5(){
     return;
   }
   if(S.jt==='byo'&&S.wantsOvernight===null){alert('Please select whether you want to stay overnight.');return;}
+  if(S.jt==='byo'&&S.wantsOvernight&&!S.staySelCities.length){alert('Please choose at least one destination to stay in.');return;}
   if(S.jt==='byo'&&S.wantsOvernight&&!S.stayStyle){alert('Please select your preferred stay style.');return;}
   if(!S.stayStyle&&S.tour&&S.tour.nights>0){alert('Please select your preferred stay style.');return;}
   const names={3:'Boutique Comfort (3*)',4:'Premium Stay (4*)',5:'Luxury Collection (5*)'};
@@ -1986,12 +2087,17 @@ function calcLoHi(){
   const pax=totalPax();
   let jLo=0,jHi=0;
   if(S.tour){const r=RATES[S.tour.id];jLo=r*pax*S.tour.days*0.9;jHi=r*pax*S.tour.days*1.15;}
-  else{const n=S.byoCities.length;jLo=n*38000*pax;jHi=n*58000*pax;}
+  else{
+    const rk=S.routeKm||Math.max(100,S.byoCities.length*150);
+    const veh=Math.round(rk*1.055)*18;
+    jLo=veh*0.95;jHi=veh*1.12;
+  }
   const hc=calcHotelCost();
   let lo=jLo+hc.lo+S.addonTotal+calcAirport();
   let hi=jHi+hc.hi+S.addonTotal+calcAirport();
   if(!S.guideOn&&S.tour){lo-=1500;hi-=1500;}
   lo+=hc.lo*0.1;hi+=hc.hi*0.1;
+  const sup=(S.jt==='byo'&&S.wantsOvernight)?totalNights()*800:0;lo+=sup;hi+=sup;
   lo*=1.05;hi*=1.05;
   return[Math.round(lo),Math.round(hi)];
 }
@@ -2005,19 +2111,29 @@ function doneS8(){collapseSec(8,calcRange());revealSec(9);}
 /* ═══════════════════════════════════════════════════════
    FIREBASE INIT
 ═══════════════════════════════════════════════════════ */
-var _fbApp,_fbAuth,_fbDb;
-(function initFirebase(){
-  var cfg={
-    apiKey:'AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM',
-    authDomain:'ivory-arc-estimator-8727e.firebaseapp.com',
-    projectId:'ivory-arc-estimator-8727e',
-    storageBucket:'ivory-arc-estimator-8727e.firebasestorage.app',
-    messagingSenderId:'551942404838',
-    appId:'1:551942404838:web:4ca6260483724506271927'
-  };
-  try{_fbApp=firebase.initializeApp(cfg);_fbAuth=firebase.auth();_fbDb=firebase.firestore();_fbAuth.useDeviceLanguage();}
-  catch(e){console.warn('Firebase init:',e);}
-})();
+var _fbApp,_fbAuth,_fbDb,_fbReady=false;
+var _FB_CFG={
+  apiKey:'AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM',
+  authDomain:'ivory-arc-estimator-8727e.firebaseapp.com',
+  projectId:'ivory-arc-estimator-8727e',
+  storageBucket:'ivory-arc-estimator-8727e.firebasestorage.app',
+  messagingSenderId:'551942404838',
+  appId:'1:551942404838:web:4ca6260483724506271927'
+};
+/* Initialise on demand. Returns true once Firebase is ready, false if the SDK
+   hasn't loaded yet (e.g. offline preview or the CDN was blocked). */
+function ensureFirebase(){
+  if(_fbReady)return true;
+  if(typeof firebase==='undefined'||!firebase.initializeApp)return false;
+  try{
+    _fbApp=(firebase.apps&&firebase.apps.length)?firebase.app():firebase.initializeApp(_FB_CFG);
+    _fbAuth=firebase.auth();_fbDb=firebase.firestore();_fbAuth.useDeviceLanguage();
+    _fbReady=true;return true;
+  }catch(e){console.warn('Firebase init deferred:',e&&e.message?e.message:e);return false;}
+}
+/* Try once the document and its external SDK scripts have finished loading. */
+if(document.readyState==='complete')ensureFirebase();
+else window.addEventListener('load',ensureFirebase);
 
 /* ═══════════════════════════════════════════════════════
    SECTION 9 — OTP VIA FIREBASE PHONE AUTH
@@ -2056,6 +2172,7 @@ function sendOTP(){
   if(!name){alert('Please enter your name.');return;}
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('email-error').style.display='block';alert('Please enter a valid email address.');return;}
   if(phone.length<6){alert('Please enter a valid mobile number.');return;}
+  if(!ensureFirebase()){alert('The verification service is still loading. Please check your internet connection and try again in a moment.');return;}
   S.phone=phone;S.customerName=name;S.customerEmail=email;S.countryCode=code;
   var fullNumber=code+phone;
   $('send-otp-btn').textContent='Sending...';$('send-otp-btn').disabled=true;
@@ -2109,8 +2226,9 @@ function verifyOTP(){
     });
 }
 function saveLead(user){
-  var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
-  if(_fbDb){_fbDb.collection('leads').add(lead).then(function(d){console.log('Lead saved:',d.id);}).catch(function(e){console.warn('Lead save:',e);});}
+  var ready=ensureFirebase();
+  var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,stayCities:S.staySelCities,stayDates:S.stayDate,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:(ready&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString()};
+  if(ready&&_fbDb){_fbDb.collection('leads').add(lead).then(function(d){console.log('Lead saved:',d.id);}).catch(function(e){console.warn('Lead save:',e);});}
   else console.log('[LEAD]',lead);
 }
 
@@ -2119,9 +2237,14 @@ function saveLead(user){
 ═══════════════════════════════════════════════════════ */
 function buildS10(){
   var pax=totalPax();
+  var isBYO=(!S.tour&&S.byoCities.length>0);
   var jCost=0,jLabel='Journey Cost';
+  /* Vehicle cost for custom routes: (route distance + 5.5% buffer) × ₹18/km */
+  var routeKm=S.routeKm||Math.max(100,S.byoCities.length*150);
+  var bufferedKm=Math.round(routeKm*1.055);
+  var vehicleCost=bufferedKm*18;
   if(S.tour){var rate=RATES[S.tour.id];jCost=rate*pax*S.tour.days;jLabel='Journey Cost <span style="font-size:10px;color:var(--mut)">'+fmtCFull(rate)+'/pp/day x '+pax+' traveller'+(pax>1?'s':'')+' x '+S.tour.days+' day'+(S.tour.days>1?'s':'')+'</span>';}
-  else if(S.byoCities.length){jCost=S.byoCities.length*45000*pax;jLabel='Journey Cost <span style="font-size:10px;color:var(--mut)">Custom route - '+S.byoCities.length+' destination'+(S.byoCities.length>1?'s':'')+'</span>';}
+  else if(isBYO){jCost=vehicleCost;jLabel='Private Vehicle &amp; Driver <span style="font-size:10px;color:var(--mut);line-height:1.7">Google Maps suggested route ~'+routeKm+' km + 5.5% journey flexibility buffer = '+bufferedKm+' km &times; \u20b918/km<br>To account for local diversions, comfort stops, route optimisation, hotel access roads, sightseeing detours and unexpected traffic conditions, a small journey flexibility buffer is applied.</span>';}
   var apCost=calcAirport();
   var apLabels={none:'No Airport Assistance',pickup:'Airport Pickup',meetgreet:'Airport Pickup + Meet & Greet',porterage:'Full Package + Porterage'};
   var apVehicle=totalPax()<=6?'SUV (1-6 pax)':'10-Seater (7-10 pax)';
@@ -2130,8 +2253,8 @@ function buildS10(){
   var addNames=[];if(S.tour&&S.tour.add)S.tour.add.forEach(function(a){if(S.addons.has(a.id))addNames.push(a.l);});
   var hc=calcHotelCost();var hotelCost=Math.round(hc.exact);var coordFee=Math.round(hotelCost*0.1);
   var hotelLines=[];var oCities=overnightCities();
-  oCities.forEach(function(city){var n=S.nights[city]||smartNights(city);var sc=STAY_COST[S.stayStyle]||{lo:0,hi:0};var mid=Math.round((sc.lo+sc.hi)/2);var hName=S.hotelSel[city]||'Est. avg';hotelLines.push(city+': '+hName+' - '+n+' night'+(n>1?'s':'')+' - '+fmtCFull(mid)+'/night');});
-  /* Driver support: ₹800/night for ALL custom overnight journeys + outside-portfolio curated */
+  oCities.forEach(function(city){var n=S.nights[city]||smartNights(city);var sc=STAY_COST[S.stayStyle]||{lo:0,hi:0};var mid=Math.round((sc.lo+sc.hi)/2);var hName=S.hotelSel[city]||'Est. avg';var ds=S.stayDate[city]?' (check-in '+new Date(S.stayDate[city]).toLocaleDateString('en-IN',{day:'numeric',month:'short'})+')':'';hotelLines.push(city+': '+hName+ds+' - '+n+' night'+(n>1?'s':'')+' - '+fmtCFull(mid)+'/night');});
+  /* Journey Support Allowance: ₹800 per overnight stay for custom overnight journeys + outside-portfolio curated */
   var nonPort=S.byoCities.filter(function(c){return !PORTFOLIO.has(c);}).length;
   var isCustomOvernight=(S.jt==='byo'&&S.wantsOvernight);
   var supportAllowance=(isCustomOvernight||nonPort>0)?totalNights()*800:0;
@@ -2141,17 +2264,22 @@ function buildS10(){
   $('s10-route-val').textContent=S.tour?S.tour.name:S.byoCities.join(' > ');
   var rows=[];
   rows.push({l:jLabel,v:jCost});
+  /* Custom routes: tolls & parking billed at actuals, no markup */
+  if(isBYO){
+    rows.push({l:'Tolls <span style="font-size:10px;color:var(--mut)">Billed at actuals, no markup</span>',note:'Actuals'});
+    rows.push({l:'Parking <span style="font-size:10px;color:var(--mut)">Billed at actuals, no markup</span>',note:'Actuals'});
+  }
   if(apCost>0)rows.push({l:(apLabels[S.apOpt]||'Airport Assistance')+(apSub?' <span style="font-size:10px;color:var(--mut)">'+apSub+'</span>':''),v:apCost});
   if(addCost>0)rows.push({l:'Activities & Experiences'+(addNames.length?' <span style="font-size:10px;color:var(--mut)">'+addNames.join(', ')+'</span>':''),v:addCost});
-  if(hotelCost>0){rows.push({l:'Accommodation'+(hotelLines.length?'<br><span style="font-size:10px;color:var(--mut);line-height:1.7">'+hotelLines.join('<br>')+'</span>':''),v:hotelCost});rows.push({l:'Accommodation Coordination (10%) <span style="font-size:10px;color:var(--mut)">Sourcing, booking & payment</span>',v:coordFee});}
-  if(supportAllowance>0)rows.push({l:'Journey Support Allowance <span style="font-size:10px;color:var(--mut)">Driver accommodation & overnight logistics</span>',v:supportAllowance});
+  if(hotelCost>0){rows.push({l:'Accommodation'+(hotelLines.length?'<br><span style="font-size:10px;color:var(--mut);line-height:1.7">'+hotelLines.join('<br>')+'</span>':''),v:hotelCost});rows.push({l:'Accommodation Coordination Fee (10%) <span style="font-size:10px;color:var(--mut)">Covers hotel sourcing, booking coordination, payment processing &amp; itinerary management</span>',v:coordFee});}
+  if(supportAllowance>0)rows.push({l:'Journey Support Allowance <span style="font-size:10px;color:var(--mut)">Covers the driver\'s accommodation, meals &amp; overnight logistics — \u20b9800 per overnight stay</span>',v:supportAllowance});
   if(guideDeduction<0)rows.push({l:'English Guide Waiver',v:guideDeduction,deduction:true});
   rows.push({l:'GST @ 5%',v:gst,dividerBefore:true});
   var h='';
   rows.forEach(function(row){
     var ds=row.dividerBefore?'border-top:1px solid var(--bd);padding-top:12px;margin-top:4px;':'';
     var vc=row.deduction?'color:var(--grn)':'';
-    var vs=row.deduction?'&minus;'+fmtCFull(-row.v):fmtCFull(row.v);
+    var vs=row.note?'<span style="font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:.12em;color:var(--gold)">'+row.note+'</span>':(row.deduction?'&minus;'+fmtCFull(-row.v):fmtCFull(row.v));
     h+='<div class="range-item" style="align-items:flex-start;'+ds+'"><div class="ri-label" style="flex:1;line-height:1.65">'+row.l+'</div><div class="ri-val" style="'+vc+';white-space:nowrap;padding-left:12px">'+vs+'</div></div>';
   });
   $('s10-line-items').innerHTML=h;
