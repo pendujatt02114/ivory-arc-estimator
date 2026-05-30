@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>Ivory Arc Travels — Journey Estimator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -26,7 +26,9 @@
 }
 html{scroll-behavior:smooth}
 body{background:var(--blk3);color:var(--ivory);font-family:'Lato',sans-serif;
-  font-weight:300;min-height:100vh;overflow-x:hidden;padding-bottom:80px}
+  font-weight:300;min-height:100vh;overflow-x:hidden;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));
+  -webkit-text-size-adjust:100%}
 img{display:block;max-width:100%}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
 input,textarea,select{font-family:inherit}
@@ -405,8 +407,9 @@ input,textarea,select{font-family:inherit}
 /* ── FLOATING ESTIMATE BAR ── */
 #est-bar{position:fixed;bottom:0;left:0;right:0;z-index:700;
   background:rgba(9,9,11,.97);backdrop-filter:blur(20px);
-  border-top:1px solid var(--gbd);height:64px;display:flex;
-  align-items:center;padding:0 20px;justify-content:space-between;gap:14px}
+  border-top:1px solid var(--gbd);min-height:64px;display:flex;
+  align-items:center;padding:0 20px;justify-content:space-between;gap:14px;
+  padding-bottom:env(safe-area-inset-bottom,0px)}
 .est-left{display:flex;flex-direction:column;gap:1px}
 .est-micro{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:.24em;
   color:var(--mut);text-transform:uppercase}
@@ -485,15 +488,82 @@ input,textarea,select{font-family:inherit}
 .pac-icon{display:none!important}
 .pac-matched{color:var(--gold)!important}
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE ──────────────────────────────────────────
+   ~85% of traffic is mobile, so the phone layout is treated
+   as a first-class target, not a fallback. */
+
+/* Tablet / large phone */
+@media(max-width:680px){
+  .est-wrap{padding:0 14px 50px}
+  .block{padding:18px 15px}
+  .pac-container{font-size:16px!important}
+  .pac-item{font-size:15px!important;padding:11px 14px!important}
+}
+
+/* Phones */
 @media(max-width:520px){
-  .sec-title{font-size:21px}
+  .sec-title{font-size:20px;line-height:1.35}
+  .sec-sub{font-size:12.5px}
   .stay-cards{flex-direction:column}
-  .f-row{flex-direction:column}
+  .stay-card{min-width:0;width:100%;text-align:left;padding:15px 16px}
+  .f-row{flex-direction:column;gap:12px}
   .f-grp{min-width:100%}
   .range-val{font-size:28px}
-  .tab{padding:10px 12px;font-size:8.5px;letter-spacing:.12em}
-  .otp-digit{width:48px;height:56px;font-size:22px}
+  .tab{padding:11px 10px;font-size:8.5px;letter-spacing:.1em}
+
+  /* Prevent iOS auto-zoom: focusable inputs must be >=16px */
+  .f-inp,.otp-inp,input[type="text"],input[type="email"],input[type="tel"],input[type="date"],select{font-size:16px}
+
+  /* Currency strip wraps gracefully */
+  .currency-strip{flex-wrap:wrap;gap:8px;padding:11px 14px}
+  .cur-pills{flex-wrap:wrap}
+  .cur-pill{padding:9px 14px;font-size:9.5px}
+
+  /* Bigger touch targets for steppers (min ~40px) */
+  .ns-btn{width:40px;height:40px;font-size:20px}
+  .ns-val{font-size:16px}
+  .st-btn{width:40px;height:40px;font-size:21px}
+  .st-val{font-size:21px}
+
+  /* Options & cards roomier for thumbs */
+  .opt{padding:15px 15px}
+  .opt-name{font-size:16px}
+  .dep-opt{padding:15px 15px}
+  .cc{padding:10px 14px;font-size:13px}
+
+  /* Section-collapsed summary rows: keep Edit reachable */
+  .sec-col{padding:13px 14px;gap:10px}
+  .sc-summary{font-size:14px}
+
+  /* Floating estimate bar: stack value over a full-width-ish button */
+  #est-bar{padding:0 14px;gap:10px;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .est-micro{font-size:7px}
+  .est-range{font-size:18px}
+  .est-view-btn{padding:11px 16px;font-size:9px}
+
+  /* Detailed investment rows: stack label above amount so long
+     descriptions don't get crushed against the number */
+  .range-item{flex-direction:column;align-items:flex-start;gap:3px}
+  .ri-val{padding-left:0!important;font-size:16px;color:var(--gold2)}
+
+  .sheet-inner{padding:18px 16px}
+  .hotel-img{width:56px;height:56px}
+  .otp-digits{gap:7px}
+  .otp-digit{width:46px;height:54px;font-size:21px}
+}
+
+/* Small / older phones */
+@media(max-width:380px){
+  .est-wrap{padding:0 11px 46px}
+  .block{padding:16px 13px}
+  .sec-title{font-size:18px}
+  .ice-txt{font-size:18px}
+  .tab{padding:10px 7px;letter-spacing:.06em}
+  .cur-lbl{display:none}
+  .est-range{font-size:16px}
+  .est-view-btn{padding:10px 13px;letter-spacing:.12em}
+  .otp-digit{width:42px;height:50px;font-size:19px}
+  .otp-digits{gap:6px}
 }
 
 </style>
@@ -1872,7 +1942,7 @@ function renderCustomCityNights(){
     h+='<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;color:var(--ivory)">'+city+'</div>';
     h+='<div style="display:flex;align-items:center">';
     h+='<button class="ns-btn" onclick="adjStayNights(\''+city.replace(/'/g,"\\'")+'\',-1)">&#8722;</button>';
-    h+='<span id="sn-'+cid+'" class="ns-val" style="width:80px;text-align:center;font-size:14px">'+cur+' night'+(cur>1?'s':'')+'</span>';
+    h+='<span id="sn-'+cid+'" class="ns-val" style="width:84px;text-align:center">'+cur+' night'+(cur>1?'s':'')+'</span>';
     h+='<button class="ns-btn" onclick="adjStayNights(\''+city.replace(/'/g,"\\'")+'\',1)">+</button>';
     h+='</div></div>';
     h+='<div style="display:flex;align-items:center;gap:10px">';
