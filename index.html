@@ -1042,8 +1042,8 @@ input,textarea,select{font-family:inherit}
 
       <div id="hotel-blocks"></div>
 
-      <div class="google-note" style="margin-top:6px">
-        🏨 &nbsp;<b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — live pricing sourced from Google Hotels and subject to change until booking confirmation. A 10% accommodation coordination fee applies.
+      <div class="google-note" style="margin-top:6px" data-hotelnote="1">
+        🏨 &nbsp;<b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — indicative estimates shown; your Journey Manager confirms exact live rates before booking. A 10% accommodation coordination fee applies.
       </div>
 
       <button class="btn-gold" id="s5-continue" onclick="doneS5()" style="display:none">Continue to Guide Preference →</button>
@@ -1409,19 +1409,22 @@ input,textarea,select{font-family:inherit}
 /* ═══════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════ */
+/* Apps Script Web App URL (…/exec). Paste once; powers leads, hotels & payment. */
+var GAS_URL='PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 const RATES={agra:7500,mathura:7500,delhi:7500,jaipur:8000,rishikesh:8000,amritsar:9000,varanasi:11000,golden:11000,corbett:11000,shimla:13000};
 const HOTEL_NIGHTLY={3:5500,4:11000,5:26500}; // per night averages per tier
+const IABASE='https://www.ivoryarctravels.com/assets/images/';
 const IMG={
-  Delhi:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-delhi-1.jpg',
-  Agra:'https://ivoryarctravels.com/wp-content/uploads/2026/05/ivory-arc-hero.jpg',
-  Jaipur:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jaipur-Hawa-Mahal-pink-city.jpg',
-  Rishikesh:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Rishikesh-Ganges-mountains.jpg',
-  Amritsar:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Amritsar-Golden-Temple-reflection.jpg',
-  Mathura:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Mathura-Vrindavan-temple.jpg',
-  Varanasi:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Varanasi-ghat-sunrise-Ganges-1.jpg',
-  'Jim Corbett':'https://ivoryarctravels.com/wp-content/uploads/2026/05/Jim-Corbett-tiger-forest-2.jpg',
-  Shimla:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg',
-  Manali:'https://ivoryarctravels.com/wp-content/uploads/2026/05/Shimla-Manali-Himalaya-snow-1.jpg',
+  Delhi:IABASE+'delhi.jpg',
+  Agra:IABASE+'agra-2.jpg',
+  Jaipur:IABASE+'jaipur.jpg',
+  Rishikesh:IABASE+'rishikesh.jpg',
+  Amritsar:IABASE+'amritsar.jpg',
+  Mathura:IABASE+'mathura-vrindavan.jpg',
+  Varanasi:IABASE+'varanasi.jpg',
+  'Jim Corbett':IABASE+'jim-corbett.jpg',
+  Shimla:IABASE+'shimla-manali.jpg',
+  Manali:IABASE+'shimla-manali.jpg',
 };
 const TOURS={
   day:[
@@ -1896,25 +1899,51 @@ function showDistBadges(km,duration,nodeCount,badgesEl,concEl){
   recalc();
 }
 function calcRouteDistance(nodes,badgesEl,concEl){
+  /* Sum EACH consecutive leg: Pickup→City1 + City1→City2 + … + →Drop.
+     (Previously only measured first→last, ignoring all middle stops.) */
+  if(nodes.length<2){showDistBadges(0,null,nodes.length,badgesEl,concEl);return;}
   if(!window.google||!google.maps||!google.maps.DistanceMatrixService){haversineFallback(nodes,badgesEl,concEl);return;}
   const svc=new google.maps.DistanceMatrixService();
-  svc.getDistanceMatrix({
-    origins:[nodes[0].label],
-    destinations:[nodes[nodes.length-1].label],
-    travelMode:google.maps.TravelMode.DRIVING,
-    unitSystem:google.maps.UnitSystem.METRIC
-  },function(result,status){
-    if(status==='OK'&&result.rows[0].elements[0].status==='OK'){
-      const km=Math.round(result.rows[0].elements[0].distance.value/1000);
-      const dur=result.rows[0].elements[0].duration.text;
-      showDistBadges(km,dur,nodes.length,badgesEl,concEl);
-    } else {haversineFallback(nodes,badgesEl,concEl);}
-  });
+  let totalKm=0,totalSec=0,done=0,failed=false;
+  const legs=nodes.length-1;
+  for(let i=0;i<legs;i++){
+    (function(idx){
+      svc.getDistanceMatrix({
+        origins:[nodes[idx].label],
+        destinations:[nodes[idx+1].label],
+        travelMode:google.maps.TravelMode.DRIVING,
+        unitSystem:google.maps.UnitSystem.METRIC
+      },function(result,status){
+        if(status==='OK'&&result.rows[0]&&result.rows[0].elements[0]&&result.rows[0].elements[0].status==='OK'){
+          totalKm+=result.rows[0].elements[0].distance.value/1000;
+          totalSec+=result.rows[0].elements[0].duration.value;
+        } else { failed=true; }
+        if(++done===legs){
+          if(failed&&totalKm===0){haversineFallback(nodes,badgesEl,concEl);return;}
+          const km=Math.round(totalKm);
+          const dur=totalSec?fmtDuration(totalSec):null;
+          showDistBadges(km,dur,nodes.length,badgesEl,concEl);
+        }
+      });
+    })(i);
+  }
+}
+function fmtDuration(sec){
+  var h=Math.floor(sec/3600),m=Math.round((sec%3600)/60);
+  return (h?h+' hr ':'')+(m?m+' min':'').trim()||'—';
 }
 function haversineFallback(nodes,badgesEl,concEl){
-  const delhi={lat:28.6139,lng:77.209};let maxKm=0;
-  nodes.forEach(n=>{const ll=CITY_LL[n.label];if(ll)maxKm=Math.max(maxKm,haverKm(delhi,ll));});
-  showDistBadges(maxKm,null,nodes.length,badgesEl,concEl);
+  /* Sum straight-line distance of each consecutive leg, then inflate ~25%
+     to approximate real road distance. Used only when Google Maps is blocked. */
+  let km=0,missing=0;
+  for(let i=0;i<nodes.length-1;i++){
+    const a=CITY_LL[nodes[i].label],b=CITY_LL[nodes[i+1].label];
+    if(a&&b)km+=haverKm(a,b)*1.25; else missing++;
+  }
+  /* If we couldn't map some cities, approximate each unknown leg at ~120 km
+     so the estimate is never absurdly low (real figure comes from Google Maps live). */
+  if(missing)km+=missing*120;
+  showDistBadges(Math.round(km),null,nodes.length,badgesEl,concEl);
 }
 function updateRoute(){
   const strip=$('route-strip'),citiesEl=$('route-cities'),badges=$('route-badges'),conc=$('concierge-box');
@@ -1942,9 +1971,23 @@ function updateRoute(){
 function doneS3(){
   let summary='';
   if(S.tour){summary=S.tour.name+' - '+S.tour.tag;buildS4FromTour();}
-  else if(S.byoCities.length){summary='Custom: '+S.byoCities.join(' - ');buildS4BYO();}
+  else if(S.byoCities.length){summary='Custom: '+fullRouteLabel();buildS4BYO();}
   else{alert('Please select a journey or build a custom route.');return;}
   collapseSec(3,summary);revealSec(4);
+}
+/* Full ordered route: Pickup → City1 → City2 → … → Drop. Used for every
+   route display and as the basis for leg-by-leg distance. */
+function routeNodes(){
+  var n=[];
+  if(S.byoPickup&&S.byoPickup.trim())n.push(S.byoPickup.trim());
+  S.byoCities.forEach(function(c){n.push(c);});
+  if(S.byoDrop&&S.byoDrop.trim())n.push(S.byoDrop.trim());
+  return n;
+}
+function fullRouteLabel(sep){
+  sep=sep||' > ';
+  var n=routeNodes();
+  return n.length?n.join(sep):S.byoCities.join(sep);
 }
 function buildS4FromTour(){
   if(!S.tour)return;
@@ -2104,6 +2147,70 @@ function onStayDate(city,val){
 }
 
 /* Hotels for any city — uses the curated list when we have it, otherwise live-sourced placeholders */
+/* ── LIVE HOTELS via backend SerpAPI proxy (JSONP) ──
+   Backend (action=hotels) returns callback(<SerpAPI JSON>). We parse the
+   `properties` array into our card shape. If the backend/key is unavailable,
+   we fall back to indicative estimates and SAY SO (no false "live" claim). */
+var _hotelJSONPn=0;
+function fetchLiveHotels(city,tier,ci,co,cb){
+  var GAS_HOTELS_URL=(typeof GAS_URL!=='undefined')?GAS_URL:'';
+  if(!GAS_HOTELS_URL||GAS_HOTELS_URL.indexOf('PASTE_')===0){cb(null);return;}
+  var cbName='hotelCB_'+(_hotelJSONPn++);
+  var done=false;
+  var t=setTimeout(function(){if(!done){done=true;cleanup();cb(null);}},9000);
+  function cleanup(){try{delete window[cbName];}catch(e){window[cbName]=undefined;}var sc=document.getElementById(cbName);if(sc)sc.remove();clearTimeout(t);}
+  window[cbName]=function(json){
+    if(done)return;done=true;cleanup();
+    try{
+      var props=(json&&json.properties)?json.properties:[];
+      var stars=({3:3,4:4,5:5})[tier]||4;
+      var mapped=props.filter(function(p){
+        var r=p.overall_rating||0;return r>=(stars>=5?4.4:stars>=4?4.0:3.3);
+      }).slice(0,3).map(function(p){
+        var rate=(p.rate_per_night&&p.rate_per_night.extracted_lowest)||0;
+        return {n:p.name||'Hotel',
+          m:(p.hotel_class||(stars+'-star'))+' · '+city,
+          note:(p.overall_rating?('Rated '+p.overall_rating+'★'):'Well-rated')+(rate?(' · approx ₹'+Math.round(rate).toLocaleString('en-IN')+'/night'):''),
+          img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||'',
+          rate:rate};
+      });
+      cb(mapped.length?mapped:null);
+    }catch(e){cb(null);}
+  };
+  var url=GAS_HOTELS_URL+(GAS_HOTELS_URL.indexOf('?')>=0?'&':'?')
+    +'action=hotels&callback='+cbName
+    +'&city='+encodeURIComponent(city)
+    +'&stars='+stars(tier)+'&ci='+encodeURIComponent(ci||'')+'&co='+encodeURIComponent(co||'');
+  var sc=document.createElement('script');sc.id=cbName;sc.src=url;
+  sc.onerror=function(){if(!done){done=true;cleanup();cb(null);}};
+  document.body.appendChild(sc);
+  function stars(t){return ({3:'3',4:'4',5:'5'})[t]||'4';}
+}
+/* Replace a city's hotel cards in place once live data arrives. */
+function injectLiveHotels(city,cityDiv,headerEl,nightlyEst,liveLabelEl){
+  var tier=S.stayStyle;
+  var ci=S.stayDate&&S.stayDate[city]?S.stayDate[city]:'';
+  var co=ci?addDaysISO(ci,(S.nights&&S.nights[city])||1):'';
+  fetchLiveHotels(city,tier,ci,co,function(live){
+    if(!live){ if(liveLabelEl) liveLabelEl.dataset.live='no'; refreshHotelNote(); return; }
+    /* remove existing cards under this cityDiv (keep header) and add live ones */
+    var cards=cityDiv.querySelectorAll('.hotel-card');cards.forEach(function(c){c.remove();});
+    var cid=cidOf?cidOf(city):city.replace(/\s+/g,'-').toLowerCase();
+    live.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-live-'+i));});
+    if(liveLabelEl) liveLabelEl.dataset.live='yes';
+    refreshHotelNote();
+  });
+}
+function addDaysISO(iso,days){try{var d=new Date(iso);d.setDate(d.getDate()+(days||1));return d.toISOString().slice(0,10);}catch(e){return '';}}
+/* Honest note text: shows "live" only if at least one city returned live data. */
+function refreshHotelNote(){
+  document.querySelectorAll('.google-note[data-hotelnote]').forEach(function(note){
+    var anyLive=!!document.querySelector('[data-livelabel][data-live="yes"]');
+    note.innerHTML=anyLive
+      ? '🏨&nbsp; <b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — live availability sourced from Google Hotels, subject to change until booking confirmation.'
+      : '🏨&nbsp; <b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — indicative estimates shown; your Journey Manager confirms exact live rates before booking.';
+  });
+}
 function genericHotelPool(city,tier){
   var sets={
     3:[{n:'Heritage Boutique '+city,m:'3 Stars · '+city,note:'Characterful, well-rated stay with warm local hospitality'},
@@ -2122,8 +2229,8 @@ function renderCustomHotelBlocks(){
   if(!cities.length)return;
   var outer=document.createElement('div');
   var note=document.createElement('div');
-  note.className='google-note';note.style.margin='0 0 16px';
-  note.innerHTML='&#127976;&nbsp; <b style="color:var(--ivory2);font-weight:400;letter-spacing:.02em">Hotel Rates</b> — live pricing sourced from Google Hotels and subject to change until booking confirmation.';
+  note.className='google-note';note.style.margin='0 0 16px';note.setAttribute('data-hotelnote','1');
+  note.innerHTML='&#127976;&nbsp; <b style="color:var(--ivory2);font-weight:400;letter-spacing:.02em">Hotel Rates</b> — checking live availability…';
   outer.appendChild(note);
   cities.forEach(function(city){
     var pool=(HOTELS[city]&&HOTELS[city][S.stayStyle])?HOTELS[city][S.stayStyle]:genericHotelPool(city,S.stayStyle);
@@ -2137,9 +2244,12 @@ function renderCustomHotelBlocks(){
       +'<span style="font-size:11px;color:var(--mut)">'+n+' night'+(n>1?'s':'')+dstr+' · est. '+fmtCFull(nightly)+'/night</span>';
     cityDiv.appendChild(hdr);
     pool.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-'+i));});
+    var ll=document.createElement('span');ll.setAttribute('data-livelabel','1');ll.style.display='none';cityDiv.appendChild(ll);
     outer.appendChild(cityDiv);
+    injectLiveHotels(city,cityDiv,hdr,nightly,ll);
   });
   wrap.appendChild(outer);
+  refreshHotelNote();
 }
 
 function overnightCities(){
@@ -2196,6 +2306,8 @@ function renderHotelBlocks(){
     hdr.appendChild(nc);cityDiv.appendChild(hdr);
     primary.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-'+i));});
     if(upgrade.length){var ul=document.createElement('div');ul.className='upgrade-lbl';ul.textContent='Upgrade Options';cityDiv.appendChild(ul);upgrade.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-up-'+i));});}
+    var llt=document.createElement('span');llt.setAttribute('data-livelabel','1');llt.style.display='none';cityDiv.appendChild(llt);
+    injectLiveHotels(city,cityDiv,hdr,nightly,llt);
     var skipDiv=document.createElement('div');skipDiv.className='hotel-skip';
     var skipA=document.createElement('a');skipA.textContent='Skip - use estimated average';
     (function(c){skipA.onclick=function(){skipHotel(c);};})(city);
@@ -2429,17 +2541,14 @@ function verifyOTP(){
 }
 function saveLead(user){
   var ready=ensureFirebase();
-  var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,stayCities:S.staySelCities,stayDates:S.stayDate,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:(ready&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString()};
+  var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:fullRouteLabel(),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,stayCities:S.staySelCities,stayDates:S.stayDate,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:(ready&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString()};
   if(ready&&_fbDb){_fbDb.collection('leads').add(lead).then(function(d){console.log('Lead saved:',d.id);}).catch(function(e){console.warn('Lead save:',e);});}
   else console.log('[LEAD]',lead);
   /* Also notify the team backend (Sheet + email + WhatsApp). Non-blocking. */
   postLeadToBackend();
 }
-/* ── Apps Script backend (Sheet / email / WhatsApp / Razorpay) ──
-   Paste your deployed Web App URL (…/exec) here once. */
-const GAS_URL='https://script.google.com/macros/s/AKfycbyklco3FboT1Kbmc1Ee5GMNKBjqn5JB07TMaOwLnU2P_b2zQGMww08UkBPmMzS5pUXb/exec';
 function leadPayload(extra){
-  var route=S.tour?S.tour.name:S.byoCities.join(' > ');
+  var route=S.tour?S.tour.name:fullRouteLabel();
   var p={
     name:S.customerName||'',email:S.customerEmail||'',phone:(S.countryCode||'+91')+' '+(S.phone||''),
     destination:route,customRoute:S.tour?'':route,
@@ -2493,7 +2602,7 @@ function buildS10(){
   var guideDeduction=(!S.guideOn&&S.tour)?-1500:0;
   var subtotal=jCost+apCost+addCost+hotelCost+coordFee+supportAllowance+guideDeduction;
   var gst=Math.round(subtotal*0.05);var total=subtotal+gst;var pp=pax?Math.round(total/pax):total;
-  $('s10-route-val').textContent=S.tour?S.tour.name:S.byoCities.join(' > ');
+  $('s10-route-val').textContent=S.tour?S.tour.name:fullRouteLabel();
   var rows=[];
   rows.push({l:jLabel,v:jCost});
   /* Custom routes: tolls & parking billed at actuals, no markup */
@@ -2542,7 +2651,7 @@ function openJourneySheet(){
   function secHead(txt){return '<div style="font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin:18px 0 4px;padding-top:14px;border-top:1px solid rgba(201,168,76,.18)">'+txt+'</div>';}
   function chip(txt){return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:14px;border:1px solid var(--gbd);background:var(--gbg);color:var(--gold2);font-size:11px;margin:3px 3px 0 0">&#10003; '+txt+'</span>';}
   var rows='';
-  var routeName=S.tour?S.tour.name:(S.byoCities.length?S.byoCities.join(' > '):'Route not yet selected');
+  var routeName=S.tour?S.tour.name:(routeNodes().length?fullRouteLabel():'Route not yet selected');
   $('js-route').textContent=routeName;
   rows+=secHead('Travel Details');
   if(S.arrivalDate){var d=new Date(S.arrivalDate);rows+=row('&#128197;','Arrival Date',d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));}
@@ -2654,7 +2763,7 @@ function startPayment(){
       body:JSON.stringify({action:'createOrder',currency:S.currency,inrAmount:inr,
         estimateRef:S.estimateRef||'',name:S.customerName||'',email:S.customerEmail||'',
         phone:(S.countryCode||'+91')+' '+(S.phone||''),
-        tourReference:(S.tour?S.tour.name:S.byoCities.join(' > '))})});
+        tourReference:(S.tour?S.tour.name:fullRouteLabel())})});
   }).then(function(r){return r.json();}).then(function(o){
     if(!o||!o.success){throw new Error((o&&o.error)||'Order creation failed');}
     var opts={
@@ -2676,7 +2785,7 @@ function verifyPayment(resp,inr){
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(Object.assign({action:'verifyPayment',amountInr:inr,estimateRef:S.estimateRef||'',
       name:S.customerName||'',email:S.customerEmail||'',phone:(S.countryCode||'+91')+' '+(S.phone||''),
-      destination:(S.tour?S.tour.name:S.byoCities.join(' > '))},resp))})
+      destination:(S.tour?S.tour.name:fullRouteLabel())},resp))})
     .then(function(r){return r.json();}).then(function(v){
       if(v&&v.success){
         $('pay-ok-ref').textContent='Booking Reference: '+(v.booking_reference||S.estimateRef||'');
