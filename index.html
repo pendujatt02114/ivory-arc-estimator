@@ -315,6 +315,18 @@ input,textarea,select{font-family:inherit}
 .int-chip.on{border-color:var(--gold);background:var(--gbg2);color:var(--gold2);
   box-shadow:0 0 12px rgba(201,168,76,.18)}
 
+/* ── SELECTED DESTINATION PILLS ── */
+.sel-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.sel-pills:empty{display:none}
+.sel-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 10px 6px 12px;border-radius:100px;
+  border:1px solid var(--gold);background:var(--gbg2);color:var(--gold2);
+  font-size:12.5px;font-weight:600;letter-spacing:.02em;animation:pillIn .25s ease}
+.sel-pill .px{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border-radius:50%;background:rgba(201,162,74,.22);color:var(--gold2);font-size:11px;line-height:1;
+  cursor:pointer;transition:.18s}
+.sel-pill .px:hover{background:var(--gold);color:#1a1408}
+@keyframes pillIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
 /* ── BYO ROUTE BUILDER ── */
 .places-wrap{position:relative}
 .places-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);
@@ -375,6 +387,47 @@ input,textarea,select{font-family:inherit}
   color:var(--ivory);text-transform:uppercase}
 .rt-val{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold2);font-weight:500}
 .rt-pp{font-size:11px;color:var(--mut);text-align:right;margin-top:2px}
+
+/* ── PAYMENT / BOOKING SECTION ── */
+.pay-wrap{margin-top:22px}
+.pay-trust{border:1px solid var(--gbd);border-radius:12px;background:var(--gbg);padding:20px 16px;text-align:center}
+.pay-trust .pt-secure{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ivory2)}
+.pay-trust .pt-secure svg{width:16px;height:16px;stroke:var(--gold);fill:none}
+.pay-trust .pt-rzp{height:30px;width:auto;vertical-align:middle}
+.pay-trust .pt-sub{font-size:11px;color:var(--mut);margin-top:6px}
+.pay-cards{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px;margin-top:13px}
+.pay-cards img{height:34px;width:auto;display:block}
+.pol-head{margin:24px 0 4px}
+.pol-title{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--ivory)}
+.pol-sub{font-size:12px;color:var(--mut);line-height:1.6;margin-top:4px}
+.acc{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.acc-item{border:1px solid var(--gbd);border-radius:10px;overflow:hidden;background:var(--blk3)}
+.acc-q{width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ivory2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.acc-q .ico{color:var(--gold);font-size:18px;line-height:1;transition:transform .25s;flex:none}
+.acc-item.open .acc-q .ico{transform:rotate(45deg)}
+.acc-a{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:13px;color:var(--mut);line-height:1.7}
+.acc-a-inner{padding:0 16px 16px}
+.acc-a-inner b{color:var(--ivory2)}
+.acc-a-inner .warn{color:var(--gold2);font-weight:600}
+.acc-a-inner ul{margin:6px 0 0;padding-left:18px}
+.acc-a-inner li{margin:3px 0}
+.pay-accept{margin-top:18px;display:flex;gap:11px;align-items:flex-start;border:1px solid var(--gbd);border-radius:10px;padding:14px 16px;background:var(--gbg);cursor:pointer}
+.pay-accept input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--gold);cursor:pointer}
+.pay-accept label{font-size:12.5px;color:var(--ivory2);line-height:1.6;cursor:pointer}
+.pay-gate-msg{font-size:11.5px;color:var(--gold2);margin-top:8px;display:none}
+.pay-amt-row{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.pay-amt-opt{font-size:12px;color:var(--mid);cursor:pointer;border:1px solid var(--bd);border-radius:100px;padding:7px 14px;transition:.2s}
+.pay-amt-opt.on{border-color:var(--gold);background:var(--gbg2);color:var(--gold2)}
+.pay-custom-wrap{display:none;align-items:center;gap:8px;margin-top:10px;justify-content:center}
+.pay-custom-wrap input{background:var(--blk3);border:1px solid var(--gbd);border-radius:8px;color:var(--ivory);padding:9px 12px;font-size:14px;width:150px;text-align:center}
+.btn-pay{width:100%;margin-top:16px;padding:15px;border-radius:10px;border:none;background:var(--gold);color:#1a1408;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:.2s}
+.btn-pay:hover:not(:disabled){background:var(--gold2)}
+.btn-pay:disabled{opacity:.4;cursor:not-allowed}
+.pay-ok{display:none;margin-top:18px;border:1px solid var(--gbd);border-radius:12px;background:var(--gbg);padding:24px 18px;text-align:center}
+.pay-ok .ok-ic{font-size:34px}
+.pay-ok h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold2);margin:8px 0 4px}
+.pay-ok p{font-size:13px;color:var(--ivory2);line-height:1.7}
+.pay-ok .ref{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:.08em;margin-top:8px}
 
 /* ── OTP ── */
 .otp-box{text-align:center;padding:24px 20px}
@@ -571,6 +624,8 @@ input,textarea,select{font-family:inherit}
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <!-- Razorpay Checkout -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
@@ -578,7 +633,7 @@ input,textarea,select{font-family:inherit}
 <div id="hdr">
   <div class="hdr-inner">
     <div class="hdr-logo">
-      <img src="https://ivoryarctravels.com/wp-content/uploads/2026/05/ChatGPT-Image-Jan-10-2026-09_54_20-AM-1.png" alt="Ivory Arc Travels"/>
+      <img src="https://www.ivoryarctravels.com/assets/images/logo.png" alt="Ivory Arc Travels"/>
     </div>
     <div class="hdr-sep"></div>
     <div class="hdr-trust">
@@ -852,6 +907,7 @@ input,textarea,select{font-family:inherit}
             <span class="places-ico">🔍</span>
             <input class="places-inp" id="byo-dest1" type="text" placeholder="Search another city or region in North India…"/>
           </div>
+          <div class="sel-pills" id="sel-pills"></div>
         </div>
         <div class="f-grp" style="margin-bottom:18px">
           <label class="f-lbl">Add Another Destination</label>
@@ -1219,6 +1275,77 @@ input,textarea,select{font-family:inherit}
 
         <div id="s10-currency-note" style="margin-top:14px;padding:11px 14px;border-radius:10px;border:1px solid var(--bd);font-size:11px;color:var(--mut);display:none">
           Currency conversion reference: 1 USD = ₹85 &nbsp;·&nbsp; 1 EUR = ₹100. All amounts are indicative.
+        </div>
+
+        <!-- ═══ BOOKING / PAYMENT ═══ -->
+        <div class="pay-wrap" id="pay-wrap">
+
+          <!-- 1) RAZORPAY TRUST FOOTER (before policy) -->
+          <div class="pay-trust">
+            <div class="pt-secure">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              <span>Secure payments powered by</span>
+              <img class="pt-rzp" src="https://www.ivoryarctravels.com/assets/images/razorpay-badge.png" alt="Razorpay"/>
+            </div>
+            <div class="pt-sub">We accept all major credit &amp; debit cards</div>
+            <div class="pay-cards">
+              <img src="https://www.ivoryarctravels.com/assets/images/card-visa.png" alt="Visa"/>
+              <img src="https://www.ivoryarctravels.com/assets/images/card-mastercard.png" alt="Mastercard"/>
+              <img src="https://www.ivoryarctravels.com/assets/images/card-amex.png" alt="American Express"/>
+              <img src="https://www.ivoryarctravels.com/assets/images/card-discover.png" alt="Discover"/>
+              <img src="https://www.ivoryarctravels.com/assets/images/card-rupay.png" alt="RuPay"/>
+            </div>
+          </div>
+
+          <!-- 2) POLICY -->
+          <div class="pol-head">
+            <div class="pol-title">Booking Confirmation, Payment &amp; Cancellation Policy</div>
+            <div class="pol-sub">Please review the following information before confirming your booking with Ivory Arc Travels.</div>
+          </div>
+          <div class="acc" id="policy-acc">
+            <div class="acc-item"><button type="button" class="acc-q" onclick="togAcc(this)">Confirming Your Journey<span class="ico">+</span></button>
+              <div class="acc-a"><div class="acc-a-inner">To confirm your selected itinerary, Ivory Arc Travels requires a booking commitment payment of <b>INR 5,000</b> (or the equivalent in your selected currency). This payment allows us to:<ul><li>Lock hotel rates with suppliers.</li><li>Reserve transport and operational resources.</li><li>Allocate a dedicated Journey Manager.</li><li>Begin pre-tour planning activities.</li><li>Ensure resources are reserved for genuine travel enquiries.</li></ul>The INR 5,000 commitment payment is not an additional fee and will be adjusted against the total tour cost.</div></div>
+            </div>
+            <div class="acc-item"><button type="button" class="acc-q" onclick="togAcc(this)">Making Changes To Your Itinerary<span class="ico">+</span></button>
+              <div class="acc-a"><div class="acc-a-inner">You may revise the itinerary after making the INR 5,000 booking commitment payment &mdash; generate a new estimate, add or remove services, modify hotels, sightseeing or travel dates. No additional commitment payment is required; the original INR 5,000 is automatically adjusted against the revised booking.<br><br><span class="warn">IMPORTANT:</span> Once Ivory Arc Travels issues the Final GST-Compliant Invoice, <span class="warn">no changes shall be allowed</span> &mdash; including dates, hotels, vehicle, sightseeing, route, guest count, package modifications or any itinerary revisions. The Final GST-Compliant Invoice is the final booking confirmation document for operational, accounting and taxation purposes.</div></div>
+            </div>
+            <div class="acc-item"><button type="button" class="acc-q" onclick="togAcc(this)">Payment Schedule<span class="ico">+</span></button>
+              <div class="acc-a"><div class="acc-a-inner"><b>Booking Commitment Payment</b> &mdash; INR 5,000, due immediately upon booking confirmation.<br><br><b>Second Payment</b> &mdash; 50% of total tour value, due at least 7 days before the tour start date. The INR 5,000 commitment forms part of this 50% and is adjusted automatically.<br><br><i>Example:</i> Total INR 100,000 &rarr; 50% = INR 50,000 &rarr; already paid INR 5,000 &rarr; balance due INR 45,000.<br><br><b>Final Payment</b> &mdash; remaining balance, due 24 hours before the tour start date. On receipt of the 50% payment we generate the Final GST-Compliant Invoice, send it to you, and lock the itinerary from further modifications.</div></div>
+            </div>
+            <div class="acc-item"><button type="button" class="acc-q" onclick="togAcc(this)">Cancellation &amp; Refund Policy<span class="ico">+</span></button>
+              <div class="acc-a"><div class="acc-a-inner"><b>More than 7 days before start:</b> 100% refund of the INR 5,000 commitment. No cancellation fee.<br><br><b>7 days to 48 hours before:</b> 100% refund of all amounts paid, excluding GST already invoiced and deposited.<br><br><b>48 to 24 hours before:</b> 85% refund of all amounts paid (excluding GST); 15% retained for supplier commitments and operational expenses.<br><br><b>Within 24 hours of start:</b> no refund of commitment or advance payment &mdash; hotels, transport and resources are already confirmed.<br><br><b>Within 24 hours after full payment:</b> 50% of total tour value refunded; GST non-refundable.</div></div>
+            </div>
+            <div class="acc-item"><button type="button" class="acc-q" onclick="togAcc(this)">Important Booking Conditions<span class="ico">+</span></button>
+              <div class="acc-a"><div class="acc-a-inner"><ul><li>Refunds are issued to the original payment source.</li><li>Refund processing timeline is 7&ndash;10 business days.</li><li>GST already invoiced and deposited is non-refundable.</li><li>Acceptance of this policy forms part of the booking contract between you and Ivory Arc Travels.</li><li>Ivory Arc Travels reserves the right to review exceptional circumstances on a case-by-case basis.</li></ul></div></div>
+            </div>
+          </div>
+
+          <!-- 3) ACCEPTANCE CHECKBOX -->
+          <div class="pay-accept" onclick="if(event.target.tagName!=='INPUT'){var c=document.getElementById('policy-accept');c.checked=!c.checked;onAcceptChange();}">
+            <input type="checkbox" id="policy-accept" onchange="onAcceptChange()"/>
+            <label for="policy-accept">I have read, understood and agree to the Booking Confirmation, Payment &amp; Cancellation Policy of Ivory Arc Travels.</label>
+          </div>
+          <div class="pay-gate-msg" id="pay-gate-msg">You must accept the Booking Confirmation, Payment &amp; Cancellation Policy before proceeding to payment.</div>
+
+          <!-- 4) AMOUNT + PAY -->
+          <div class="pay-amt-row">
+            <span class="pay-amt-opt on" id="amt-fixed" onclick="setAmtMode('fixed')">Commitment advance</span>
+            <span class="pay-amt-opt" id="amt-custom" onclick="setAmtMode('custom')">Pay a custom amount</span>
+          </div>
+          <div class="pay-custom-wrap" id="pay-custom-wrap">
+            <span id="cust-amt-sym" style="color:var(--gold2);font-size:14px">&#8377;</span>
+            <input type="number" id="cust-amt-inp" min="5000" step="100" placeholder="5000" oninput="onCustomAmt()"/>
+            <span id="cust-amt-hint" style="font-size:11px;color:var(--mut)"></span>
+          </div>
+          <button class="btn-pay" id="btn-pay" disabled onclick="startPayment()">Proceed To Pay &#8377;5,000</button>
+
+          <!-- SUCCESS -->
+          <div class="pay-ok" id="pay-ok">
+            <div class="ok-ic">&#10003;</div>
+            <h3>Booking Confirmed</h3>
+            <p>Payment received successfully.<br>A dedicated Journey Manager will contact you shortly.</p>
+            <div class="ref" id="pay-ok-ref"></div>
+          </div>
         </div>
 
         <button class="btn-solid" style="margin-top:18px" onclick="doneFinal()">Continue With Concierge Planning →</button>
@@ -1651,6 +1778,26 @@ function togCity(chip){
   chip.classList.toggle('on');
   chip.classList.contains('on')?(S.byoCities.includes(city)||S.byoCities.push(city)):(S.byoCities=S.byoCities.filter(c=>c!==city));
   updateBYOPlaceholders();
+  renderSelPills();
+  updateRoute();
+  $('s3-continue').style.display=S.byoCities.length?'block':'none';
+  recalc();
+}
+/* Selected-destination pills: chosen cities shown as removable pills so the
+   customer sees a clear confirmation of their route. Pricing logic untouched. */
+function renderSelPills(){
+  const el=$('sel-pills');if(!el)return;
+  el.innerHTML=S.byoCities.map(function(c){
+    return '<span class="sel-pill">'+c+'<span class="px" title="Remove" onclick="removeCity(\''+
+      String(c).replace(/'/g,"\\'")+'\')">&#10005;</span></span>';
+  }).join('');
+}
+function removeCity(city){
+  S.byoCities=S.byoCities.filter(function(c){return c!==city;});
+  const chip=document.querySelector('[data-city="'+city+'"]');
+  if(chip)chip.classList.remove('on');
+  updateBYOPlaceholders();
+  renderSelPills();
   updateRoute();
   $('s3-continue').style.display=S.byoCities.length?'block':'none';
   recalc();
@@ -2285,6 +2432,36 @@ function saveLead(user){
   var lead={name:S.customerName,email:S.customerEmail,phone:S.phone,countryCode:S.countryCode||'+91',uid:user?user.uid:null,route:S.tour?S.tour.name:S.byoCities.join(' > '),journeyType:S.jt,arrivalDate:S.arrivalDate,hotels:S.hotelSel,activities:[...S.addons],travellers:{adults:S.pax.adults,children:S.pax.children,seniors:S.pax.seniors},stayStyle:S.stayStyle,stayCities:S.staySelCities,stayDates:S.stayDate,guideOn:S.guideOn,airportOpt:S.apOpt,departure:S.departure,currency:S.currency,estimateDisplay:calcRange(),nights:S.nights,timestamp:(ready&&firebase.firestore&&firebase.firestore.FieldValue)?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString()};
   if(ready&&_fbDb){_fbDb.collection('leads').add(lead).then(function(d){console.log('Lead saved:',d.id);}).catch(function(e){console.warn('Lead save:',e);});}
   else console.log('[LEAD]',lead);
+  /* Also notify the team backend (Sheet + email + WhatsApp). Non-blocking. */
+  postLeadToBackend();
+}
+/* ── Apps Script backend (Sheet / email / WhatsApp / Razorpay) ──
+   Paste your deployed Web App URL (…/exec) here once. */
+const GAS_URL='PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+function leadPayload(extra){
+  var route=S.tour?S.tour.name:S.byoCities.join(' > ');
+  var p={
+    name:S.customerName||'',email:S.customerEmail||'',phone:(S.countryCode||'+91')+' '+(S.phone||''),
+    destination:route,customRoute:S.tour?'':route,
+    estimateTotal:(S.finalTotalDisplay||calcRange()||''),
+    groupSize:(totalPax()+' ('+S.pax.adults+'A'+(S.pax.children?'/'+S.pax.children+'C':'')+(S.pax.seniors?'/'+S.pax.seniors+'S':'')+')'),
+    nights:(S.nights?Object.keys(S.nights).map(function(c){return c+':'+S.nights[c];}).join(', '):''),
+    guide:S.guideOn?'Yes':'No',
+    hotelSelection:(S.hotelSel?Object.keys(S.hotelSel).map(function(c){return c+': '+S.hotelSel[c];}).join(' | '):''),
+    airportServices:S.apOpt||'',travellingAs:S.travellingAs||'',source:'estimator',
+    estimateRef:S.estimateRef||''
+  };
+  if(extra)for(var k in extra)p[k]=extra[k];
+  return p;
+}
+function postLeadToBackend(extra){
+  if(!GAS_URL||GAS_URL.indexOf('PASTE_')===0){console.warn('[GAS] URL not set — skipping backend lead');return Promise.resolve(null);}
+  /* text/plain = "simple" request, avoids the CORS preflight Apps Script cannot answer */
+  return fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(leadPayload(extra))})
+    .then(function(r){return r.json();})
+    .then(function(j){if(j&&j.estimateRef)S.estimateRef=j.estimateRef;return j;})
+    .catch(function(e){console.warn('[GAS] lead post failed',e);return null;});
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2340,8 +2517,10 @@ function buildS10(){
   $('s10-line-items').innerHTML=h;
   $('s10-total-val').textContent=fmtCFull(total);
   $('s10-pp').textContent=fmtCFull(pp)+' per person';
+  S.finalInr=total;S.finalTotalDisplay=fmtCFull(total);
   var cnEl=$('s10-currency-note');if(cnEl)cnEl.style.display=S.currency!=='INR'?'block':'none';
   var noteEl=$('s10-cur-note');if(noteEl)noteEl.textContent=S.currency!=='INR'?'Amounts shown in '+S.currency+'. Rate: 1 USD = \u20b985 / 1 EUR = \u20b9100':'';
+  if(typeof refreshAdvanceUI==='function')refreshAdvanceUI();
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2413,6 +2592,100 @@ function openAddonsSheet(){
 }
 function openSheet(id){$('backdrop').classList.add('on');$(id).classList.add('on');}
 function closeAllSheets(){$('backdrop').classList.remove('on');['addons-sheet','journey-sheet'].forEach(id=>$(id).classList.remove('on'));}
+/* ═══════════════════════════════════════════════════════
+   BOOKING / PAYMENT  (advance shown in the customer's currency)
+═══════════════════════════════════════════════════════ */
+var PAY={mode:'fixed'};            // 'fixed' = 5000 INR commitment, 'custom' = >=5000 INR
+function togAcc(btn){
+  var item=btn.parentElement;
+  var open=item.classList.contains('open');
+  // collapse all (one open at a time), then toggle this one
+  document.querySelectorAll('#policy-acc .acc-item').forEach(function(it){
+    it.classList.remove('open');it.querySelector('.acc-a').style.maxHeight='0px';
+  });
+  if(!open){item.classList.add('open');var a=item.querySelector('.acc-a');a.style.maxHeight=a.querySelector('.acc-a-inner').scrollHeight+'px';}
+}
+function advanceInr(){
+  if(PAY.mode==='custom'){var v=Math.round(Number(($('cust-amt-inp')||{}).value)||0);return v;}
+  return 5000;
+}
+function fmtAdvance(inr){
+  // mirror estimator currency: INR shows ₹, else converted via CONV
+  if(S.currency==='INR')return '\u20b9'+inr.toLocaleString('en-IN');
+  var v=inr/CONV[S.currency];
+  return SYM[S.currency]+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function refreshAdvanceUI(){
+  var sym=$('cust-amt-sym');if(sym)sym.innerHTML=(S.currency==='INR'?'\u20b9':SYM[S.currency]);
+  var btn=$('btn-pay');if(!btn)return;
+  var inr=advanceInr();
+  if(PAY.mode==='custom'){
+    var hint=$('cust-amt-hint');
+    if(inr<5000){if(hint)hint.textContent='Minimum '+fmtAdvance(5000);}
+    else{if(hint)hint.textContent='= '+(S.currency==='INR'?'':fmtAdvance(inr)+' ');}
+  }
+  btn.textContent='Proceed To Pay '+fmtAdvance(PAY.mode==='custom'?(inr>=5000?inr:5000):5000);
+}
+function setAmtMode(m){
+  PAY.mode=m;
+  $('amt-fixed').classList.toggle('on',m==='fixed');
+  $('amt-custom').classList.toggle('on',m==='custom');
+  $('pay-custom-wrap').style.display=(m==='custom')?'flex':'none';
+  refreshAdvanceUI();onAcceptChange();
+}
+function onCustomAmt(){refreshAdvanceUI();onAcceptChange();}
+function onAcceptChange(){
+  var ok=$('policy-accept')&&$('policy-accept').checked;
+  var amtOk=(PAY.mode!=='custom')||(advanceInr()>=5000);
+  var btn=$('btn-pay');
+  btn.disabled=!(ok&&amtOk);
+  $('pay-gate-msg').style.display=ok?'none':'block';
+}
+function startPayment(){
+  if(!$('policy-accept').checked){onAcceptChange();return;}
+  var inr=PAY.mode==='custom'?advanceInr():5000;
+  if(inr<5000){onAcceptChange();return;}
+  if(!GAS_URL||GAS_URL.indexOf('PASTE_')===0){alert('Payment is not configured yet (backend URL missing).');return;}
+  var btn=$('btn-pay');btn.disabled=true;btn.textContent='Starting secure payment…';
+
+  // ensure a lead/ref exists, then create the order server-side
+  postLeadToBackend().then(function(){
+    return fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'createOrder',currency:S.currency,inrAmount:inr,
+        estimateRef:S.estimateRef||'',name:S.customerName||'',email:S.customerEmail||'',
+        phone:(S.countryCode||'+91')+' '+(S.phone||''),
+        tourReference:(S.tour?S.tour.name:S.byoCities.join(' > '))})});
+  }).then(function(r){return r.json();}).then(function(o){
+    if(!o||!o.success){throw new Error((o&&o.error)||'Order creation failed');}
+    var opts={
+      key:o.key_id,amount:o.amount,currency:o.currency,order_id:o.order_id,
+      name:'Ivory Arc Travels',description:'Booking Commitment Payment',
+      image:'https://www.ivoryarctravels.com/assets/images/logo.png',
+      prefill:{name:S.customerName||'',email:S.customerEmail||'',contact:(S.phone||'')},
+      theme:{color:'#c9a24a'},
+      handler:function(resp){verifyPayment(resp,inr);},
+      modal:{ondismiss:function(){btn.disabled=false;refreshAdvanceUI();}}
+    };
+    var rzp=new Razorpay(opts);
+    rzp.on('payment.failed',function(){alert('Payment failed or was declined. Please try again.');btn.disabled=false;refreshAdvanceUI();});
+    rzp.open();
+  }).catch(function(e){alert('Could not start payment: '+e.message);btn.disabled=false;refreshAdvanceUI();});
+}
+function verifyPayment(resp,inr){
+  var btn=$('btn-pay');btn.textContent='Confirming payment…';
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(Object.assign({action:'verifyPayment',amountInr:inr,estimateRef:S.estimateRef||'',
+      name:S.customerName||'',email:S.customerEmail||'',phone:(S.countryCode||'+91')+' '+(S.phone||''),
+      destination:(S.tour?S.tour.name:S.byoCities.join(' > '))},resp))})
+    .then(function(r){return r.json();}).then(function(v){
+      if(v&&v.success){
+        $('pay-ok-ref').textContent='Booking Reference: '+(v.booking_reference||S.estimateRef||'');
+        $('pay-ok').style.display='block';
+        btn.style.display='none';
+        $('pay-ok').scrollIntoView({behavior:'smooth',block:'center'});
+      }else{alert('Payment could not be verified. If money was deducted, contact us with your payment ID. '+((v&&v.error)||''));btn.disabled=false;refreshAdvanceUI();}
+    }).catch(function(e){alert('Verification error: '+e.message+'. Please contact us.');btn.disabled=false;refreshAdvanceUI();});
+}
 function doneFinal(){alert('Thank you! Your journey concierge will be in touch within 2 hours to begin planning your perfect North India experience.');}
 
 /* ═══════════════════════════════════════════════════════
@@ -2428,8 +2701,8 @@ function initGoogleMaps(){
       ac.addListener('place_changed',function(){var p=ac.getPlace();if(p&&(p.name||p.formatted_address))cb(p,inp);});
     }
     mkAC('byo-pickup',globalOpts,function(p,inp){var name=p.name||(p.formatted_address||'').split(',')[0];S.byoPickup=name;inp.value=name;updateRoute();});
-    mkAC('byo-dest1',cityOpts,function(p,inp){var city=p.name.split(',')[0].trim();inp.value='';if(!S.byoCities.includes(city)){S.byoCities.push(city);updateRoute();}var chip=document.querySelector('[data-city="'+city+'"]');if(chip&&!chip.classList.contains('on'))chip.classList.add('on');});
-    mkAC('byo-dest2',cityOpts,function(p,inp){var city=p.name.split(',')[0].trim();inp.value='';if(!S.byoCities.includes(city)){S.byoCities.push(city);updateRoute();}var chip=document.querySelector('[data-city="'+city+'"]');if(chip&&!chip.classList.contains('on'))chip.classList.add('on');});
+    mkAC('byo-dest1',cityOpts,function(p,inp){var city=p.name.split(',')[0].trim();inp.value='';if(!S.byoCities.includes(city)){S.byoCities.push(city);updateBYOPlaceholders();renderSelPills();updateRoute();}var chip=document.querySelector('[data-city="'+city+'"]');if(chip&&!chip.classList.contains('on'))chip.classList.add('on');$('s3-continue').style.display=S.byoCities.length?'block':'none';});
+    mkAC('byo-dest2',cityOpts,function(p,inp){var city=p.name.split(',')[0].trim();inp.value='';if(!S.byoCities.includes(city)){S.byoCities.push(city);updateBYOPlaceholders();renderSelPills();updateRoute();}var chip=document.querySelector('[data-city="'+city+'"]');if(chip&&!chip.classList.contains('on'))chip.classList.add('on');$('s3-continue').style.display=S.byoCities.length?'block':'none';});
     mkAC('byo-drop',globalOpts,function(p,inp){var name=p.name||(p.formatted_address||'').split(',')[0];S.byoDrop=name;inp.value=name;updateRoute();checkOneWay();});
     mkAC('dep-hotel-inp',globalOpts,function(p,inp){S.depHotel=p.name||(p.formatted_address||'').split(',')[0];});
   }catch(e){console.log('Maps init:',e);}
