@@ -2147,6 +2147,100 @@ function onStayDate(city,val){
 }
 
 /* Hotels for any city — uses the curated list when we have it, otherwise live-sourced placeholders */
+/* ═══════════════════════════════════════════════════════════════════
+   HOTEL SELECTION ENGINE
+   Tiers: 3 = Comfort, 4 = Premium, 5 = Luxury.
+   Rank by a CONFIDENCE score (rating + review volume), never rating alone,
+   so a 4.9 with 12 reviews can't beat a 4.7 with 4,000.
+   Three slots, all from the SAME selected tier:
+     • Our Recommendation = highest confidence score
+     • Most Popular       = most reviews of the rest
+     • Best Value         = lowest nightly price of the rest
+   Relax REVIEW thresholds only (never rating). Then supplement with curated.
+   ═══════════════════════════════════════════════════════════════════ */
+var LUX_BRANDS=['taj','oberoi','leela','itc','rambagh','hyatt regency','park hyatt',
+  'jw marriott','st. regis','st regis','ritz carlton','ritz-carlton','six senses','aman'];
+
+function hotelScore(rating,reviews){
+  return (Number(rating)||0)*100 + (reviews>0?Math.log10(reviews):0)*20;
+}
+function normHotel(p,city){
+  var rate=(p.rate_per_night&&p.rate_per_night.extracted_lowest)||0;
+  var rating=Number(p.overall_rating)||0;
+  var reviews=Number(p.reviews)||0;
+  var cls=Number(p.extracted_hotel_class||(p.hotel_class?parseInt(p.hotel_class,10):0))||0;
+  return {n:p.name||'Hotel',rating:rating,reviews:reviews,price:rate,cls:cls,
+    m:((p.hotel_class||(cls?cls+'-star':''))?((p.hotel_class||cls+'-star')+' · '):'')+city,
+    img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||'',
+    score:hotelScore(rating,reviews),source:'live'};
+}
+function isLux(h){
+  var nm=(h.n||'').toLowerCase();
+  var brand=LUX_BRANDS.some(function(b){return nm.indexOf(b)>=0;});
+  return (h.cls>=5)||brand||(h.rating>4.6&&h.reviews>500);
+}
+/* Qualify candidates for a tier, relaxing review count (never rating). */
+function tierQualify(cands,tier){
+  var luxuryLimited=false,pool=[];
+  function byReviews(minRating,steps){
+    var out=[];
+    for(var i=0;i<steps.length;i++){
+      out=cands.filter(function(h){return h.rating>minRating&&h.reviews>=steps[i];});
+      if(out.length>=3)break;
+    }
+    return out;
+  }
+  if(tier===5){
+    pool=cands.filter(isLux);
+    if(pool.length===0)luxuryLimited=true;
+    if(pool.length<3){
+      var prem=byReviews(4.2,[200,100,50]).filter(function(h){return pool.indexOf(h)<0;});
+      pool=pool.concat(prem);
+    }
+  } else if(tier===4){
+    pool=byReviews(4.2,[200,100,50]);
+  } else {
+    pool=byReviews(4.0,[100,50,25]);
+  }
+  return {pool:pool,luxuryLimited:luxuryLimited};
+}
+/* Assign the three badges to three DISTINCT hotels from a scored pool. */
+function badgeThree(pool){
+  var ranked=pool.slice().sort(function(a,b){return b.score-a.score;});
+  var used=[],picks=[];
+  function avail(){return ranked.filter(function(h){return used.indexOf(h)<0;});}
+  function take(h,badge){if(h&&used.indexOf(h)<0){h.badge=badge;used.push(h);picks.push(h);}}
+  take(avail()[0],'Our Recommendation');
+  take(avail().slice().sort(function(a,b){return b.reviews-a.reviews;})[0],'Most Popular');
+  var rest=avail(),priced=rest.filter(function(h){return h.price>0;});
+  take((priced.length?priced:rest).slice().sort(function(a,b){return a.price-b.price;})[0],'Best Value');
+  return picks;
+}
+/* Curated fallback inventory, mapped to the engine's shape (source='curated'). */
+function curatedForTier(city,tier){
+  var pool=(HOTELS[city]&&HOTELS[city][tier])?HOTELS[city][tier]:genericHotelPool(city,tier);
+  return pool.map(function(h){
+    return {n:h.n,m:h.m||((tier?tier+'-star · ':'')+city),note:h.note||'',
+      rating:0,reviews:0,price:HOTEL_NIGHTLY[tier]||0,cls:tier,img:h.img||'',
+      score:0,source:'curated'};
+  });
+}
+/* Full pipeline: live candidates → up to 3 badged hotels (+ curated top-up). */
+function selectHotels(cands,tier,city){
+  var q=tierQualify(cands||[],tier);
+  var picks=badgeThree(q.pool);
+  if(picks.length<3){
+    var badges=['Our Recommendation','Most Popular','Best Value'];
+    var curated=curatedForTier(city,tier).filter(function(c){
+      return !picks.some(function(p){return p.n===c.n;});
+    });
+    for(var i=0;picks.length<3&&i<curated.length;i++){
+      curated[i].badge=badges[picks.length];picks.push(curated[i]);
+    }
+  }
+  return {picks:picks.slice(0,3),luxuryLimited:q.luxuryLimited};
+}
+
 /* ── LIVE HOTELS via backend SerpAPI proxy (JSONP) ──
    Backend (action=hotels) returns callback(<SerpAPI JSON>). We parse the
    `properties` array into our card shape. If the backend/key is unavailable,
@@ -2163,19 +2257,10 @@ function fetchLiveHotels(city,tier,ci,co,cb){
     if(done)return;done=true;cleanup();
     try{
       var props=(json&&json.properties)?json.properties:[];
-      var stars=({3:3,4:4,5:5})[tier]||4;
-      var mapped=props.filter(function(p){
-        var r=p.overall_rating||0;return r>=(stars>=5?4.4:stars>=4?4.0:3.3);
-      }).slice(0,3).map(function(p){
-        var rate=(p.rate_per_night&&p.rate_per_night.extracted_lowest)||0;
-        return {n:p.name||'Hotel',
-          m:(p.hotel_class||(stars+'-star'))+' · '+city,
-          note:(p.overall_rating?('Rated '+p.overall_rating+'★'):'Well-rated')+(rate?(' · approx ₹'+Math.round(rate).toLocaleString('en-IN')+'/night'):''),
-          img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||'',
-          rate:rate};
-      });
-      cb(mapped.length?mapped:null);
-    }catch(e){cb(null);}
+      var cands=props.map(function(p){return normHotel(p,city);})
+                     .filter(function(h){return h.rating>0;});
+      cb(cands);
+    }catch(e){cb([]);}
   };
   var url=GAS_HOTELS_URL+(GAS_HOTELS_URL.indexOf('?')>=0?'&':'?')
     +'action=hotels&callback='+cbName
@@ -2191,13 +2276,22 @@ function injectLiveHotels(city,cityDiv,headerEl,nightlyEst,liveLabelEl){
   var tier=S.stayStyle;
   var ci=S.stayDate&&S.stayDate[city]?S.stayDate[city]:'';
   var co=ci?addDaysISO(ci,(S.nights&&S.nights[city])||1):'';
-  fetchLiveHotels(city,tier,ci,co,function(live){
-    if(!live){ if(liveLabelEl) liveLabelEl.dataset.live='no'; refreshHotelNote(); return; }
-    /* remove existing cards under this cityDiv (keep header) and add live ones */
-    var cards=cityDiv.querySelectorAll('.hotel-card');cards.forEach(function(c){c.remove();});
+  fetchLiveHotels(city,tier,ci,co,function(cands){
+    var sel=selectHotels(cands||[],tier,city);
+    if(!sel.picks.length){ if(liveLabelEl)liveLabelEl.dataset.live='no'; refreshHotelNote(); return; }
+    /* swap placeholder cards for the badged picks (keep the header) */
+    cityDiv.querySelectorAll('.hotel-card').forEach(function(c){c.remove();});
+    cityDiv.querySelectorAll('[data-luxnote]').forEach(function(n){n.remove();});
     var cid=cidOf?cidOf(city):city.replace(/\s+/g,'-').toLowerCase();
-    live.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-live-'+i));});
-    if(liveLabelEl) liveLabelEl.dataset.live='yes';
+    if(sel.luxuryLimited){
+      var ln=document.createElement('div');ln.setAttribute('data-luxnote','1');
+      ln.style.cssText='font-size:11px;color:var(--gold2);font-style:italic;line-height:1.55;margin:2px 0 10px;padding:9px 12px;border:1px solid var(--gbd);border-radius:9px;background:var(--gbg)';
+      ln.textContent='Luxury accommodation options are limited in this destination. The properties below represent the highest-rated premium stays available.';
+      if(headerEl&&headerEl.parentNode===cityDiv)headerEl.insertAdjacentElement('afterend',ln);
+      else cityDiv.appendChild(ln);
+    }
+    sel.picks.forEach(function(hh,i){cityDiv.appendChild(hotelCardHTML(city,hh,cid+'-pick-'+i));});
+    if(liveLabelEl)liveLabelEl.dataset.live=(cands&&cands.length)?'yes':'no';
     refreshHotelNote();
   });
 }
@@ -2205,10 +2299,7 @@ function addDaysISO(iso,days){try{var d=new Date(iso);d.setDate(d.getDate()+(day
 /* Honest note text: shows "live" only if at least one city returned live data. */
 function refreshHotelNote(){
   document.querySelectorAll('.google-note[data-hotelnote]').forEach(function(note){
-    var anyLive=!!document.querySelector('[data-livelabel][data-live="yes"]');
-    note.innerHTML=anyLive
-      ? '🏨&nbsp; <b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — live availability sourced from Google Hotels, subject to change until booking confirmation.'
-      : '🏨&nbsp; <b style="color:var(--ivory2);font-weight:400">Hotel Rates</b> — indicative estimates shown; your Journey Manager confirms exact live rates before booking.';
+    note.innerHTML='🏨&nbsp; <b style="color:var(--ivory2);font-weight:400">Hotel Recommendations</b> — Curated accommodation recommendations based on guest reviews, location quality and live market availability. Shown as reference examples; your Journey Manager confirms the final property (or a similar category) subject to availability.';
   });
 }
 function genericHotelPool(city,tier){
@@ -2276,7 +2367,24 @@ function hotelCardHTML(city,hh,hid){
     div.appendChild(ph);
   }
   var info=document.createElement('div');info.className='hotel-info';
-  info.innerHTML='<div class="hotel-name">'+hh.n+'</div><div class="hotel-meta">'+hh.m+'</div><div class="hotel-note">'+hh.note+'</div><div class="hotel-sel-btn">'+(sel?'✓ Selected':'Select Stay')+'</div>';
+  var badgeHTML='';
+  if(hh.badge){
+    var strong=(hh.badge==='Our Recommendation');
+    var st=strong
+      ? 'color:#1a1408;background:linear-gradient(135deg,var(--gold2),var(--gold3));border:none'
+      : 'color:var(--gold2);background:var(--gbg);border:1px solid var(--gbd)';
+    badgeHTML='<div style="display:inline-block;font-family:\'Cinzel\',serif;font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;padding:3px 9px;border-radius:100px;margin-bottom:6px;'+st+'">'+hh.badge+'</div>';
+  }
+  var note=hh.note||'';
+  if(!note){
+    if(hh.rating>0){
+      note='Rated '+hh.rating+'★'+(hh.reviews>0?(' · '+Number(hh.reviews).toLocaleString('en-IN')+' reviews'):'');
+      if(hh.price>0)note+=' · approx ₹'+Math.round(hh.price).toLocaleString('en-IN')+'/night';
+    } else {
+      note='Well-rated stay'+(hh.price>0?(' · approx ₹'+Math.round(hh.price).toLocaleString('en-IN')+'/night'):'');
+    }
+  }
+  info.innerHTML=badgeHTML+'<div class="hotel-name">'+hh.n+'</div><div class="hotel-meta">'+(hh.m||'')+'</div><div class="hotel-note">'+note+'</div><div class="hotel-sel-btn">'+(sel?'✓ Preferred':'Select')+'</div>';
   div.appendChild(info);return div;
 }
 function renderHotelBlocks(){
