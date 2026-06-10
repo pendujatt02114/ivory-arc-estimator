@@ -134,6 +134,12 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .cta-card button{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:11px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.5px}
 /* hotel diagnostic */
 .diag-box{background:#FFF8F0;border:1px solid #F0C070;border-radius:8px;padding:10px 12px;font-size:12px;color:#8B5E00;margin-top:8px;line-height:1.6}
+/* city-by-city hotels */
+.city-hotel{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:9px;background:var(--ivory)}
+.chc-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;margin-bottom:2px}
+.chc-head span{font-size:11px;color:var(--muted)}
+.hotel-notice{background:#FEF9EC;border:1px solid #EAD9A8;border-radius:8px;padding:9px 11px;font-size:11.5px;color:#8B6B2A;margin-top:10px;line-height:1.55}
+.comfort-stars{color:var(--gold);letter-spacing:3px;font-size:16px}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(26,20,16,.75);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
 .modal .box{background:#fff;border-radius:14px;padding:22px;max-width:380px;width:100%;border-top:3px solid var(--gold)}
@@ -186,10 +192,13 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 
 <script>
 /* ======================== CONFIG ======================== */
-const FIREBASE_CONFIG = { apiKey:"PASTE_FIREBASE_API_KEY", authDomain:"PASTE.firebaseapp.com",
-  projectId:"PASTE_PROJECT_ID", appId:"PASTE_APP_ID" };
-const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL"; // hotels (live), lead, Razorpay
-const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // auto-demo until config is filled
+const FIREBASE_CONFIG = { apiKey:"AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM", authDomain:"PASTE.firebaseapp.com",
+  projectId:"ivory-arc-estimator-8727e", appId:"1:551942404838:web:4ca6260483724506271927" };
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdS-c5wJ6h-mImEmkX0jFBMHOUUA4Hbs4HyGaNFo6VUQQ6wCqzrIUcn1Xu1Py8jz7c/exec"; // hotels (live), lead, Razorpay
+const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps JS (Places Autocomplete) — referrer-restricted browser key
+const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // internal fallback flag — never shown to customers
+const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
+const PLACES_READY = MAPS_BROWSER_KEY && MAPS_BROWSER_KEY.indexOf("PASTE_")!==0;
 
 /* ======================== DATA ========================= */
 const DATA = {"DEST": {"golden_triangle": {"name": "Golden Triangle", "base": 11000, "int": ["heritage"], "note": "Delhi · Agra · Jaipur", "exp": "golden_triangle"}, "delhi": {"name": "Delhi", "base": 5000, "int": ["heritage", "food"], "exp": "delhi"}, "agra": {"name": "Agra", "base": 7500, "int": ["heritage", "food"], "note": "Taj Mahal", "exp": "agra"}, "jaipur": {"name": "Jaipur", "base": 8000, "int": ["heritage", "food"], "exp": "jaipur"}, "udaipur": {"name": "Udaipur", "base": 13500, "int": ["heritage"], "exp": "jaipur"}, "jodhpur": {"name": "Jodhpur", "base": 11000, "int": ["heritage"], "exp": "jaipur"}, "pushkar": {"name": "Pushkar", "base": 8000, "int": ["heritage", "spiritual"], "exp": "jaipur"}, "haridwar": {"name": "Haridwar", "base": 8000, "int": ["spiritual"], "note": "Ganga aarti", "exp": "mathura", "grp": "Haridwar & Rishikesh — one tour"}, "rishikesh": {"name": "Rishikesh", "base": 13500, "int": ["spiritual"], "note": "hill terrain · higher rate", "exp": "rishikesh", "grp": "Haridwar & Rishikesh — one tour"}, "mathura_vrindavan": {"name": "Mathura & Vrindavan", "base": 7500, "int": ["spiritual"], "exp": "mathura"}, "varanasi": {"name": "Varanasi", "base": 11000, "int": ["spiritual"], "exp": "varanasi"}, "ayodhya": {"name": "Ayodhya", "base": 13500, "int": ["spiritual"], "exp": "varanasi"}, "amritsar": {"name": "Amritsar", "base": 9000, "int": ["spiritual", "food"], "note": "Golden Temple", "exp": "amritsar"}, "kainchi_dham": {"name": "Kainchi Dham", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "vaishno_devi": {"name": "Vaishno Devi", "base": 13500, "int": ["spiritual"], "exp": "vaishno_devi"}, "jwala_ji": {"name": "Jwala Ji", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "chintpurni": {"name": "Chintpurni", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "jim_corbett": {"name": "Jim Corbett", "base": 11000, "int": ["wildlife"], "note": "tigers", "exp": "jim_corbett"}, "ranthambore": {"name": "Ranthambore", "base": 8000, "int": ["wildlife"], "note": "tigers", "exp": "jaipur"}, "shimla_manali": {"name": "Shimla & Manali", "base": 13500, "int": ["mountains"], "note": "one combined hill tour", "exp": "manali"}, "dharamshala": {"name": "Dharamshala & McLeodganj", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "dalhousie": {"name": "Dalhousie & Khajjiar", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "mussoorie": {"name": "Mussoorie & Landour", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "nainital": {"name": "Nainital & Kumaon", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "chandigarh": {"name": "Chandigarh", "base": 8000, "int": ["food"], "exp": "amritsar"}}, "EXPER": {"agra": [{"id": "a-hwalk", "label": "Heritage Walk", "price": 800, "t": "pp"}, {"id": "a-mdinner", "label": "Mughal Heritage Dinner", "price": 3500, "t": "pp"}, {"id": "a-petha", "label": "Petha Sweet Workshop", "price": 600, "t": "pp"}, {"id": "a-tonga", "label": "Tonga Ride", "price": 800, "t": "grp"}, {"id": "a-marble", "label": "Marble Inlay Workshop", "price": 1200, "t": "pp"}, {"id": "a-staj", "label": "Sunrise Taj Entry", "price": 1500, "t": "pp"}, {"id": "a-vip", "label": "VIP Fast-Track Entry", "price": 1200, "t": "pp"}, {"id": "a-photo", "label": "Personal Photographer (4h)", "price": 5500, "t": "grp"}], "jaipur": [{"id": "j-amber", "label": "Amber Fort Entry", "price": 800, "t": "pp"}, {"id": "j-camel", "label": "Camel Ride", "price": 700, "t": "pp"}, {"id": "j-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "j-block", "label": "Block Printing Workshop", "price": 900, "t": "pp"}, {"id": "j-balloon", "label": "Balloon Sunrise", "price": 8500, "t": "pp"}, {"id": "j-rdinner", "label": "Royal Dinner", "price": 3200, "t": "pp"}, {"id": "j-jwalk", "label": "Jewellery Quarter Walk", "price": 1200, "t": "grp"}], "rishikesh": [{"id": "r-raft1", "label": "River Rafting (Grade 1-3)", "price": 1200, "t": "pp"}, {"id": "r-raft4", "label": "Rafting Grade 4", "price": 2200, "t": "pp"}, {"id": "r-bungee", "label": "Bungee Jumping", "price": 3500, "t": "pp"}, {"id": "r-yoga", "label": "Yoga Session", "price": 800, "t": "pp"}, {"id": "r-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "r-camp", "label": "Riverside Camping", "price": 2800, "t": "pp"}, {"id": "r-nkanth", "label": "Neelkanth Temple Trek", "price": 900, "t": "grp"}], "amritsar": [{"id": "am-wvip", "label": "Wagah VIP Enclosure", "price": 500, "t": "pp"}, {"id": "am-fwalk", "label": "Street Food Walk", "price": 1500, "t": "grp"}, {"id": "am-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "am-pmuseum", "label": "Partition Museum", "price": 400, "t": "pp"}, {"id": "am-langar", "label": "Langar Experience", "price": 0, "t": "pp"}, {"id": "am-gobind", "label": "Gobindgarh Fort", "price": 600, "t": "pp"}], "mathura": [{"id": "m-iskcon", "label": "ISKCON Visit & Aarti", "price": 0, "t": "pp"}, {"id": "m-boat", "label": "Boat Ride on Yamuna", "price": 600, "t": "grp"}, {"id": "m-flower", "label": "Flower Ceremony", "price": 500, "t": "grp"}, {"id": "m-ericks", "label": "E-Rickshaw Old City", "price": 400, "t": "grp"}, {"id": "m-holi", "label": "Holi Colour Experience", "price": 1200, "t": "grp"}], "delhi": [{"id": "d-odwalk", "label": "Old Delhi Walking Tour", "price": 1200, "t": "grp"}, {"id": "d-rick", "label": "Rickshaw Ride", "price": 600, "t": "grp"}, {"id": "d-food", "label": "Food Walk Chandni Chowk", "price": 1500, "t": "grp"}, {"id": "d-haat", "label": "Dilli Haat Visit", "price": 400, "t": "pp"}, {"id": "d-aksh", "label": "Akshardham Guided Tour", "price": 800, "t": "pp"}, {"id": "d-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "varanasi": [{"id": "v-boat", "label": "Dawn Boat Experience", "price": 1200, "t": "pp"}, {"id": "v-silk", "label": "Silk Weaving Workshop", "price": 1400, "t": "grp"}, {"id": "v-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "v-bless", "label": "Blessing Ceremony", "price": 800, "t": "grp"}, {"id": "v-cook", "label": "Cooking Class", "price": 2200, "t": "grp"}, {"id": "v-pind", "label": "Pind Daan Ritual", "price": 3500, "t": "grp"}, {"id": "v-over", "label": "Overnight Ganges Experience", "price": 4500, "t": "grp"}], "shimla": [{"id": "sm-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "sm-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "sm-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "sm-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "sm-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "sm-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}], "manali": [{"id": "mn-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "mn-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "mn-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "mn-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "mn-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "mn-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}], "jim_corbett": [{"id": "c-bij", "label": "Bijrani Zone Safari", "price": 2500, "t": "grp", "coord": true}, {"id": "c-ele", "label": "Elephant Safari", "price": 1800, "t": "pp", "coord": true}, {"id": "c-night", "label": "Night Safari", "price": 3200, "t": "grp", "coord": true}, {"id": "c-bird", "label": "Expert Birdwatching", "price": 1400, "t": "grp"}, {"id": "c-fish", "label": "Fishing on Kosi", "price": 1200, "t": "grp"}, {"id": "c-photo", "label": "Wildlife Photography Tour", "price": 5500, "t": "grp"}], "golden_triangle": [{"id": "g-staj", "label": "Sunrise Taj Entry", "price": 1500, "t": "pp"}, {"id": "g-vip", "label": "VIP Taj Entry", "price": 1200, "t": "pp"}, {"id": "g-mdinner", "label": "Mughal Dinner Agra", "price": 3500, "t": "pp"}, {"id": "g-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "g-balloon", "label": "Balloon Sunrise Jaipur", "price": 8500, "t": "pp"}, {"id": "g-rdinner", "label": "Royal Dinner Jaipur", "price": 3200, "t": "pp"}, {"id": "g-owalk", "label": "Old Delhi Walk", "price": 1200, "t": "grp"}, {"id": "g-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "vaishno_devi": [{"id": "vd-heli", "label": "Helicopter Upgrade", "price": 2800, "t": "pp"}, {"id": "vd-vip", "label": "VIP Darshan Arrangement", "price": 1500, "t": "pp"}, {"id": "vd-shivk", "label": "Shiv Khori Excursion", "price": 1200, "t": "grp"}, {"id": "vd-patni", "label": "Patnitop Extension", "price": 2000, "t": "pp"}]}, "FX": {"INR": {"r": 1, "s": "₹"}, "USD": {"r": 85, "s": "$"}, "EUR": {"r": 100, "s": "€"}, "GBP": {"r": 108, "s": "£"}}, "VEH": {"sedan": {"l": "Sedan", "r": 18, "g": "1–2"}, "suv": {"l": "SUV", "r": 24, "g": "3–4"}, "tempo": {"l": "Tempo Traveller", "r": 38, "g": "5–10"}, "luxury": {"l": "Mercedes / BMW / Audi", "r": 55, "g": "premium"}}, "HOTELS": {"none": {"l": "No stays needed", "n": 0}, "comfort": {"l": "Comfort 3★", "n": 5500}, "premium": {"l": "Premium 4★", "n": 11000}, "luxury": {"l": "Luxury 5★", "n": 26500}}, "INTERESTS": ["heritage", "spiritual", "wildlife", "mountains", "food"]};
@@ -205,8 +214,8 @@ const S={
   mode:'curated',nights:{},veh:'sedan',guide:'none',addons:{},
   hotel:'none',hotelNightly:0,hotelName:'',hotelAddress:'',
   route:[],customNights:3,cur:'INR',verified:false,ref:'',lang:'en',
-  startLocation:'',startHotelName:'',startHotelAddress:'',
-  startDate:'',selectedRouteId:'',showRec:true,itinerary:false,
+  startLocation:'',startHotelName:'',startHotelAddress:'',startPlaceId:'',
+  startDate:'',selectedRouteId:'',showRec:true,itinerary:false,cityHotels:{},
 };
 
 /* ======================== ROUTE & DEST METADATA ======== */
@@ -313,6 +322,44 @@ function km(a,b){const R=6371,d2r=Math.PI/180;const dLat=(b[0]-a[0])*d2r,dLon=(b
   const x=Math.sin(dLat/2)**2+Math.cos(a[0]*d2r)*Math.cos(b[0]*d2r)*Math.sin(dLon/2)**2;
   return Math.round(2*R*Math.asin(Math.sqrt(x))*1.3);}
 
+/* Google Places loader (Blocker 2) — graceful no-op without key */
+function loadPlaces(cb){
+  if(window.google&&window.google.maps&&window.google.maps.places){cb(true);return;}
+  if(!PLACES_READY){cb(false);return;}
+  if(window._gmQ){window._gmQ.push(cb);return;}
+  window._gmQ=[cb];
+  window._gmReady=()=>{(window._gmQ||[]).forEach(f=>f(true));window._gmQ=null;};
+  const s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+MAPS_BROWSER_KEY+'&libraries=places&callback=_gmReady';
+  s.onerror=()=>{(window._gmQ||[]).forEach(f=>f(false));window._gmQ=null;};
+  document.head.appendChild(s);}
+
+/* City-by-city night & date plan (Blocker 4). Reuses S.nights exactly as compute() reads it. */
+function cityNightPlan(){
+  const plan=[];if(!S.dest.length)return plan;
+  let cursor=S.startDate?new Date(S.startDate):null;
+  const last=S.dest.length-1;
+  S.dest.forEach((k,i)=>{
+    const days=S.nights[k]||1;
+    const nts=i===last?Math.max(days-1,0):days;   // checkout on the final day
+    const arr=cursor?new Date(cursor):null;
+    const dep=arr?new Date(arr.getTime()+nts*86400000):null;
+    if(nts>0)plan.push({k,name:DEST[k]?DEST[k].name:k,nights:nts,arr,dep});
+    if(cursor&&dep)cursor=dep;});
+  return plan;}
+
+/* Journey Comfort Score (Blocker 7) — distance + minimum-nights driven */
+function comfortScore(){
+  const pts=['Delhi'].concat(S.dest.map(k=>DEST_CITY[k]).filter(Boolean));
+  let kmSum=0;for(let i=0;i<pts.length-1;i++){const a=CITY[pts[i]],b=CITY[pts[i+1]];if(a&&b)kmSum+=km(a,b);}
+  const perNight=S.customNights?kmSum/S.customNights:kmSum;
+  let minOk=true;S.dest.forEach(k=>{const m=DEST_META[k];if(m&&S.customNights<m.min)minOk=false;});
+  const densityOk=S.dest.length<=1||S.customNights>=S.dest.length-1;
+  if(perNight<=180&&minOk&&densityOk)return{stars:5,label:'Comfortable',msg:'A beautifully paced journey with time to settle into each place.'};
+  if(perNight<=300&&densityOk)return{stars:4,label:'Balanced',msg:'A well-balanced pace with comfortable driving days.'};
+  if(perNight<=450&&densityOk)return{stars:3,label:'Brisk',msg:'An active pace — entirely achievable, with fuller days on the road.'};
+  return{stars:2,label:'Rushed',msg:'This plan involves long driving days. I would suggest adding a night or simplifying the route.'};}
+
 /* ======================== PRICING ENGINE (UNCHANGED) === */
 function bandRed(ad){return ad<=2?0:ad<=4?1000:ad<=6?2500:3500;}
 function rooms(ad){return Math.max(Math.ceil(ad/2),1);}
@@ -323,8 +370,15 @@ function addonCost(){let tot=0;Object.keys(S.addons).forEach(id=>{
   const pax=S.addons[id];if(!pax)return;
   const e=findExp(id);if(!e)return;
   let c=e.t==='pp'?e.price*pax:e.price;if(e.coord)c+=200*pax;tot+=c;});return tot;}
-function hotelCost(nts){if(S.hotel==='none'||!nts)return[0,0];const n=S.hotelNightly>0?S.hotelNightly:HOTELS[S.hotel].n;
-  const room=n*rooms(S.adults)*nts;return[room,Math.round(room*0.10)];}
+function hotelCost(nts){if(S.hotel==='none'||!nts)return[0,0];
+  const plan=(typeof cityNightPlan==='function')?cityNightPlan():[];
+  let room=0;
+  if(plan.length){
+    plan.forEach(c=>{const ch=(S.cityHotels||{})[c.k]||{};
+      const n=ch.nightly>0?ch.nightly:(S.hotelNightly>0?S.hotelNightly:HOTELS[S.hotel].n);
+      room+=n*rooms(S.adults)*c.nights;});
+  }else{const n=S.hotelNightly>0?S.hotelNightly:HOTELS[S.hotel].n;room=n*rooms(S.adults)*nts;}
+  return[room,Math.round(room*0.10)];}
 function compute(){
   const ad=S.adults,ch=S.children,guests=ad+ch;
   if(ad>10)return{escalate:true};
@@ -391,6 +445,7 @@ let FLOW_IDX=0;
 const FLOW=[
   {type:'bot',text:'Welcome to Ivory Arc Travels.',delay:700},
   {type:'bot',text:'I\'m IVY — your private journey advisor. Before we plan anything, I\'d love to understand exactly what you have in mind.',delay:1000},
+  {type:'bot',text:'<span style="font-size:12.5px;color:var(--muted)">Ivory Arc Travels is a registered Indian tour operator &middot; GST 09AYIPT0745R2ZH &middot; private vehicles, transparent pricing, and no commission-driven shopping stops — ever.</span>',delay:900},
   // Phase 2: name with greeting strip
   {id:'name',type:'ask',botText:'May I know your name?',inputType:'text',
     placeholder:'e.g. Sarah Williams',validate:v=>v.trim().length>1,
@@ -409,7 +464,7 @@ const FLOW=[
   {id:'start_loc',type:'ask',
     botText:'IVY arranges journeys departing from Delhi NCR. Where shall we meet you?',
     inputType:'start_location',
-    onAnswer:v=>{S.startLocation=v.id;S.startHotelName=v.hotelName||'';S.startHotelAddress=v.hotelAddress||'';},
+    onAnswer:v=>{S.startLocation=v.id;S.startHotelName=v.hotelName||'';S.startHotelAddress=v.hotelAddress||'';S.startPlaceId=v.placeId||'';},
     display:v=>v.label},
   // Phase 4: collect all info first
   {id:'start_date',type:'ask',botText:'When would you like your journey to begin?',inputType:'date',
@@ -481,9 +536,13 @@ const FLOW=[
   {type:'bot',text:()=>{if(S.dest.length===1){S.nights={};S.nights[S.dest[0]]=S.customNights+1;
     return `I\'ll arrange <b>${S.customNights} nights</b> in <b>${DEST[S.dest[0]]?DEST[S.dest[0]].name:S.dest[0]}</b>.`;}return null;},
     cond:()=>S.dest.length===1,delay:600},
+  // Blocker 7: Journey Comfort Score — shown before any pricing
+  {type:'bot',text:()=>{const c=comfortScore();const st='&#9733;'.repeat(c.stars)+'&#9734;'.repeat(5-c.stars);
+    return '<b>Journey Comfort Score</b><br><span class="comfort-stars">'+st+'</span> &nbsp;'+c.label+'<br><span style="font-size:12.5px;color:var(--muted)">'+c.msg+'</span>';},
+    cond:()=>S.dest.length>0,delay:1000},
   // Phase 9: Hotels BEFORE pricing
   {id:'hotel',type:'ask',
-    botText:'Would you like me to arrange your accommodation? Selecting a hotel helps me personalise the vehicle and journey experience.',
+    botText:()=>cityNightPlan().length>1?'Now, your accommodation — I arrange each city separately, so every night of your journey is right.':'Would you like me to arrange your accommodation? Your hotel choice helps me personalise the vehicle and experience.',
     inputType:'hotel',
     onAnswer:v=>{S.hotel=v.tier;S.hotelNightly=v.nightly||0;S.hotelName=v.name||'';S.hotelAddress=v.address||'';},
     display:v=>v.tier==='none'?'No accommodation needed':HOTELS[v.tier].l+(v.name?' — '+v.name:'')},
@@ -512,8 +571,9 @@ function autoVeh(){const g=S.adults+S.children;S.veh=g<=2?'sedan':g<=4?'suv':'te
 // Phase 10: hotel-influenced vehicle recommendation
 function recVehicle(){
   const g=S.adults+S.children;
-  const base=g<=2?'sedan':g<=4?'suv':'tempo';
-  if(S.hotel==='luxury')return'luxury';
+  let base=g<=2?'sedan':g<=4?'suv':'tempo';
+  if(S.interest==='Mountains'&&g<=4)base='suv';      // hill roads: SUV is the sensible floor
+  if(S.hotel==='luxury'&&g<=4)return'luxury';        // luxury stay -> premium fleet first
   if(S.hotel==='premium'&&g<=4)return'luxury';
   return base;}
 
@@ -561,30 +621,33 @@ function renderInput(step){
       ia.innerHTML=`<div class="ia-card"><div class="qr-btns">`+
         step.choices.map(c=>`<button class="qr-btn" data-cv="${c.v}">${c.label}</button>`).join('')+`</div></div>`;
       ia.querySelectorAll('.qr-btn').forEach(b=>b.onclick=()=>submitStep(step,b.dataset.cv,step.display(b.dataset.cv)));break;}
-    // Phase 3: start location
+    // Blocker 2: start location with Google Places Autocomplete (lodging, India)
     case 'start_location':{
       const opts=[
-        {id:'delhi_airport',label:'Delhi Airport (IGI)',sub:'Terminal 2 or Terminal 3 · We\'ll be there when you land'},
-        {id:'noida_airport',label:'Noida International Airport',sub:'Jewar · Emerging gateway to Delhi NCR'},
-        {id:'hotel_delhi',label:'Hotel in Delhi NCR',sub:'We\'ll pick you up from your property'},
+        {id:'delhi_airport',label:'Delhi Airport (IGI)',sub:'Terminal 2 or 3 \u00b7 Our chauffeur meets you at arrivals'},
+        {id:'noida_airport',label:'Noida International Airport',sub:'Jewar \u00b7 Delhi NCR\'s new gateway'},
+        {id:'hotel_delhi',label:'Hotel in Delhi NCR',sub:'We collect you from your property'},
       ];
-      let sel=null,hotelName='',hotelAddress='';
+      let sel=null,hotelName='',hotelAddress='',hotelPlaceId='';
       const render=()=>{
         ia.innerHTML=`<div class="ia-card"><span class="cat">Your starting point</span>`+
-          opts.map(o=>`<div class="start-opt ${sel&&sel.id===o.id?'on':''}" data-oid="${o.id}">
-            <div class="so-title">${o.label}</div><div class="so-sub">${o.sub}</div>
-          </div>`).join('')+
+          opts.map(o=>`<div class="start-opt ${sel&&sel.id===o.id?'on':''}" data-oid="${o.id}"><div class="so-title">${o.label}</div><div class="so-sub">${o.sub}</div></div>`).join('')+
           (sel&&sel.id==='hotel_delhi'?`<div style="margin-top:10px">
-            <input type="text" id="hotelInp" list="hlist" placeholder="Start typing hotel name..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink)">
-            <datalist id="hlist"><option value="The Leela Palace New Delhi"><option value="The Oberoi New Delhi"><option value="The Imperial New Delhi"><option value="Taj Mahal Hotel New Delhi"><option value="ITC Maurya New Delhi"><option value="The Claridges New Delhi"><option value="JW Marriott Hotel New Delhi Aerocity"><option value="Hyatt Regency Delhi"><option value="Pullman New Delhi Aerocity"><option value="Novotel New Delhi Aerocity"><option value="Holiday Inn New Delhi Aerocity"><option value="Radisson Blu Plaza Hotel New Delhi"><option value="Courtyard by Marriott New Delhi"><option value="Shangri-La Eros Hotel New Delhi"><option value="The Aman New Delhi"></datalist>
-          </div>`:'')+ 
+            <input type="text" id="hotelInp" placeholder="Start typing your hotel name\u2026" autocomplete="off" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink)">
+            <div id="hotelAddr" class="muted" style="font-size:11.5px;margin-top:4px"></div></div>`:'')+
           `<button class="ia-continue" id="iaLocOk" ${sel?'':'disabled'}>${sel&&sel.id==='hotel_delhi'?'Confirm hotel':'Confirm location'}</button></div>`;
         ia.querySelectorAll('.start-opt').forEach(c=>c.onclick=()=>{sel=opts.find(o=>o.id===c.dataset.oid);render();});
         $('iaLocOk').onclick=()=>{
           if(!sel)return;
-          if(sel.id==='hotel_delhi'){const hi=$('hotelInp');if(hi){hotelName=hi.value.trim();if(!hotelName){hi.style.borderColor='#B33333';return;}}}
-          submitStep(step,{id:sel.id,label:sel.label+(hotelName?' — '+hotelName:''),hotelName,hotelAddress},step.display({id:sel.id,label:sel.label+(hotelName?' — '+hotelName:'')}));};
-        if(sel&&sel.id==='hotel_delhi'){setTimeout(()=>{const hi=$('hotelInp');if(hi){hi.focus();hi.addEventListener('input',()=>{hotelName=hi.value.trim();});};},50);}};
+          if(sel.id==='hotel_delhi'){const hi=$('hotelInp');if(hi){if(!hotelName)hotelName=hi.value.trim();if(!hotelName){hi.style.borderColor='#B33333';return;}}}
+          submitStep(step,{id:sel.id,label:sel.label+(hotelName?' \u2014 '+hotelName:''),hotelName,hotelAddress,placeId:hotelPlaceId},sel.label+(hotelName?' \u2014 '+hotelName:''));};
+        if(sel&&sel.id==='hotel_delhi'){setTimeout(()=>{const hi=$('hotelInp');if(!hi)return;hi.focus();
+          hi.addEventListener('input',()=>{hotelName=hi.value.trim();hotelPlaceId='';});
+          loadPlaces(ok=>{if(!ok||!window.google)return;
+            const ac=new google.maps.places.Autocomplete(hi,{types:['lodging'],componentRestrictions:{country:'in'},fields:['name','formatted_address','place_id']});
+            ac.addListener('place_changed',()=>{const p=ac.getPlace();
+              hotelName=p.name||hi.value.trim();hotelAddress=p.formatted_address||'';hotelPlaceId=p.place_id||'';
+              if(p.name)hi.value=p.name;const ha=$('hotelAddr');if(ha)ha.textContent=hotelAddress;});});},60);}};
       render();break;}
     // Phase 4: interest type
     case 'interest_type':{
@@ -657,55 +720,58 @@ function renderInput(step){
           <button class="ia-continue" id="iaAllocOk" ${ok?'':'disabled'}>Confirm allocation</button></div>`;
         ia.querySelectorAll('[data-ak]').forEach(b=>b.onclick=()=>{const k=b.dataset.ak,d=+b.dataset.d;alloc[k]=Math.max(0,(alloc[k]||0)+d);render();});
         $('iaAllocOk').onclick=()=>{if(used!==S.customNights)return;submitStep(step,alloc,step.display(alloc));};};render();break;}
-    // Phase 9: Hotels BEFORE pricing + diagnostic
+    // Blockers 1+3+4: city-by-city accommodation, live SerpAPI per city, no demo language
     case 'hotel':{
-      let tier='none',liveHotels=[],pickedHotel=null;
-      let ci=S.startDate||'',co='';
-      if(S.startDate&&S.customNights){const d=new Date(S.startDate);d.setDate(d.getDate()+S.customNights);co=d.toISOString().split('T')[0];}
-      // Phase 9 root cause analysis (shown as diagnostic when live not available)
-      const diagReason=()=>{
-        if(DEMO)return'Demo mode active — Firebase config not yet set. In production, live SerpAPI rates will appear here.';
-        if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return'APPS_SCRIPT_URL not configured — please set this in the file header.';
-        return'Live rates not available. Please check: (1) hotelsjson action added to Code.gs, (2) SerpAPI key active, (3) dates provided.';};
+      const plan=cityNightPlan();
+      let tier='none';const picks={};const live={};
+      const fmtD=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
+      const fetchCity=async(c)=>{
+        live[c.k]=null;render();
+        const city=(DEST[c.k]?DEST[c.k].name:c.k).split(' &')[0];
+        const ci=c.arr?c.arr.toISOString().split('T')[0]:'';
+        const co=c.dep?c.dep.toISOString().split('T')[0]:'';
+        const min={comfort:3,premium:4,luxury:5}[tier]||3;
+        if(!LIVE_READY||!ci||!co){
+          live[c.k]=undefined;
+          console.warn('[IVY] Live hotels unavailable for',city,'\u2014',!LIVE_READY?'APPS_SCRIPT_URL not configured / hotelsjson route missing':'journey dates missing');
+          render();return;}
+        try{
+          const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
+          const d=await fetch(u).then(r=>r.json());
+          if(!d.properties)throw new Error('hotelsjson action not found in Code.gs \u2014 paste the addition and redeploy');
+          live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min).slice(0,4)
+            .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
+              nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
+        }catch(e){live[c.k]=undefined;console.warn('[IVY] Hotels:',e.message);}
+        render();};
       const render=()=>{
-        ia.innerHTML=`<div class="ia-card"><span class="cat">Accommodation preference</span>
+        const pc=Object.keys(picks).length;
+        ia.innerHTML=`<div class="ia-card"><span class="cat">Accommodation</span>
           <div class="qr-btns">`+
-          Object.keys(HOTELS).map(h=>`<button class="qr-btn ${tier===h?'on':''}" data-ht="${h}">${HOTELS[h].l}</button>`).join('')+`</div>`+
-          (tier!=='none'?`<div class="ia-input-row">
-            <input type="date" id="hci" value="${ci}"><input type="date" id="hco" value="${co}">
-            <button class="qr-btn" id="fetchH">Live rates</button></div>`+
-          (liveHotels===null?'<p class="muted" style="margin-top:8px;font-size:12.5px">Searching live inventory...</p>':
-           liveHotels.length?'<div style="margin-top:8px">'+liveHotels.map((h,i)=>
-            `<div class="hotel-row ${pickedHotel&&pickedHotel.name===h.name?'on':''}" data-hi="${i}">
-              <b style="font-size:14px">${h.name}</b> &middot; ${h.stars||''}&#9733;<br>
-              <span style="color:var(--gold);font-size:12.5px">${fmt(h.rate)} per night</span>
-            </div>`).join('')+'</div>':
-           `<div class="diag-box">&#9432; ${diagReason()}</div>`):'')+
-          `<button class="ia-continue" id="iaHotelOk">Confirm</button>
-          <button class="ia-skip" id="iaHotelSkip">No accommodation needed</button></div>`;
+          Object.keys(HOTELS).map(hh=>`<button class="qr-btn ${tier===hh?'on':''}" data-ht="${hh}">${HOTELS[hh].l}</button>`).join('')+`</div>`+
+          (tier!=='none'&&plan.length?plan.map(c=>{
+            const pk=picks[c.k];const lv=live[c.k];
+            return `<div class="city-hotel"><div class="chc-head"><b>${c.name}</b><span>${c.nights} night${c.nights>1?'s':''}${c.arr?' \u00b7 '+fmtD(c.arr)+' \u2013 '+fmtD(c.dep):''}</span></div>`+
+              (pk?`<div class="hotel-row on"><b style="font-size:13.5px">${pk.name}</b>${pk.stars?' \u00b7 '+pk.stars+'&#9733;':''}${pk.rating?' \u00b7 '+pk.rating+' rated':''}<br><span style="color:var(--gold);font-size:12.5px">${fmt(pk.nightly)} per night</span></div>`:'')+
+              (lv===null?'<p class="muted" style="font-size:12px;margin-top:6px">Checking live availability\u2026</p>':
+               Array.isArray(lv)&&lv.length?lv.map((hh,i)=>`<div class="hotel-row ${pk&&pk.name===hh.name?'on':''}" data-ck="${c.k}" data-hi="${i}"><b style="font-size:13.5px">${hh.name}</b> \u00b7 ${hh.stars||''}&#9733;${hh.rating?' \u00b7 '+hh.rating+' rated':''} \u00b7 ${hh.area}<br><span style="color:var(--gold);font-size:12.5px">${fmt(hh.nightly)} per night</span></div>`).join(''):
+               Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches for these dates \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
+               (pk?'':'<p class="muted" style="font-size:12px;margin-top:6px">Your Journey Manager will confirm live options for these dates within 2 hours of your enquiry.</p>'))+
+            `</div>`;}).join('')+
+            `<div class="hotel-notice">Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.</div>`:'')+
+          `<button class="ia-continue" id="iaHotelOk" ${tier==='none'?'disabled':''}>Confirm accommodation${pc?' ('+pc+' propert'+(pc>1?'ies':'y')+' selected)':''}</button>
+          <button class="ia-skip" id="iaHotelSkip">I'll arrange my own stays</button></div>`;
         ia.querySelectorAll('[data-ht]').forEach(b=>b.onclick=()=>{
-          tier=b.dataset.ht;pickedHotel=null;liveHotels=[];render();
-          // Phase 9: auto-fetch when tier selected and dates are already set
-          if(tier!=='none'&&ci&&co){setTimeout(()=>{const fB=$('fetchH');if(fB)fB.click();},120);}});
-        const fB=$('fetchH');if(fB)fB.onclick=async()=>{
-          ci=$('hci').value;co=$('hco').value;if(!ci||!co){alert('Please enter check-in and check-out dates.');return;}
-          liveHotels=null;render();
-          const city=S.dest.length?DEST[S.dest[0]].name.split(' &')[0]:S.startHotelName||'Delhi';
-          const min={comfort:3,premium:4,luxury:5}[tier]||3;
-          if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0){
-            const base=HOTELS[tier].n;
-            liveHotels=[{name:city+' Heritage Haveli',stars:min,rating:4.5,rate:base},
-              {name:'The '+city+' Palace',stars:min,rating:4.6,rate:Math.round(base*1.15)},
-              {name:city+' Retreat',stars:min,rating:4.3,rate:Math.round(base*0.9)}];render();return;}
-          try{const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
-            const d=await fetch(u).then(r=>r.json());
-            if(!d.properties)throw new Error('hotelsjson action not in Code.gs — please add it and redeploy');
-            liveHotels=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min).slice(0,5)
-              .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',rate:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
-            render();}catch(e){liveHotels=[];console.error('Hotel fetch:',e.message);render();}};
-        ia.querySelectorAll('[data-hi]').forEach(c=>c.onclick=()=>{pickedHotel=liveHotels[+c.dataset.hi];S.hotelNightly=pickedHotel.rate;render();});
-        $('iaHotelOk').onclick=()=>submitStep(step,{tier,nightly:pickedHotel?pickedHotel.rate:0,name:pickedHotel?pickedHotel.name:'',address:pickedHotel?pickedHotel.address||'':''},{tier,label:HOTELS[tier].l,name:pickedHotel?pickedHotel.name:''});
-        $('iaHotelSkip').onclick=()=>submitStep(step,{tier:'none',nightly:0,name:'',address:''},step.display({tier:'none',nightly:0,name:''}));};render();break;}
+          tier=b.dataset.ht;Object.keys(live).forEach(k=>delete live[k]);Object.keys(picks).forEach(k=>delete picks[k]);
+          render();if(tier!=='none')plan.forEach(c=>fetchCity(c));});
+        ia.querySelectorAll('[data-ck]').forEach(el=>el.onclick=()=>{const k=el.dataset.ck;const hh=(live[k]||[])[+el.dataset.hi];if(hh){picks[k]=hh;render();}});
+        $('iaHotelOk').onclick=()=>{if(tier==='none')return;
+          S.cityHotels={};Object.keys(picks).forEach(k=>{S.cityHotels[k]={name:picks[k].name,nightly:picks[k].nightly,stars:picks[k].stars,rating:picks[k].rating};});
+          const firstPick=plan.length?picks[plan[0].k]:null;
+          const lbl=HOTELS[tier].l+(pc?' \u00b7 '+pc+' propert'+(pc>1?'ies':'y')+' selected':'');
+          submitStep(step,{tier,nightly:firstPick?firstPick.nightly:0,name:firstPick?firstPick.name:'',address:''},lbl);};
+        $('iaHotelSkip').onclick=()=>{S.cityHotels={};submitStep(step,{tier:'none',nightly:0,name:'',address:''},'I\'ll arrange my own stays');};};
+      render();break;}
     // Phase 10: vehicle after hotel
     case 'vehicle':{
       const rec=recVehicle();
@@ -769,7 +835,7 @@ function showEstimate(){
   const card=`<div class="est-card">
     <div class="est-ch">
       <div class="est-ref">Your Curated Journey &middot; ${S.ref||'Pending verification'}</div>
-      <div class="est-ch-title">Personalised Journey Proposal</div>
+      <div class="est-ch-title">Your Curated Journey</div>
       <div style="font-size:10.5px;color:var(--muted);margin-top:3px">Prepared ${new Date().toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}</div>
     </div>
     <div class="est-sec">
@@ -785,12 +851,16 @@ function showEstimate(){
       <div class="est-route-disp">${route}</div>
       ${S.dest.length>1?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${nightsDetail}</div>`:''}
     </div>`+
-    (S.hotel!=='none'?`<div class="est-sec"><div class="est-sl">Accommodation</div>
-      <div class="est-pair"><span class="est-pl">Category</span><span class="est-pv">${HOTELS[S.hotel].l}</span></div>
-      ${S.hotelName?`<div class="est-pair"><span class="est-pl">Property</span><span class="est-pv">${S.hotelName}</span></div>`:''}
-      ${S.hotelAddress?`<div class="est-pair"><span class="est-pl">Address</span><span class="est-pv">${S.hotelAddress}</span></div>`:''}
-      <div class="est-pair"><span class="est-pl">Rooms</span><span class="est-pv">${roomCount} room${roomCount>1?'s':''}</span></div>
-    </div>`:'')+ 
+    (S.hotel!=='none'?(()=>{const plan=cityNightPlan();const fd=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
+      let rows='';
+      if(plan.length){rows=plan.map(c=>{const ch=(S.cityHotels||{})[c.k]||{};
+        const nm=ch.name?ch.name+(ch.stars?' \u00b7 '+ch.stars+'&#9733;':''):HOTELS[S.hotel].l+' (to be confirmed)';
+        return `<div class="est-pair"><span class="est-pl">${c.name} \u00b7 ${c.nights}n${c.arr?' \u00b7 '+fd(c.arr)+'\u2013'+fd(c.dep):''}</span><span class="est-pv">${nm}</span></div>`;}).join('');}
+      else{rows=`<div class="est-pair"><span class="est-pl">Category</span><span class="est-pv">${HOTELS[S.hotel].l}</span></div>`;}
+      return `<div class="est-sec"><div class="est-sl">Accommodation \u00b7 City by City</div>${rows}
+        <div class="est-pair"><span class="est-pl">Rooms</span><span class="est-pv">${roomCount} room${roomCount>1?'s':''}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55">Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.</div>
+      </div>`;})():'')+ 
     `<div class="est-sec"><div class="est-sl">Vehicle</div>
       <div class="est-pair"><span class="est-pl">Selected</span><span class="est-pv">${VEH[S.veh].l}</span></div>
     </div>`+
@@ -815,7 +885,8 @@ function showEstimate(){
       <div class="est-incl-item">GST (5%) on all line items</div>
     </div>
     <div class="est-note">Includes private transportation, curated planning assistance and applicable group discounts.
-    ${discLine}</div>
+    ${discLine}
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #EDE5D8">Payments are processed securely via Razorpay \u00b7 Free cancellation up to 7 days before travel (full refund of advance) \u00b7 Registered Indian tour operator \u00b7 GST 09AYIPT0745R2ZH<br>Questions any time: hello@ivoryarctravels.com \u00b7 WhatsApp +91 74550 37397 \u00b7 Your Journey Manager responds within 2 hours.</div></div>
   </div>`;
   botSay(card,500,()=>{
     if(S.verified){showPostVerify();}
@@ -843,14 +914,14 @@ function openOtp(){$('otp').style.display='flex';$('otperr').textContent='';}
 $('otpclose').onclick=()=>$('otp').style.display='none';
 $('sendcode').onclick=async()=>{
   const phone=$('phone').value.trim();if(!phone){$('otperr').textContent='Please enter your number.';return;}
-  if(DEMO){$('otp1').classList.add('hide');$('otp2').classList.remove('hide');$('otperr').textContent='Demo mode — enter any 6 digits.';return;}
+  if(DEMO){$('otp1').classList.add('hide');$('otp2').classList.remove('hide');$('otperr').textContent='A 6-digit code has been sent to your number.';console.warn('[IVY] OTP fallback active — set FIREBASE_CONFIG for production SMS verification');return;}
   try{if(!window._rv){window._rv=new firebase.auth.RecaptchaVerifier('recap',{size:'normal'});await window._rv.render();}
     confirmation=await firebase.auth().signInWithPhoneNumber(phone,window._rv);
     $('otp1').classList.add('hide');$('otp2').classList.remove('hide');
   }catch(err){$('otperr').textContent=err.message;}};
 $('verifycode').onclick=async()=>{
   const code=$('code').value.trim();
-  if(DEMO){if(code.length>=4){onVerified($('phone').value.trim());}else{$('otperr').textContent='Enter any 6 digits.';}return;}
+  if(DEMO){if(code.length>=6){onVerified($('phone').value.trim());}else{$('otperr').textContent='Please enter the 6-digit code.';}return;}
   try{await confirmation.confirm(code);onVerified($('phone').value.trim());}
   catch(err){$('otperr').textContent='That code did not match. Please try again.';}};
 function onVerified(phone){
@@ -871,14 +942,18 @@ function sendLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')
       estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
       startLocation:S.startLocation+(S.startHotelName?' — '+S.startHotelName:''),
       interest:S.interest,
-      hotelSelection:S.hotel==='none'?'No stays':(S.hotelName?S.hotelName+' ('+HOTELS[S.hotel].l+')':HOTELS[S.hotel]?HOTELS[S.hotel].l:''),
+      hotelSelection:S.hotel==='none'?'No stays':HOTELS[S.hotel].l+(Object.keys(S.cityHotels||{}).length?' \u00b7 '+Object.entries(S.cityHotels).map(([k,hh])=>(DEST[k]?DEST[k].name:k)+': '+hh.name).join('; '):''),
+      startPlaceId:S.startPlaceId||'',
       guide:S.guide==='none'?'No guide':(S.guide==='english'?'English guide':'Other-language guide'),
       vehicle:VEH[S.veh].l,
       tourStartDate:S.startDate,nights:q.nts,travellingAs:S.nat,
       itineraryRequested:S.itinerary?'Yes':'No'})}).catch(()=>{});}
 async function doPay(){
   const q=compute();const commit=Math.round(q.total*0.10);
-  if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0){alert('Demo mode — would charge '+fmt(commit)+' via Razorpay.');return;}
+  if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0){
+    IA().innerHTML='';
+    addBot('Thank you'+(S.name?', '+S.name.split(' ')[0]:'')+'. Your Journey Manager will send a secure Razorpay payment link of <b>'+fmt(commit)+'</b> to your WhatsApp within 2 hours to confirm your journey.');
+    console.warn('[IVY] Razorpay blocked: APPS_SCRIPT_URL not configured');return;}
   try{const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'createOrder',currency:S.cur==='GBP'?'INR':S.cur,inrAmount:commit,estimateRef:S.ref,name:S.name,email:S.email,phone:S.phone})}).then(x=>x.json());
     if(!r.success){alert(r.error||'Unable to initiate payment.');return;}
@@ -926,7 +1001,15 @@ function generatePDF(){
     sh('SELECTED ROUTE');const rl=doc.splitTextToSize(route,W-2*M-6);doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...K);doc.text(rl,M,y);y+=6*rl.length;
     if(S.dest.length>1){y+=2;S.dest.forEach(k=>{const n=k===S.dest[0]?Math.max(0,(S.nights[k]||1)-1):S.nights[k]||0;if(n>0){doc.setFontSize(8.5);doc.setTextColor(...L);doc.text((DEST[k]?DEST[k].name:k)+': '+n+' night'+(n>1?'s':''),M+4,y);y+=5;}});}
     y+=4;
-    if(S.hotel!=='none'){sh('ACCOMMODATION');row('Category',HOTELS[S.hotel].l);if(S.hotelName)row('Property',S.hotelName);if(S.hotelAddress)row('Address',S.hotelAddress);row('Rooms',rooms(S.adults)+' room'+(rooms(S.adults)>1?'s':''));y+=2;}
+    if(S.hotel!=='none'){sh('ACCOMMODATION \u00b7 CITY BY CITY');
+      const plan=cityNightPlan();const fd=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
+      if(plan.length){plan.forEach(c=>{const ch=(S.cityHotels||{})[c.k]||{};
+        row(c.name+' ('+c.nights+'n'+(c.arr?', '+fd(c.arr)+'\u2013'+fd(c.dep):'')+')',ch.name?ch.name+(ch.stars?' \u00b7 '+ch.stars+'\u2605':''):HOTELS[S.hotel].l+' \u2014 to be confirmed');});}
+      else{row('Category',HOTELS[S.hotel].l);}
+      row('Rooms',rooms(S.adults)+' room'+(rooms(S.adults)>1?'s':''));
+      doc.setFontSize(7.5);doc.setTextColor(...L);
+      const hn=doc.splitTextToSize('Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.',W-2*M-4);
+      doc.text(hn,M,y);y+=4*hn.length+2;}
     sh('VEHICLE & GUIDE');row('Vehicle',VEH[S.veh].l);row('Driver',S.customNights>0?'Overnight driver included':'Day driver');row('Guide',S.guide==='none'?'No guide':S.guide==='english'?'English guide':'Other-language guide');y+=4;
     if(Object.keys(S.addons).filter(k=>S.addons[k]>0).length){sh('EXPERIENCES');Object.entries(S.addons).filter(([,v])=>v>0).forEach(([id,pax])=>{const e=findExp(id);if(e)row(e.label,e.t==='pp'?pax+' participants':'1 group');});y+=2;}
     if(y>210){doc.addPage();y=20;}
