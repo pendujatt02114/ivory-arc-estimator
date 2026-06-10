@@ -181,7 +181,7 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
   <h3>Verify your number</h3>
   <div id="otp1"><p class="muted">We'll send a 6-digit code.</p>
     <input type="tel" id="phone" placeholder="+91 98765 43210">
-    <div id="recap" style="margin:10px 0"></div>
+    <div id="recap" style="margin:10px 0;overflow:hidden;max-width:100%;transform-origin:left top"></div>
     <button class="btn" id="sendcode">Send code</button></div>
   <div id="otp2" class="hide"><p class="muted">Enter the 6-digit code.</p>
     <input type="tel" id="code" placeholder="6-digit code">
@@ -192,10 +192,10 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 
 <script>
 /* ======================== CONFIG ======================== */
-const FIREBASE_CONFIG = { apiKey:"AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM", authDomain:"PASTE.firebaseapp.com",
-  projectId:"ivory-arc-estimator-8727e", appId:"1:551942404838:web:4ca6260483724506271927" };
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdS-c5wJ6h-mImEmkX0jFBMHOUUA4Hbs4HyGaNFo6VUQQ6wCqzrIUcn1Xu1Py8jz7c/exec"; // hotels (live), lead, Razorpay
-const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps JS (Places Autocomplete) — referrer-restricted browser key
+const FIREBASE_CONFIG = { apiKey:"PASTE_FIREBASE_API_KEY", authDomain:"PASTE.firebaseapp.com",
+  projectId:"PASTE_PROJECT_ID", appId:"PASTE_APP_ID" };
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL"; // hotels (live), lead, Razorpay
+const MAPS_BROWSER_KEY = "PASTE_MAPS_BROWSER_KEY"; // Google Maps JS (Places Autocomplete) — referrer-restricted browser key
 const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // internal fallback flag — never shown to customers
 const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
 const PLACES_READY = MAPS_BROWSER_KEY && MAPS_BROWSER_KEY.indexOf("PASTE_")!==0;
@@ -341,7 +341,8 @@ function cityNightPlan(){
   const last=S.dest.length-1;
   S.dest.forEach((k,i)=>{
     const days=S.nights[k]||1;
-    const nts=i===last?Math.max(days-1,0):days;   // checkout on the final day
+    // first dest has +1 internal transit day; show customer the actual nights they allocated
+    const nts=i===0?Math.max(days-1,0):days;
     const arr=cursor?new Date(cursor):null;
     const dep=arr?new Date(arr.getTime()+nts*86400000):null;
     if(nts>0)plan.push({k,name:DEST[k]?DEST[k].name:k,nights:nts,arr,dep});
@@ -531,7 +532,7 @@ const FLOW=[
   {id:'nights_alloc',type:'ask',
     botText:'Let\'s decide the nights at each destination.',
     inputType:'nights_alloc',cond:()=>S.dest.length>1,
-    onAnswer:v=>{S.nights={};S.nights[S.dest[0]]=1;Object.keys(v).forEach(k=>{S.nights[k]=v[k];});},
+    onAnswer:v=>{/* S.nights already set inside the renderer's iaAllocOk handler */},
     display:v=>Object.entries(v).map(([k,n])=>(DEST[k]?DEST[k].name:k)+': '+n+'n').join(' · ')},
   {type:'bot',text:()=>{if(S.dest.length===1){S.nights={};S.nights[S.dest[0]]=S.customNights+1;
     return `I\'ll arrange <b>${S.customNights} nights</b> in <b>${DEST[S.dest[0]]?DEST[S.dest[0]].name:S.dest[0]}</b>.`;}return null;},
@@ -709,17 +710,22 @@ function renderInput(step){
         $('iaDestOk').onclick=()=>{if(!sel.length)return;submitStep(step,sel,step.display(sel));};};render();break;}
     // Nights allocation
     case 'nights_alloc':{
-      const allocDests=S.dest.slice(1);let alloc={};allocDests.forEach(k=>{alloc[k]=1;});
+      // ALL dests get steppers — journey always departs from Delhi NCR, not the first destination
+      let alloc={};S.dest.forEach(k=>{alloc[k]=1;});
       const render=()=>{
-        const used=allocDests.reduce((a,k)=>a+(alloc[k]||0),0),ok=used===S.customNights;
+        const used=S.dest.reduce((a,k)=>a+(alloc[k]||0),0),ok=used===S.customNights;
         ia.innerHTML=`<div class="ia-card"><span class="cat">Night allocation</span>
-          <div class="alloc-row"><span style="font-weight:600">${DEST[S.dest[0]]?DEST[S.dest[0]].name:S.dest[0]}</span><span class="muted">Start point</span></div>`+
-          allocDests.map(k=>`<div class="alloc-row"><span style="font-weight:600;font-size:13.5px">${DEST[k]?DEST[k].name:k}</span>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Departing from Delhi NCR · allocate nights across each destination</div>`+
+          S.dest.map(k=>`<div class="alloc-row"><span style="font-weight:600;font-size:13.5px">${DEST[k]?DEST[k].name:k}</span>
             <div class="stepper" style="transform:scale(.88)"><button data-ak="${k}" data-d="-1">&#8722;</button><span>${alloc[k]||0}</span><button data-ak="${k}" data-d="1">&#43;</button></div></div>`).join('')+
           `<div style="font-size:12px;color:${ok?'#5A7A4A':'#B85C00'};padding:8px 0 4px">${used} of ${S.customNights} nights allocated</div>
           <button class="ia-continue" id="iaAllocOk" ${ok?'':'disabled'}>Confirm allocation</button></div>`;
         ia.querySelectorAll('[data-ak]').forEach(b=>b.onclick=()=>{const k=b.dataset.ak,d=+b.dataset.d;alloc[k]=Math.max(0,(alloc[k]||0)+d);render();});
-        $('iaAllocOk').onclick=()=>{if(used!==S.customNights)return;submitStep(step,alloc,step.display(alloc));};};render();break;}
+        // +1 on first dest = the transit/arrival day; keeps compute() days=customNights+1 → nts=customNights
+        $('iaAllocOk').onclick=()=>{if(used!==S.customNights)return;
+          S.dest.forEach((k,i)=>{ S.nights[k]= i===0 ? (alloc[k]||0)+1 : (alloc[k]||0); });
+          const disp=S.dest.map(k=>(DEST[k]?DEST[k].name:k)+': '+(alloc[k]||0)+'n').join(' · ');
+          submitStep(step,alloc,disp);};};render();break;}
     // Blockers 1+3+4: city-by-city accommodation, live SerpAPI per city, no demo language
     case 'hotel':{
       const plan=cityNightPlan();
@@ -731,9 +737,16 @@ function renderInput(step){
         const ci=c.arr?c.arr.toISOString().split('T')[0]:'';
         const co=c.dep?c.dep.toISOString().split('T')[0]:'';
         const min={comfort:3,premium:4,luxury:5}[tier]||3;
-        if(!LIVE_READY||!ci||!co){
+        // Fallback: if date chain produced no dates, estimate from startDate+cumulative nights
+        if(!ci||!co){
+          const sd=S.startDate?new Date(S.startDate):new Date();
+          let off=0;for(const dk of S.dest){if(dk===c.k)break;off+=(S.nights[dk]||1);}
+          const arrFb=new Date(sd.getTime()+off*86400000);
+          const depFb=new Date(arrFb.getTime()+((S.nights[c.k]||1))*86400000);
+          ci=arrFb.toISOString().split('T')[0];co=depFb.toISOString().split('T')[0];}
+        if(!LIVE_READY){
           live[c.k]=undefined;
-          console.warn('[IVY] Live hotels unavailable for',city,'\u2014',!LIVE_READY?'APPS_SCRIPT_URL not configured / hotelsjson route missing':'journey dates missing');
+          console.warn('[IVY hotels] APPS_SCRIPT_URL not configured — set it at the top of the file and paste the hotelsjson action into Code.gs then redeploy.');
           render();return;}
         try{
           const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
@@ -915,7 +928,10 @@ $('otpclose').onclick=()=>$('otp').style.display='none';
 $('sendcode').onclick=async()=>{
   const phone=$('phone').value.trim();if(!phone){$('otperr').textContent='Please enter your number.';return;}
   if(DEMO){$('otp1').classList.add('hide');$('otp2').classList.remove('hide');$('otperr').textContent='A 6-digit code has been sent to your number.';console.warn('[IVY] OTP fallback active — set FIREBASE_CONFIG for production SMS verification');return;}
-  try{if(!window._rv){window._rv=new firebase.auth.RecaptchaVerifier('recap',{size:'normal'});await window._rv.render();}
+  try{if(!window._rv){window._rv=new firebase.auth.RecaptchaVerifier('sendcode',{
+      size:'invisible',
+      callback:()=>{/* automatic on solve */},
+      'error-callback':()=>{$('otperr').textContent='reCAPTCHA failed. Please try again.';}});}
     confirmation=await firebase.auth().signInWithPhoneNumber(phone,window._rv);
     $('otp1').classList.add('hide');$('otp2').classList.remove('hide');
   }catch(err){$('otperr').textContent=err.message;}};
