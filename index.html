@@ -192,10 +192,14 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 
 <script>
 /* ======================== CONFIG ======================== */
-const FIREBASE_CONFIG = { apiKey:"AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM", authDomain:"ivory-arc-estimator-8727e.firebaseapp.com,
-  projectId:"ivory-arc-estimator-8727e", appId:"1:551942404838:web:4ca6260483724506271927" };
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdS-c5wJ6h-mImEmkX0jFBMHOUUA4Hbs4HyGaNFo6VUQQ6wCqzrIUcn1Xu1Py8jz7c/exec"; // hotels (live), lead, Razorpay
-const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps JS (Places Autocomplete) — referrer-restricted browser key
+const FIREBASE_CONFIG = {
+  apiKey:      "AIzaSyB542lOW-PHy5OX53kO7LZqGYGEpCQyBhM",
+  authDomain:  "ivory-arc-estimator-8727e.firebaseapp.com",
+  projectId:   "ivory-arc-estimator-8727e",
+  appId:       "1:551942404838:web:4ca6260483724506271927"
+};
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdS-c5wJ6h-mImEmkX0jFBMHOUUA4Hbs4HyGaNFo6VUQQ6wCqzrIUcn1Xu1Py8jz7c/exec";
+const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps — referrer-restricted browser key
 const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // internal fallback flag — never shown to customers
 const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
 const PLACES_READY = MAPS_BROWSER_KEY && MAPS_BROWSER_KEY.indexOf("PASTE_")!==0;
@@ -471,10 +475,10 @@ const FLOW=[
   {id:'start_date',type:'ask',botText:'When would you like your journey to begin?',inputType:'date',
     onAnswer:v=>{S.startDate=v;},
     display:v=>{try{return new Date(v).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'});}catch(e){return v;}}},
-  {id:'nights',type:'ask',botText:'How many nights are you planning?',inputType:'stepper',
-    min:1,max:21,initial:3,
+  {id:'nights',type:'ask',botText:'How many nights? Enter 0 for a same-day tour — we cover those too.',inputType:'stepper',
+    min:0,max:21,initial:3,
     onAnswer:v=>{S.customNights=v;},
-    display:v=>v+(v===1?' night':' nights')},
+    display:v=>v===0?'Same-day tour (no overnight)':v+(v===1?' night':' nights')},
   {id:'adults',type:'ask',botText:'How many adults will be travelling?',inputType:'stepper',
     min:1,max:12,initial:2,
     onAnswer:v=>{S.adults=v;autoVeh();},
@@ -604,15 +608,19 @@ function renderInput(step){
       $('iaSend').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();};break;}
     case 'date':{
       ia.innerHTML=`<div class="ia-card"><span class="cat">Journey start date</span>
-        <input type="date" id="chatDate" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;color:var(--ink)">
-        <button class="ia-continue" id="iaDateOk">Confirm date</button></div>`;
+        <input type="date" id="chatDate" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;color:var(--ink);display:block;margin-bottom:220px">
+        <button class="ia-continue" id="iaDateOk" style="margin-top:0">Confirm date</button></div>`;
       const mn=new Date().toISOString().split('T')[0];$('chatDate').min=mn;$('chatDate').value=S.startDate||mn;
       $('iaDateOk').onclick=()=>{const v=$('chatDate').value;if(!v)return;submitStep(step,v,step.display(v));};break;}
     case 'stepper':{
       let val=S[{nights:'customNights',adults:'adults',children:'children'}[step.id]]||step.initial||1;
-      const render=()=>{ia.innerHTML=`<div class="ia-card">
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0">
-          <div class="stepper"><button id="sM">&#8722;</button><span id="sV">${val}</span><button id="sP">&#43;</button></div>
+      const render=()=>{const stepLbl=step.id==='nights'?(val===0?'Day tour (same-day return)':val+(val===1?' night':' nights')):'';
+        ia.innerHTML=`<div class="ia-card">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0;flex-wrap:wrap">
+          <div>
+            <div class="stepper"><button id="sM">&#8722;</button><span id="sV">${val}</span><button id="sP">&#43;</button></div>
+            ${stepLbl?`<div style="text-align:center;font-size:12px;color:var(--gold);margin-top:4px">${stepLbl}</div>`:''}
+          </div>
           <button class="ia-continue" style="width:auto;padding:11px 28px;margin:0" id="iaSOk">Confirm</button>
         </div></div>`;
         $('sM').onclick=()=>{val=Math.max(step.min||0,val-1);render();};
