@@ -244,7 +244,7 @@ const FIREBASE_CONFIG = {
   projectId:   "ivory-arc-estimator-8727e",
   appId:       "1:551942404838:web:4ca6260483724506271927"
 };
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLxKza9PJDkN7NzKVNhZUVAilaCUdxXejXp-7hJCkVsfd-0CnPwSGhRCB7WoqJPoct/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdS-c5wJ6h-mImEmkX0jFBMHOUUA4Hbs4HyGaNFo6VUQQ6wCqzrIUcn1Xu1Py8jz7c/exec";
 const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps — referrer-restricted browser key
 const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // internal fallback flag — never shown to customers
 const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
@@ -582,7 +582,7 @@ function addBot(html){
 function addUser(text,stepId){
   const d=document.createElement('div');d.className='msg user';
   const editable=stepId?'data-edit="'+stepId+'" role="button" tabindex="0" title="Tap to change this answer" style="cursor:pointer"':'';
-  d.innerHTML=`<div class="bubble user-bubble" ${editable}>${esc(text)}<span class="ts">${nowTS()}</span>${stepId?'<span style="display:block;font-size:10px;color:var(--gold-text);text-align:right">tap to edit</span>':''}</div>`;
+  d.innerHTML=`<div class="bubble user-bubble" ${editable}>${esc(text)}<span class="ts">${nowTS()}</span>${stepId?'<span style="display:block;font-size:11px;color:var(--gold-text);text-align:right;margin-top:3px;font-weight:600">✎ edit</span>':''}</div>`;
   if(stepId){const b=d.querySelector('[data-edit]');
     const fire=()=>editAnswer(stepId);
     b.onclick=fire;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fire();}};}
@@ -979,67 +979,121 @@ function renderInput(step){
           submitStep(step,alloc,disp);};};render();break;}
     // Blockers 1+3+4: city-by-city accommodation, live SerpAPI per city, no demo language
     case 'hotel':{
-      const plan=cityNightPlan();
-      let tier='none';const picks={};const live={};
+      // Expansion map: package routes → component cities for hotel search
+      const ROUTE_HOTEL_CITIES={golden_triangle:[{k:'delhi',name:'Delhi',city:'Delhi'},{k:'agra',name:'Agra',city:'Agra'},{k:'jaipur',name:'Jaipur',city:'Jaipur'}]};
+      const basePlan=cityNightPlan();
+      let hotelPlan=[];
+      basePlan.forEach(c=>{
+        const exp=ROUTE_HOTEL_CITIES[c.k];
+        if(exp){
+          let cursor=c.arr?new Date(c.arr):null;
+          const def=Math.floor(c.nights/exp.length),rem=c.nights-def*exp.length;
+          const hcn=S.hotelCityNights||{};
+          exp.forEach((ec,ei)=>{
+            const n=hcn[ec.k]!==undefined?hcn[ec.k]:(ei<rem?def+1:def);
+            const arr=cursor?new Date(cursor):null;
+            const dep=arr&&n>0?new Date(arr.getTime()+n*86400000):null;
+            if(cursor&&dep)cursor=new Date(dep);
+            hotelPlan.push({k:ec.k,name:ec.name,city:ec.city,nights:n,arr,dep,parentK:c.k,parentNights:c.nights,expandGroup:exp.map(e=>e.k)});});}
+        else{
+          const sc=DEST_CITY[c.k]||c.name.split(' ')[0];
+          hotelPlan.push(Object.assign({},c,{city:sc}));}});
+      const needsAlloc=hotelPlan.some(c=>c.expandGroup);
+      const totalNights=S.customNights;
+      let allocNights={};
+      let nightsLocked=!needsAlloc;
+      if(needsAlloc){
+        const expCities=hotelPlan.filter(c=>c.expandGroup);
+        if(S.hotelCityNights){expCities.forEach(c=>{allocNights[c.k]=S.hotelCityNights[c.k]||0;});nightsLocked=true;}
+        else{expCities.forEach(c=>{allocNights[c.k]=c.nights;});}}
+      let tier='none';const picks={};const live={};let _fetchToken=0;
       const fmtD=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
-      let _fetchToken=0;
       const fetchCity=async(c)=>{
-        const myToken=_fetchToken;
-        live[c.k]=null;render();
-        const city=(DEST[c.k]?DEST[c.k].name:c.k).split(' &')[0];
+        const myToken=_fetchToken;live[c.k]=null;render();
+        const city=c.city||DEST_CITY[c.k]||(DEST[c.k]?DEST[c.k].name:c.k).split(' ')[0];
         let ci=c.arr?c.arr.toISOString().split('T')[0]:'';
         let co=c.dep?c.dep.toISOString().split('T')[0]:'';
-        const min={comfort:3,premium:4,luxury:5}[tier]||3;
-        // Fallback: if date chain produced no dates, estimate from startDate+cumulative nights
         if(!ci||!co){
           const sd=S.startDate?new Date(S.startDate):new Date();
-          let off=0;for(const dk of S.dest){if(dk===c.k)break;off+=(S.nights[dk]||1);}
-          const arrFb=new Date(sd.getTime()+off*86400000);
-          const depFb=new Date(arrFb.getTime()+((S.nights[c.k]||1))*86400000);
-          ci=arrFb.toISOString().split('T')[0];co=depFb.toISOString().split('T')[0];}
-        if(!LIVE_READY){
-          live[c.k]=undefined;
-          console.warn('[IVY hotels] APPS_SCRIPT_URL not configured — set it at the top of the file and paste the hotelsjson action into Code.gs then redeploy.');
-          render();return;}
+          let off=0;for(const ec of hotelPlan){if(ec.k===c.k)break;off+=ec.nights;}
+          const af=new Date(sd.getTime()+off*86400000);
+          const df=new Date(af.getTime()+c.nights*86400000);
+          ci=af.toISOString().split('T')[0];co=df.toISOString().split('T')[0];}
+        const min={comfort:3,premium:4,luxury:5}[tier]||3;
+        if(!LIVE_READY){live[c.k]=undefined;render();return;}
         try{
           const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
           const d=await fetch(u).then(r=>r.json());
-          if(!d.properties){const hint=d&&d.error?d.error:'No response';throw new Error('Hotels unavailable: '+hint+' \u2014 check SERPAPI_KEY in Script Properties and confirm the deployment is current (Deploy → Manage → edit → New version).');}
+          if(!d.properties){const hint=d&&d.error?d.error:'No response';throw new Error('Hotels unavailable: '+hint);}
           if(myToken!==_fetchToken)return;
           live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class).slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
               img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
-              loc:(p.gps_coordinates?'':''),
               nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
-        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.error('[IVY] Hotels fetch failed:',e.message,'| URL:',u);render();}
+        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.error('[IVY Hotels]',e.message,'|',city);}
         render();};
       const render=()=>{
         const pc=Object.keys(picks).length;
-        ia.innerHTML=`<div class="ia-card"><span class="cat">Accommodation</span>
-          <div class="qr-btns">`+
-          Object.keys(HOTELS).map(hh=>`<button class="qr-btn ${tier===hh?'on':''}" data-ht="${hh}" aria-pressed="${tier===hh}">${HOTELS[hh].l}</button>`).join('')+`</div>`+
-          (tier!=='none'&&plan.length?plan.map(c=>{
+        const allocSum=Object.values(allocNights).reduce((a,b)=>a+b,0);
+        const allocOk=allocSum===totalNights;
+        ia.innerHTML='<div class="ia-card"><span class="cat">Accommodation</span>'+
+          (needsAlloc&&!nightsLocked?'<div style="background:#FBF6EA;border-radius:10px;padding:14px;margin-bottom:14px">'+
+            '<div style="font-size:12.5px;font-weight:700;color:var(--gold-text);margin-bottom:12px">How many nights at each city? <span style="float:right;color:'+(allocOk?'#1A7E2A':'var(--gold-text)')+'">'+(allocSum)+'/'+totalNights+' nights '+(allocOk?'&#10003;':'')+'</span></div>'+
+            hotelPlan.filter(c=>c.expandGroup).map(c=>
+              '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">'+
+              '<span style="font-size:14px;font-weight:500;color:var(--ink)">'+c.name+'</span>'+
+              '<div style="display:flex;align-items:center;gap:6px">'+
+              '<button class="alloc-btn alloc-m" data-ak="'+c.k+'" style="width:32px;height:32px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-size:18px;cursor:pointer">&#8722;</button>'+
+              '<span style="min-width:28px;text-align:center;font-size:16px;font-weight:700">'+(allocNights[c.k]||0)+'</span>'+
+              '<button class="alloc-btn alloc-p" data-ak="'+c.k+'" style="width:32px;height:32px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-size:18px;cursor:pointer">&#43;</button>'+
+              '<span style="font-size:11.5px;color:var(--muted);min-width:34px">night'+(( allocNights[c.k]||0)!==1?'s':'')+'</span>'+
+              '</div></div>').join('')+
+            (allocOk?'<button class="ia-continue" id="iaAllocLock" style="margin-top:12px">Confirm city nights &#8594;</button>':'')+
+            '</div>':'')+
+          (nightsLocked?'<div class="qr-btns">'+
+            Object.keys(HOTELS).map(hh=>'<button class="qr-btn '+(tier===hh?'on':'')+' " data-ht="'+hh+'" aria-pressed="'+(tier===hh)+'">'+HOTELS[hh].l+'</button>').join('')+'</div>':'')+
+          (nightsLocked&&tier!=='none'&&hotelPlan.length?hotelPlan.filter(c=>c.nights>0).map(c=>{
             const pk=picks[c.k];const lv=live[c.k];
-            return `<div class="city-hotel"><div class="chc-head"><b>${c.name}</b><span>${c.nights} night${c.nights>1?'s':''}${c.arr?' \u00b7 '+fmtD(c.arr)+' \u2013 '+fmtD(c.dep):''}</span></div>`+
-              (pk?`<div class="hotel-row on"><b style="font-size:13.5px">${esc(pk.name)}</b>${pk.stars?' \u00b7 '+pk.stars+'&#9733;':''}${pk.rating?' \u00b7 '+pk.rating+' rated':''}<br><span style="color:var(--gold-text);font-size:12.5px">${fmt(pk.nightly)} per night</span></div>`:'')+
+            return '<div class="city-hotel"><div class="chc-head"><b>'+c.name+'</b><span>'+c.nights+' night'+(c.nights!==1?'s':'')+(c.arr?' \u00b7 '+fmtD(c.arr)+' \u2013 '+fmtD(c.dep):'')+' </span></div>'+
+              (pk?'<div class="hotel-row on"><b style="font-size:13.5px">'+esc(pk.name)+'</b>'+(pk.stars?' \u00b7 '+pk.stars+'&#9733;':'')+(pk.rating?' \u00b7 '+pk.rating+' rated':'')+'<br><span style="color:var(--gold-text);font-size:12.5px">'+fmt(pk.nightly)+' per night</span></div>':'')+
               (lv===null?'<p class="muted" style="font-size:12px;margin-top:6px">Checking live availability\u2026</p>':
-               Array.isArray(lv)&&lv.length?lv.map((hh,i)=>`<button type="button" class="cardify hotel-row ${pk&&pk.name===hh.name?'on':''}" data-ck="${c.k}" data-hi="${i}" aria-pressed="${!!(pk&&pk.name===hh.name)}" style="display:flex;gap:10px;align-items:center">${hh.img?`<img src="${esc(hh.img)}" alt="" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0">`:''}<span style="flex:1;min-width:0"><b style="font-size:13.5px">${esc(hh.name)}</b><br><span style="font-size:12px;color:var(--muted)">${hh.stars?hh.stars+'&#9733; \u00b7 ':''}${hh.rating?hh.rating+'/5 rated \u00b7 ':''}${esc(hh.area)}</span><br><span style="color:var(--gold-text);font-size:12.5px;font-weight:600">${fmt(hh.nightly)} per night</span></span></button>`).join(''):
-               Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches for these dates \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
-               (pk?'':'<p class="muted" style="font-size:12px;margin-top:6px">Your Journey Manager will confirm live options for these dates within 2 hours of your enquiry.</p>'))+
-            `</div>`;}).join('')+
-            `<div class="hotel-notice">Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.</div>`:'')+
-          `<button class="ia-continue" id="iaHotelOk" ${tier==='none'?'disabled':''}>${t('btn_confirm')}${pc?' ('+pc+')':''}</button>
-          <button class="ia-skip" id="iaHotelSkip">I'll arrange my own stays</button></div>`;
+               Array.isArray(lv)&&lv.length?lv.map((hh,hi)=>'<button type="button" class="cardify hotel-row '+(pk&&pk.name===hh.name?'on':'')+' " data-ck="'+c.k+'" data-hi="'+hi+'" aria-pressed="'+(  !!(pk&&pk.name===hh.name))+'" style="display:flex;gap:10px;align-items:center">'+(hh.img?'<img src="'+esc(hh.img)+'" alt="" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0">':'')+'<span style="flex:1;min-width:0"><b style="font-size:13.5px">'+esc(hh.name)+'</b><br><span style="font-size:12px;color:var(--muted)">'+(hh.stars?hh.stars+'&#9733; \u00b7 ':'')+(hh.rating?hh.rating+'/5 rated \u00b7 ':'')+esc(hh.area)+'</span><br><span style="color:var(--gold-text);font-size:12.5px;font-weight:600">'+fmt(hh.nightly)+' per night</span></span></button>').join(''):
+               Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
+               (pk?'':'<p class="muted" style="font-size:12px;margin-top:6px">Your Journey Manager will confirm live options within 2 hours.</p>'))+
+              '</div>';}).join('')+
+            '<div class="hotel-notice">Hotel availability and rates change frequently. Final confirmation at least 24 hours before departure.</div>':'')+
+          (nightsLocked?'<button class="ia-continue" id="iaHotelOk" '+(tier==='none'?'disabled':'')+'>'+t('btn_confirm')+(pc?' ('+pc+')':'')+'</button><button class="ia-skip" id="iaHotelSkip">I\u2019ll arrange my own stays</button>':'')+
+          '</div>';
+        ia.querySelectorAll('.alloc-btn').forEach(btn=>btn.onclick=()=>{
+          const k=btn.dataset.ak,d=btn.classList.contains('alloc-p')?1:-1;
+          const cur=allocNights[k]||0,sum=Object.values(allocNights).reduce((a,b)=>a+b,0);
+          if(d>0&&sum>=totalNights)return;if(d<0&&cur<=0)return;
+          allocNights[k]=cur+d;render();});
+        const lb=document.getElementById('iaAllocLock');
+        if(lb)lb.onclick=()=>{
+          S.hotelCityNights={...allocNights};persist();
+          let cursor=basePlan[0]&&basePlan[0].arr?new Date(basePlan[0].arr):null;
+          hotelPlan.forEach(c=>{
+            if(c.expandGroup)c.nights=allocNights[c.k]||0;
+            c.arr=cursor?new Date(cursor):null;
+            c.dep=c.arr&&c.nights>0?new Date(c.arr.getTime()+c.nights*86400000):null;
+            if(cursor&&c.dep)cursor=new Date(c.dep);});
+          nightsLocked=true;render();};
         ia.querySelectorAll('[data-ht]').forEach(b=>b.onclick=()=>{
-          tier=b.dataset.ht;_fetchToken++;Object.keys(live).forEach(k=>delete live[k]);Object.keys(picks).forEach(k=>delete picks[k]);
-          render();if(tier!=='none')plan.forEach(c=>fetchCity(c));});
-        ia.querySelectorAll('[data-ck]').forEach(el=>el.onclick=()=>{const k=el.dataset.ck;const hh=(live[k]||[])[+el.dataset.hi];if(hh){picks[k]=hh;render();}});
-        $('iaHotelOk').onclick=()=>{if(tier==='none')return;
-          S.cityHotels={};Object.keys(picks).forEach(k=>{S.cityHotels[k]={name:picks[k].name,nightly:picks[k].nightly,stars:picks[k].stars,rating:picks[k].rating};});
-          const firstPick=plan.length?picks[plan[0].k]:null;
-          const lbl=HOTELS[tier].l+(pc?' \u00b7 '+pc+' propert'+(pc>1?'ies':'y')+' selected':'');
-          submitStep(step,{tier,nightly:firstPick?firstPick.nightly:0,name:firstPick?firstPick.name:'',address:''},lbl);};
-        $('iaHotelSkip').onclick=()=>{S.cityHotels={};submitStep(step,{tier:'none',nightly:0,name:'',address:''},'I\'ll arrange my own stays');};};
+          tier=b.dataset.ht;_fetchToken++;
+          Object.keys(live).forEach(k=>delete live[k]);Object.keys(picks).forEach(k=>delete picks[k]);
+          render();if(tier!=='none')hotelPlan.filter(c=>c.nights>0).forEach(c=>fetchCity(c));});
+        ia.querySelectorAll('[data-ck]').forEach(el=>el.onclick=()=>{
+          const k=el.dataset.ck,hh=(live[k]||[])[+el.dataset.hi];
+          if(hh){picks[k]=hh;render();}});
+        const ok=document.getElementById('iaHotelOk');
+        if(ok)ok.onclick=()=>{if(tier==='none')return;
+          S.cityHotels={};
+          hotelPlan.forEach(c=>{if(picks[c.k])S.cityHotels[c.k]={name:picks[c.k].name,nightly:picks[c.k].nightly,stars:picks[c.k].stars,rating:picks[c.k].rating};});
+          const fp=hotelPlan.length?picks[hotelPlan[0].k]:null;
+          submitStep(step,{tier,nightly:fp?fp.nightly:0,name:fp?fp.name:'',address:''},HOTELS[tier].l+(pc?' \u00b7 '+pc+' propert'+(pc>1?'ies':'y')+' selected':''));};
+        const sk=document.getElementById('iaHotelSkip');
+        if(sk)sk.onclick=()=>{S.cityHotels={};submitStep(step,{tier:'none',nightly:0,name:'',address:''},'I\u2019ll arrange my own stays');};};
       render();break;}
     // Phase 10: vehicle after hotel
     case 'vehicle':{
