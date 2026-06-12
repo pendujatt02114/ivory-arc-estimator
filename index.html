@@ -1,16 +1,14 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plan with IVY — Ivory Arc Travels</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://checkout.razorpay.com">
 <style>
 :root{
   --green:#075E54;--green2:#128C7E;--bright:#25D366;
   --bg:#F5F0E8;--bub-user:#EDE5D8;--card:#fff;
-  --line:#E0D6CA;--muted:#9A9490;--ink:#2A2420;
-  --gold:#C9A84C;--gold-lt:#FBF6EA;--ivory:#FDF9F4;--ia-bg:#EDE8E0;
+  --line:#E0D6CA;--muted:#6E6862;--ink:#2A2420;
+  --gold:#C9A84C;--gold-text:#8B6B2A;--gold-lt:#FBF6EA;--ivory:#FDF9F4;--ia-bg:#EDE8E0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#1A1410;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;line-height:1.45;color:var(--ink)}
@@ -35,7 +33,7 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .bot-bubble{background:#fff;border-top-left-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .user-bubble{background:var(--bub-user);border-top-right-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 /* Phase 1: timestamps only, NO ticks */
-.ts{display:block;font-size:9.5px;color:var(--muted);text-align:right;margin-top:3px}
+.ts{display:block;font-size:11px;color:var(--muted);text-align:right;margin-top:3px}
 /* typing */
 .td{display:flex;gap:5px;padding:5px 4px}
 .dot{width:6px;height:6px;border-radius:50%;background:#BFB8B0;animation:td 1.4s infinite}
@@ -47,16 +45,16 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .input-area{background:var(--ia-bg);padding:8px 10px;flex-shrink:0;border-top:1px solid var(--line)}
 .ia-simple{display:flex;gap:8px;align-items:center}
 .ia-simple input{flex:1;border:0;border-radius:22px;padding:10px 16px;font-size:14px;outline:none;background:#fff;color:var(--ink)}
-.ia-send{width:40px;height:40px;border-radius:50%;background:var(--green);border:0;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ia-send{width:44px;height:44px;border-radius:50%;background:var(--green);border:0;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .ia-card{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.ia-card .cat{font-size:10px;font-weight:700;letter-spacing:1.3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;display:block}
+.ia-card .cat{font-size:10px;font-weight:700;letter-spacing:1.3px;color:var(--gold-text);text-transform:uppercase;margin-bottom:8px;display:block}
 .qr-btns{display:flex;flex-wrap:wrap;gap:8px}
-.qr-btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:9px 15px;font-size:13.5px;cursor:pointer;font-family:inherit;transition:all .15s}
+.qr-btn{min-height:44px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:9px 15px;font-size:13.5px;cursor:pointer;font-family:inherit;transition:all .15s}
 .qr-btn:hover{border-color:var(--gold)}.qr-btn.on{background:var(--gold);color:#fff;border-color:var(--gold)}
 .ia-continue{width:100%;background:var(--bright);color:#064A20;border:0;border-radius:8px;padding:12px;font-weight:600;font-size:14.5px;cursor:pointer;margin-top:10px;font-family:inherit}
 .ia-skip{width:100%;background:#fff;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:9px;font-size:13px;cursor:pointer;margin-top:6px;font-family:inherit}
 .stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
-.stepper button{border:0;background:var(--gold-lt);color:#8B6B2A;width:36px;height:36px;font-size:20px;cursor:pointer;flex-shrink:0;font-weight:300}
+.stepper button{border:0;background:var(--gold-lt);color:#8B6B2A;width:44px;height:44px;font-size:20px;cursor:pointer;flex-shrink:0;font-weight:300}
 .stepper span{min-width:42px;text-align:center;font-weight:600;font-size:17px}
 /* start location card */
 .start-opt{border:1px solid var(--line);border-left:3px solid transparent;border-radius:8px;padding:12px 14px;cursor:pointer;background:#fff;margin-top:7px;transition:all .15s}
@@ -77,15 +75,15 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .route-cards{display:flex;flex-direction:column;gap:7px;max-height:290px;overflow-y:auto}
 .route-card{border:1px solid var(--line);border-left:3px solid transparent;border-radius:8px;padding:11px 13px;cursor:pointer;background:#fff;transition:all .15s}
 .route-card:hover{border-left-color:var(--gold)}.route-card.on{background:var(--gold-lt);border-color:var(--gold);border-left-color:var(--gold)}
-.route-card .rc-cat{font-size:9px;font-weight:700;letter-spacing:1.3px;color:var(--gold);text-transform:uppercase;margin-bottom:3px}
+.route-card .rc-cat{font-size:9px;font-weight:700;letter-spacing:1.3px;color:var(--gold-text);text-transform:uppercase;margin-bottom:3px}
 .route-card .rc-nm{font-weight:600;font-size:14px}.route-card .rc-desc{font-size:11.5px;color:var(--muted);margin-top:2px}
-.route-card .rc-nights{font-size:11px;color:var(--gold);margin-top:4px;font-weight:600}
+.route-card .rc-nights{font-size:11px;color:var(--gold-text);margin-top:4px;font-weight:600}
 /* dest cards */
 .dest-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:230px;overflow-y:auto}
 .dest-card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;transition:border-color .15s}
 .dest-card:hover{border-color:var(--gold)}.dest-card.on{background:var(--gold-lt);border-color:var(--gold)}
 .dest-card .dc-nm{font-weight:600;font-size:13.5px}.dest-card .dc-rt{font-size:11px;color:var(--muted);margin-top:2px}
-.dest-card .dc-ord{font-size:10px;color:var(--gold);font-weight:700;margin-top:3px}
+.dest-card .dc-ord{font-size:10px;color:var(--gold-text);font-weight:700;margin-top:3px}
 /* feasibility warning */
 .feas-warn{background:#FEF9EC;border:1px solid var(--gold);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:13px}
 .feas-warn b{color:#8B6B2A}
@@ -98,7 +96,7 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 /* vehicle */
 .veh-btn{border:1px solid var(--line);border-radius:8px;padding:11px 13px;cursor:pointer;background:#fff;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;transition:all .15s}
 .veh-btn:hover{border-color:var(--gold)}.veh-btn.on{background:var(--gold-lt);border-color:var(--gold)}
-.veh-tag{font-size:10px;letter-spacing:.8px;font-weight:700;color:var(--gold);text-transform:uppercase}
+.veh-tag{font-size:10px;letter-spacing:.8px;font-weight:700;color:var(--gold-text);text-transform:uppercase}
 /* addons */
 .addon-row{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:7px;background:#fff;cursor:pointer;transition:all .15s}
 .addon-row:hover{border-color:var(--gold)}.addon-row.on{background:var(--gold-lt);border-color:var(--gold)}
@@ -108,11 +106,11 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 /* ─── PROPOSAL CARD (Phase 13) ─── */
 .est-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.09);color:var(--ink);margin:4px 0}
 .est-ch{background:var(--gold-lt);padding:14px 16px 12px;border-bottom:1px solid #EDE5D8}
-.est-ref{font-size:9.5px;letter-spacing:1.5px;color:var(--gold);font-weight:700;text-transform:uppercase}
+.est-ref{font-size:9.5px;letter-spacing:1.5px;color:var(--gold-text);font-weight:700;text-transform:uppercase}
 .est-ch-title{font-size:12.5px;font-weight:700;letter-spacing:1.2px;color:var(--ink);text-transform:uppercase;margin-top:2px}
 .est-sec{padding:11px 16px;border-bottom:1px solid #F0EAE0}
 .est-sec:last-child{border:0}
-.est-sl{font-size:9.5px;letter-spacing:1.5px;color:var(--gold);font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.est-sl{font-size:9.5px;letter-spacing:1.5px;color:var(--gold-text);font-weight:700;text-transform:uppercase;margin-bottom:8px}
 .est-pair{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
 .est-pl{color:var(--muted)}.est-pv{font-weight:500;text-align:right;max-width:57%}
 .est-route-disp{font-size:13.5px;font-weight:600;line-height:1.6}
@@ -123,7 +121,7 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .est-total-row{display:flex;justify-content:space-between;padding:11px 16px;background:var(--ink);color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px}
 .est-ppd-row{padding:8px 16px;background:var(--gold-lt);text-align:center;font-size:12px;color:#8B6B2A;border-bottom:1px solid #EDE5D8}
 .est-sched-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px}
-.est-sched-label{color:var(--muted)}.est-sched-adv{font-weight:700;color:var(--gold)}
+.est-sched-label{color:var(--muted)}.est-sched-adv{font-weight:700;color:var(--gold-text)}
 .est-incl-item{font-size:12px;color:var(--muted);padding:3px 0;display:flex;gap:6px}
 .est-incl-item::before{content:"—";color:var(--gold);flex-shrink:0}
 .est-note{padding:10px 16px;background:#F8F4EE;border-top:1px solid #EDE5D8;font-size:11.5px;color:var(--muted);line-height:1.6}
@@ -155,6 +153,11 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 .c-btn{padding:8px 14px;font-size:13px}
 .c-btn.on{background:var(--gold);color:#fff;border-color:var(--gold)}
 #beginBtn{background:var(--bright);color:#064A20;border:0;border-radius:8px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:inherit}
+button.cardify{display:block;width:100%;text-align:left;font-family:inherit;font-size:inherit;color:inherit;background:#fff}
+:focus-visible{outline:3px solid #8B6B2A;outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}.chat-bg{scroll-behavior:auto}}
+.locked-amt{filter:blur(7px);user-select:none;position:relative}
+.unlock-pill{display:inline-block;background:var(--gold);color:#fff;border-radius:12px;font-size:10px;padding:2px 9px;margin-left:8px;letter-spacing:.5px;vertical-align:1px}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(26,20,16,.75);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
 .modal .box{background:#fff;border-radius:14px;padding:22px;max-width:380px;width:100%;border-top:3px solid var(--gold)}
@@ -213,19 +216,22 @@ header select{background:var(--green2);color:#fff;border:1px solid rgba(255,255,
 </div>
 <div class="chat-bg" id="chatBg">
   <div class="date-badge"><span id="dateBadge"></span></div>
-  <div id="messages"></div>
+  <div id="messages" aria-live="polite" aria-atomic="false" role="log" aria-label="Conversation with IVY"></div>
 </div>
 <div class="input-area" id="inputArea"></div>
 </div>
-<div class="modal" id="otp"><div class="box">
-  <h3>Verify your number</h3>
+<div class="modal" id="otp" role="dialog" aria-modal="true" aria-labelledby="otpTitle"><div class="box">
+  <h3 id="otpTitle">Verify your number</h3>
   <div id="otp1"><p class="muted">We'll send a 6-digit code.</p>
-    <input type="tel" id="phone" placeholder="+91 98765 43210">
+    <label for="phone" class="muted" style="display:block;text-align:left;font-size:12px">WhatsApp number with country code</label>
+    <input type="tel" id="phone" placeholder="+91 98765 43210" autocomplete="tel">
     <div id="recap" style="margin:10px 0;overflow:hidden;max-width:100%;transform-origin:left top"></div>
     <button class="btn" id="sendcode">Send code</button></div>
   <div id="otp2" class="hide"><p class="muted">Enter the 6-digit code.</p>
-    <input type="tel" id="code" placeholder="6-digit code">
-    <button class="btn" id="verifycode" style="margin-top:10px">Verify &amp; reveal</button></div>
+    <input type="tel" id="code" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+    <button class="btn" id="verifycode" style="margin-top:10px">Verify &amp; reveal</button>
+    <button class="btn-ghost" id="resendcode" style="margin-top:6px" disabled>Resend code (30)</button>
+    <button class="btn-ghost" id="editnumber" style="margin-top:4px">Change number</button></div>
   <div id="otperr" class="err"></div>
   <button class="btn-ghost" id="otpclose">Cancel</button>
 </div></div>
@@ -245,14 +251,52 @@ const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
 const PLACES_READY = MAPS_BROWSER_KEY && MAPS_BROWSER_KEY.indexOf("PASTE_")!==0;
 
 /* ======================== DATA ========================= */
-const DATA = {"DEST": {"golden_triangle": {"name": "Golden Triangle", "base": 11000, "int": ["heritage"], "note": "Delhi · Agra · Jaipur", "exp": "golden_triangle"}, "delhi": {"name": "Delhi", "base": 5000, "int": ["heritage", "food"], "exp": "delhi"}, "agra": {"name": "Agra", "base": 7500, "int": ["heritage", "food"], "note": "Taj Mahal", "exp": "agra"}, "jaipur": {"name": "Jaipur", "base": 8000, "int": ["heritage", "food"], "exp": "jaipur"}, "udaipur": {"name": "Udaipur", "base": 13500, "int": ["heritage"], "exp": "jaipur"}, "jodhpur": {"name": "Jodhpur", "base": 11000, "int": ["heritage"], "exp": "jaipur"}, "pushkar": {"name": "Pushkar", "base": 8000, "int": ["heritage", "spiritual"], "exp": "jaipur"}, "haridwar": {"name": "Haridwar", "base": 8000, "int": ["spiritual"], "note": "Ganga aarti", "exp": "mathura", "grp": "Haridwar & Rishikesh — one tour"}, "rishikesh": {"name": "Rishikesh", "base": 13500, "int": ["spiritual"], "note": "hill terrain · higher rate", "exp": "rishikesh", "grp": "Haridwar & Rishikesh — one tour"}, "mathura_vrindavan": {"name": "Mathura & Vrindavan", "base": 7500, "int": ["spiritual"], "exp": "mathura"}, "varanasi": {"name": "Varanasi", "base": 11000, "int": ["spiritual"], "exp": "varanasi"}, "ayodhya": {"name": "Ayodhya", "base": 13500, "int": ["spiritual"], "exp": "varanasi"}, "amritsar": {"name": "Amritsar", "base": 9000, "int": ["spiritual", "food"], "note": "Golden Temple", "exp": "amritsar"}, "kainchi_dham": {"name": "Kainchi Dham", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "vaishno_devi": {"name": "Vaishno Devi", "base": 13500, "int": ["spiritual"], "exp": "vaishno_devi"}, "jwala_ji": {"name": "Jwala Ji", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "chintpurni": {"name": "Chintpurni", "base": 13500, "int": ["spiritual"], "exp": "mathura"}, "jim_corbett": {"name": "Jim Corbett", "base": 11000, "int": ["wildlife"], "note": "tigers", "exp": "jim_corbett"}, "ranthambore": {"name": "Ranthambore", "base": 8000, "int": ["wildlife"], "note": "tigers", "exp": "jaipur"}, "shimla_manali": {"name": "Shimla & Manali", "base": 13500, "int": ["mountains"], "note": "one combined hill tour", "exp": "manali"}, "dharamshala": {"name": "Dharamshala & McLeodganj", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "dalhousie": {"name": "Dalhousie & Khajjiar", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "mussoorie": {"name": "Mussoorie & Landour", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "nainital": {"name": "Nainital & Kumaon", "base": 13500, "int": ["mountains"], "exp": "shimla"}, "chandigarh": {"name": "Chandigarh", "base": 8000, "int": ["food"], "exp": "amritsar"}}, "EXPER": {"agra": [{"id": "a-hwalk", "label": "Heritage Walk", "price": 800, "t": "pp"}, {"id": "a-mdinner", "label": "Mughal Heritage Dinner", "price": 3500, "t": "pp"}, {"id": "a-petha", "label": "Petha Sweet Workshop", "price": 600, "t": "pp"}, {"id": "a-tonga", "label": "Tonga Ride", "price": 800, "t": "grp"}, {"id": "a-marble", "label": "Marble Inlay Workshop", "price": 1200, "t": "pp"}, {"id": "a-staj", "label": "Sunrise Taj Entry", "price": 1500, "t": "pp"}, {"id": "a-vip", "label": "VIP Fast-Track Entry", "price": 1200, "t": "pp"}, {"id": "a-photo", "label": "Personal Photographer (4h)", "price": 5500, "t": "grp"}], "jaipur": [{"id": "j-amber", "label": "Amber Fort Entry", "price": 800, "t": "pp"}, {"id": "j-camel", "label": "Camel Ride", "price": 700, "t": "pp"}, {"id": "j-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "j-block", "label": "Block Printing Workshop", "price": 900, "t": "pp"}, {"id": "j-balloon", "label": "Balloon Sunrise", "price": 8500, "t": "pp"}, {"id": "j-rdinner", "label": "Royal Dinner", "price": 3200, "t": "pp"}, {"id": "j-jwalk", "label": "Jewellery Quarter Walk", "price": 1200, "t": "grp"}], "rishikesh": [{"id": "r-raft1", "label": "River Rafting (Grade 1-3)", "price": 1200, "t": "pp"}, {"id": "r-raft4", "label": "Rafting Grade 4", "price": 2200, "t": "pp"}, {"id": "r-bungee", "label": "Bungee Jumping", "price": 3500, "t": "pp"}, {"id": "r-yoga", "label": "Yoga Session", "price": 800, "t": "pp"}, {"id": "r-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "r-camp", "label": "Riverside Camping", "price": 2800, "t": "pp"}, {"id": "r-nkanth", "label": "Neelkanth Temple Trek", "price": 900, "t": "grp"}], "amritsar": [{"id": "am-wvip", "label": "Wagah VIP Enclosure", "price": 500, "t": "pp"}, {"id": "am-fwalk", "label": "Street Food Walk", "price": 1500, "t": "grp"}, {"id": "am-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "am-pmuseum", "label": "Partition Museum", "price": 400, "t": "pp"}, {"id": "am-langar", "label": "Langar Experience", "price": 0, "t": "pp"}, {"id": "am-gobind", "label": "Gobindgarh Fort", "price": 600, "t": "pp"}], "mathura": [{"id": "m-iskcon", "label": "ISKCON Visit & Aarti", "price": 0, "t": "pp"}, {"id": "m-boat", "label": "Boat Ride on Yamuna", "price": 600, "t": "grp"}, {"id": "m-flower", "label": "Flower Ceremony", "price": 500, "t": "grp"}, {"id": "m-ericks", "label": "E-Rickshaw Old City", "price": 400, "t": "grp"}, {"id": "m-holi", "label": "Holi Colour Experience", "price": 1200, "t": "grp"}], "delhi": [{"id": "d-odwalk", "label": "Old Delhi Walking Tour", "price": 1200, "t": "grp"}, {"id": "d-rick", "label": "Rickshaw Ride", "price": 600, "t": "grp"}, {"id": "d-food", "label": "Food Walk Chandni Chowk", "price": 1500, "t": "grp"}, {"id": "d-haat", "label": "Dilli Haat Visit", "price": 400, "t": "pp"}, {"id": "d-aksh", "label": "Akshardham Guided Tour", "price": 800, "t": "pp"}, {"id": "d-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "varanasi": [{"id": "v-boat", "label": "Dawn Boat Experience", "price": 1200, "t": "pp"}, {"id": "v-silk", "label": "Silk Weaving Workshop", "price": 1400, "t": "grp"}, {"id": "v-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "v-bless", "label": "Blessing Ceremony", "price": 800, "t": "grp"}, {"id": "v-cook", "label": "Cooking Class", "price": 2200, "t": "grp"}, {"id": "v-pind", "label": "Pind Daan Ritual", "price": 3500, "t": "grp"}, {"id": "v-over", "label": "Overnight Ganges Experience", "price": 4500, "t": "grp"}], "shimla": [{"id": "sm-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "sm-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "sm-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "sm-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "sm-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "sm-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}], "manali": [{"id": "mn-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "mn-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "mn-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "mn-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "mn-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "mn-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}], "jim_corbett": [{"id": "c-bij", "label": "Bijrani Zone Safari", "price": 2500, "t": "grp", "coord": true}, {"id": "c-ele", "label": "Elephant Safari", "price": 1800, "t": "pp", "coord": true}, {"id": "c-night", "label": "Night Safari", "price": 3200, "t": "grp", "coord": true}, {"id": "c-bird", "label": "Expert Birdwatching", "price": 1400, "t": "grp"}, {"id": "c-fish", "label": "Fishing on Kosi", "price": 1200, "t": "grp"}, {"id": "c-photo", "label": "Wildlife Photography Tour", "price": 5500, "t": "grp"}], "golden_triangle": [{"id": "g-staj", "label": "Sunrise Taj Entry", "price": 1500, "t": "pp"}, {"id": "g-vip", "label": "VIP Taj Entry", "price": 1200, "t": "pp"}, {"id": "g-mdinner", "label": "Mughal Dinner Agra", "price": 3500, "t": "pp"}, {"id": "g-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "g-balloon", "label": "Balloon Sunrise Jaipur", "price": 8500, "t": "pp"}, {"id": "g-rdinner", "label": "Royal Dinner Jaipur", "price": 3200, "t": "pp"}, {"id": "g-owalk", "label": "Old Delhi Walk", "price": 1200, "t": "grp"}, {"id": "g-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "vaishno_devi": [{"id": "vd-heli", "label": "Helicopter Upgrade", "price": 2800, "t": "pp"}, {"id": "vd-vip", "label": "VIP Darshan Arrangement", "price": 1500, "t": "pp"}, {"id": "vd-shivk", "label": "Shiv Khori Excursion", "price": 1200, "t": "grp"}, {"id": "vd-patni", "label": "Patnitop Extension", "price": 2000, "t": "pp"}]}, "FX": {"INR": {"r": 1, "s": "₹"}, "USD": {"r": 85, "s": "$"}, "EUR": {"r": 100, "s": "€"}, "GBP": {"r": 108, "s": "£"}}, "VEH": {"sedan": {"l": "Sedan", "r": 18, "g": "1–2"}, "suv": {"l": "SUV", "r": 24, "g": "3–4"}, "tempo": {"l": "Tempo Traveller", "r": 38, "g": "5–10"}, "luxury": {"l": "Mercedes / BMW / Audi", "r": 55, "g": "premium"}}, "HOTELS": {"none": {"l": "No stays needed", "n": 0}, "comfort": {"l": "Comfort 3★", "n": 5500}, "premium": {"l": "Premium 4★", "n": 11000}, "luxury": {"l": "Luxury 5★", "n": 26500}}, "INTERESTS": ["heritage", "spiritual", "wildlife", "mountains", "food"]};
+const DATA = {"DEST": {"golden_triangle": {"name": "Golden Triangle", "base": 11000, "int": ["heritage"], "note": "Delhi · Agra · Jaipur", "exp": "golden_triangle"}, "delhi": {"name": "Delhi", "base": 5000, "int": ["heritage", "food"], "exp": "delhi"}, "agra": {"name": "Agra", "base": 7500, "int": ["heritage", "food"], "note": "Taj Mahal", "exp": "agra"}, "jaipur": {"name": "Jaipur", "base": 8000, "int": ["heritage", "food"], "exp": "jaipur"}, "udaipur": {"name": "Udaipur", "base": 13500, "int": ["heritage"], "exp": "udaipur"}, "jodhpur": {"name": "Jodhpur", "base": 11000, "int": ["heritage"], "exp": "jodhpur"}, "pushkar": {"name": "Pushkar", "base": 8000, "int": ["heritage", "spiritual"], "exp": "pushkar"}, "haridwar": {"name": "Haridwar", "base": 8000, "int": ["spiritual"], "note": "Ganga aarti", "exp": "haridwar", "grp": "Haridwar & Rishikesh — one tour"}, "rishikesh": {"name": "Rishikesh", "base": 13500, "int": ["spiritual"], "note": "hill terrain · higher rate", "exp": "rishikesh", "grp": "Haridwar & Rishikesh — one tour"}, "mathura_vrindavan": {"name": "Mathura & Vrindavan", "base": 7500, "int": ["spiritual"], "exp": "mathura_vrindavan"}, "varanasi": {"name": "Varanasi", "base": 11000, "int": ["spiritual"], "exp": "varanasi"}, "ayodhya": {"name": "Ayodhya", "base": 13500, "int": ["spiritual"], "exp": "ayodhya"}, "amritsar": {"name": "Amritsar", "base": 9000, "int": ["spiritual", "food"], "note": "Golden Temple", "exp": "amritsar"}, "kainchi_dham": {"name": "Kainchi Dham", "base": 13500, "int": ["spiritual"], "exp": "kainchi_dham"}, "vaishno_devi": {"name": "Vaishno Devi", "base": 13500, "int": ["spiritual"], "exp": "vaishno_devi"}, "jwala_ji": {"name": "Jwala Ji", "base": 13500, "int": ["spiritual"], "exp": "jwala_ji"}, "chintpurni": {"name": "Chintpurni", "base": 13500, "int": ["spiritual"], "exp": "chintpurni"}, "jim_corbett": {"name": "Jim Corbett", "base": 11000, "int": ["wildlife"], "note": "tigers", "exp": "jim_corbett"}, "ranthambore": {"name": "Ranthambore", "base": 8000, "int": ["wildlife"], "note": "tigers", "exp": "ranthambore"}, "shimla_manali": {"name": "Shimla & Manali", "base": 13500, "int": ["mountains"], "note": "one combined hill tour", "exp": "shimla_manali"}, "dharamshala": {"name": "Dharamshala & McLeodganj", "base": 13500, "int": ["mountains"], "exp": "dharamshala"}, "dalhousie": {"name": "Dalhousie & Khajjiar", "base": 13500, "int": ["mountains"], "exp": "dalhousie"}, "mussoorie": {"name": "Mussoorie & Landour", "base": 13500, "int": ["mountains"], "exp": "mussoorie"}, "nainital": {"name": "Nainital & Kumaon", "base": 13500, "int": ["mountains"], "exp": "nainital"}, "chandigarh": {"name": "Chandigarh", "base": 8000, "int": ["food"], "exp": "chandigarh"}}, "EXPER": {"agra": [{"id": "a-hwalk", "label": "Heritage Walk", "price": 800, "t": "pp"}, {"id": "a-mdinner", "label": "Mughal Heritage Dinner", "price": 3500, "t": "pp"}, {"id": "a-petha", "label": "Petha Sweet Workshop", "price": 600, "t": "pp"}, {"id": "a-tonga", "label": "Tonga Ride", "price": 800, "t": "grp"}, {"id": "a-marble", "label": "Marble Inlay Workshop", "price": 1200, "t": "pp"}, {"id": "a-staj", "label": "Sunrise Taj Experience", "price": 1500, "t": "pp"}, {"id": "a-vip", "label": "VIP Fast-Track Entry", "price": 1200, "t": "pp"}, {"id": "a-photo", "label": "Personal Photographer (4h)", "price": 5500, "t": "grp"}, {"id": "a-mfood", "label": "Mughal Food Walk", "price": 1900, "t": "pp"}, {"id": "a-mehtab", "label": "Mehtab Bagh Sunset (Taj river view)", "price": 900, "t": "pp"}], "jaipur": [{"id": "j-amber", "label": "Amber Fort Entry", "price": 800, "t": "pp"}, {"id": "j-camel", "label": "Camel Ride", "price": 700, "t": "pp"}, {"id": "j-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "j-block", "label": "Block Printing Workshop", "price": 900, "t": "pp"}, {"id": "j-balloon", "label": "Balloon Sunrise", "price": 8500, "t": "pp"}, {"id": "j-rdinner", "label": "Royal Dinner", "price": 3200, "t": "pp"}, {"id": "j-jwalk", "label": "Jewellery Quarter Walk", "price": 1200, "t": "grp"}], "rishikesh": [{"id": "r-raft1", "label": "River Rafting (Grade 1-3)", "price": 1200, "t": "pp"}, {"id": "r-raft4", "label": "Rafting Grade 4", "price": 2200, "t": "pp"}, {"id": "r-bungee", "label": "Bungee Jumping", "price": 3500, "t": "pp"}, {"id": "r-yoga", "label": "Yoga Session", "price": 800, "t": "pp"}, {"id": "r-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "r-camp", "label": "Riverside Camping", "price": 2800, "t": "pp"}, {"id": "r-nkanth", "label": "Neelkanth Temple Trek", "price": 900, "t": "grp"}], "amritsar": [{"id": "am-wvip", "label": "Wagah Border Ceremony (VIP Enclosure)", "price": 500, "t": "pp"}, {"id": "am-fwalk", "label": "Street Food Walk", "price": 1500, "t": "grp"}, {"id": "am-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "am-pmuseum", "label": "Partition Museum", "price": 400, "t": "pp"}, {"id": "am-langar", "label": "Langar Experience", "price": 0, "t": "pp"}, {"id": "am-gobind", "label": "Gobindgarh Fort", "price": 600, "t": "pp"}, {"id": "am-gwalk", "label": "Golden Temple Heritage Walk", "price": 1200, "t": "pp"}], "delhi": [{"id": "d-odwalk", "label": "Old Delhi Walking Tour", "price": 1200, "t": "grp"}, {"id": "d-rick", "label": "Rickshaw Ride", "price": 600, "t": "grp"}, {"id": "d-food", "label": "Food Walk Chandni Chowk", "price": 1500, "t": "grp"}, {"id": "d-haat", "label": "Dilli Haat Visit", "price": 400, "t": "pp"}, {"id": "d-aksh", "label": "Akshardham Guided Tour", "price": 800, "t": "pp"}, {"id": "d-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "varanasi": [{"id": "v-boat", "label": "Dawn Boat Experience", "price": 1200, "t": "pp"}, {"id": "v-silk", "label": "Silk Weaving Workshop", "price": 1400, "t": "grp"}, {"id": "v-aarti", "label": "Ganga Aarti VIP Seating", "price": 600, "t": "pp"}, {"id": "v-bless", "label": "Blessing Ceremony", "price": 800, "t": "grp"}, {"id": "v-cook", "label": "Cooking Class", "price": 2200, "t": "grp"}, {"id": "v-pind", "label": "Pind Daan Ritual", "price": 3500, "t": "grp"}, {"id": "v-over", "label": "Overnight Ganges Experience", "price": 4500, "t": "grp"}], "jim_corbett": [{"id": "c-bij", "label": "Bijrani Zone Safari", "price": 2500, "t": "grp", "coord": true}, {"id": "c-ele", "label": "Elephant Safari", "price": 1800, "t": "pp", "coord": true}, {"id": "c-night", "label": "Night Safari", "price": 3200, "t": "grp", "coord": true}, {"id": "c-bird", "label": "Expert Birdwatching", "price": 1400, "t": "grp"}, {"id": "c-fish", "label": "Fishing on Kosi", "price": 1200, "t": "grp"}, {"id": "c-photo", "label": "Wildlife Photography Tour", "price": 5500, "t": "grp"}], "golden_triangle": [{"id": "g-staj", "label": "Sunrise Taj Entry", "price": 1500, "t": "pp"}, {"id": "g-vip", "label": "VIP Taj Entry", "price": 1200, "t": "pp"}, {"id": "g-mdinner", "label": "Mughal Dinner Agra", "price": 3500, "t": "pp"}, {"id": "g-turban", "label": "Turban Tying", "price": 400, "t": "grp"}, {"id": "g-balloon", "label": "Balloon Sunrise Jaipur", "price": 8500, "t": "pp"}, {"id": "g-rdinner", "label": "Royal Dinner Jaipur", "price": 3200, "t": "pp"}, {"id": "g-owalk", "label": "Old Delhi Walk", "price": 1200, "t": "grp"}, {"id": "g-photo", "label": "Personal Photographer", "price": 5500, "t": "grp"}], "vaishno_devi": [{"id": "vd-heli", "label": "Helicopter Upgrade", "price": 2800, "t": "pp"}, {"id": "vd-vip", "label": "VIP Darshan Arrangement", "price": 1500, "t": "pp"}, {"id": "vd-shivk", "label": "Shiv Khori Excursion", "price": 1200, "t": "grp"}, {"id": "vd-patni", "label": "Patnitop Extension", "price": 2000, "t": "pp"}], "mathura_vrindavan": [{"id": "m-iskcon", "label": "ISKCON Visit & Aarti", "price": 0, "t": "pp"}, {"id": "m-boat", "label": "Boat Ride on Yamuna", "price": 600, "t": "grp"}, {"id": "m-flower", "label": "Flower Ceremony", "price": 500, "t": "grp"}, {"id": "m-ericks", "label": "E-Rickshaw Old City", "price": 400, "t": "grp"}, {"id": "m-holi", "label": "Holi Colour Experience", "price": 1200, "t": "grp"}], "shimla_manali": [{"id": "sm-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "sm-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "sm-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "sm-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "sm-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "sm-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}, {"id": "mn-para", "label": "Paragliding Solang", "price": 2500, "t": "pp"}, {"id": "mn-snow", "label": "Snow Sports Package", "price": 1800, "t": "pp"}, {"id": "mn-spa", "label": "Himalayan Spa", "price": 3200, "t": "grp"}, {"id": "mn-camp", "label": "Mountain Camping", "price": 2800, "t": "pp"}, {"id": "mn-bike", "label": "Mountain Biking", "price": 1600, "t": "pp"}, {"id": "mn-meal", "label": "Local Home-Cooked Meal", "price": 1200, "t": "grp"}], "chandigarh": [{"id": "ch-rock", "label": "Rock Garden Guided Visit", "price": 400, "t": "pp"}, {"id": "ch-sukhna", "label": "Sukhna Lake Boating", "price": 600, "t": "grp"}, {"id": "ch-capitol", "label": "Capitol Complex Architecture Tour", "price": 2500, "t": "grp"}, {"id": "ch-food", "label": "Chandigarh Food Trail", "price": 1800, "t": "pp"}], "udaipur": [{"id": "u-boat", "label": "Lake Pichola Sunset Boat", "price": 1500, "t": "pp"}, {"id": "u-cook", "label": "Mewari Cooking Class", "price": 2200, "t": "pp"}, {"id": "u-bagore", "label": "Bagore ki Haveli Dance Show", "price": 700, "t": "pp"}, {"id": "u-vintage", "label": "Vintage Car Museum", "price": 800, "t": "pp"}], "jodhpur": [{"id": "jo-zip", "label": "Mehrangarh Zipline", "price": 2100, "t": "pp"}, {"id": "jo-blue", "label": "Blue City Heritage Walk", "price": 900, "t": "pp"}, {"id": "jo-spice", "label": "Spice Market Tour", "price": 700, "t": "pp"}, {"id": "jo-dinner", "label": "Rooftop Fort-View Dinner", "price": 1800, "t": "pp"}], "pushkar": [{"id": "p-camel", "label": "Sunset Camel Safari", "price": 900, "t": "pp"}, {"id": "p-aarti", "label": "Pushkar Lake Evening Aarti", "price": 0, "t": "pp"}, {"id": "p-cafe", "label": "Holy Town Café & Bazaar Walk", "price": 600, "t": "pp"}], "haridwar": [{"id": "h-aarti", "label": "Ganga Aarti at Har Ki Pauri (reserved ghat seating)", "price": 600, "t": "pp"}, {"id": "h-ropeway", "label": "Mansa Devi Ropeway", "price": 400, "t": "pp"}, {"id": "h-bazaar", "label": "Old Haridwar Bazaar Walk", "price": 700, "t": "pp"}], "ayodhya": [{"id": "ay-darshan", "label": "Ram Mandir Darshan Assistance", "price": 800, "t": "pp"}, {"id": "ay-saryu", "label": "Saryu Evening Aarti & Boat", "price": 700, "t": "pp"}, {"id": "ay-ghats", "label": "Heritage Ghats Walk", "price": 600, "t": "pp"}], "kainchi_dham": [{"id": "k-darshan", "label": "Kainchi Dham Darshan & Prasad", "price": 300, "t": "pp"}, {"id": "k-bhimtal", "label": "Bhimtal Lakeside Halt", "price": 500, "t": "grp"}], "jwala_ji": [{"id": "jw-darshan", "label": "Jwala Ji Darshan Assistance", "price": 500, "t": "pp"}, {"id": "jw-kangra", "label": "Kangra Fort Visit", "price": 600, "t": "pp"}], "chintpurni": [{"id": "cp-darshan", "label": "Chintpurni Darshan Assistance", "price": 500, "t": "pp"}, {"id": "cp-walk", "label": "Temple Town Walk", "price": 400, "t": "pp"}], "ranthambore": [{"id": "rn-safari", "label": "Gypsy Safari (per seat, per drive)", "price": 1800, "t": "pp"}, {"id": "rn-fort", "label": "Ranthambore Fort Walk", "price": 700, "t": "pp"}, {"id": "rn-photo", "label": "Wildlife Photography Guide (full day)", "price": 3500, "t": "grp"}], "dharamshala": [{"id": "dh-monastery", "label": "Namgyal Monastery & Dalai Lama Temple", "price": 500, "t": "pp"}, {"id": "dh-triund", "label": "Guided Triund Trek", "price": 1500, "t": "pp"}, {"id": "dh-tibet", "label": "Tibetan Cooking Class", "price": 1400, "t": "pp"}, {"id": "dh-hpca", "label": "HPCA Cricket Stadium Visit", "price": 400, "t": "pp"}], "dalhousie": [{"id": "dl-khajjiar", "label": "Khajjiar Meadow Excursion", "price": 900, "t": "pp"}, {"id": "dl-kalatop", "label": "Kalatop Forest Walk", "price": 700, "t": "pp"}, {"id": "dl-mall", "label": "Colonial Mall Road Walk", "price": 400, "t": "pp"}], "mussoorie": [{"id": "mu-cable", "label": "Gun Hill Cable Car", "price": 500, "t": "pp"}, {"id": "mu-landour", "label": "Landour Bakery & Char Dukan Walk", "price": 800, "t": "pp"}, {"id": "mu-kempty", "label": "Kempty Falls Visit", "price": 400, "t": "pp"}], "nainital": [{"id": "n-boat", "label": "Naini Lake Boating", "price": 600, "t": "grp"}, {"id": "n-cable", "label": "Snow View Cable Car", "price": 600, "t": "pp"}, {"id": "n-mall", "label": "Mall Road & Tibetan Market Walk", "price": 400, "t": "pp"}]}, "FX": {"INR": {"r": 1, "s": "₹"}, "USD": {"r": 85, "s": "$"}, "EUR": {"r": 100, "s": "€"}, "GBP": {"r": 108, "s": "£"}}, "VEH": {"sedan": {"l": "Sedan", "r": 18, "g": "1–2"}, "suv": {"l": "SUV", "r": 24, "g": "3–4"}, "tempo": {"l": "Tempo Traveller", "r": 38, "g": "5–10"}, "luxury": {"l": "Mercedes / BMW / Audi", "r": 55, "g": "premium"}}, "HOTELS": {"none": {"l": "No stays needed", "n": 0}, "comfort": {"l": "Comfort 3★", "n": 5500}, "premium": {"l": "Premium 4★", "n": 11000}, "luxury": {"l": "Luxury 5★", "n": 26500}}, "INTERESTS": ["heritage", "spiritual", "wildlife", "mountains", "food"]};
 const {DEST,EXPER,FX,VEH,HOTELS} = DATA;
 
 /* ======================== TRANSLATIONS ================= */
-const T={"en": {"welcome_h": "Welcome — let's plan your North India", "welcome_sub": "A private, transparent estimate in a few taps. Your number is verified before we share the final figure.", "l_name": "Your name", "l_email": "Email (we'll send your estimate here)", "l_interest": "What's calling you to North India?", "dest_h": "Choose your destinations", "dest_sub": "Here's what we curate for your interest — pick all that pull at you.", "trip_h": "Your trip", "trip_sub": "So we plan something realistic, not rushed.", "l_arrival": "Arrival city", "l_tourdays": "Days free for the tour", "note_days": "Here for work or family too? Enter only the days actually free to travel — we'll plan around the rest.", "l_adults": "Adults", "l_children": "Children", "l_nat": "Nationality (for entries)", "nat_foreign": "Foreign", "nat_indian": "Indian", "mode_h": "How would you like to travel?", "mode_curated": "Curated by IVY", "mode_custom": "Build your own route", "curated_sub": "Set the nights for each place. Pricing rises to the highest level on your route and never drops (our tier rule).", "l_guide": "Would you like a private guide?", "guide_none": "No guide", "guide_en": "English · ₹2,000/day", "guide_other": "Other language · ₹3,500/day", "custom_sub": "Trace your road trip. Distances are estimated now and confirmed precisely in your proposal.", "l_nights": "Nights on the road", "l_stops": "Your stops (in order)", "btn_addstop": "Add stop", "l_vehicle": "Vehicle", "addons_h": "Add-ons & experiences", "addons_sub": "Everything we can weave into your route — all optional.", "stays_h": "Stays", "stays_sub": "Optional. Live hotel cost + a transparent 10% coordination — never a commission.", "l_dates": "Tour dates (for live rates)", "btn_loadhotels": "See live hotels for these dates", "est_h": "Your estimate", "reveal_btn": "Verify my number & reveal the estimate", "reveal_note": "We send a one-time code by SMS to confirm it's you, then show your full estimate. Standard practice — keeps your plan private to you.", "pay_btn": "Secure my dates — pay 10% commitment", "pay_note": "10% now to begin arrangements · 50% a week before · balance the day before. A specialist follows up shortly.", "est_lbl": "Estimated per person, per day", "sched_h": "Payment schedule", "sched_now": "To begin now — 10%", "sched_mid": "At least 7 days before — 40%", "sched_bal": "24 hours before — balance 50%", "sched_note": "Free cancellation up to 7 days before; GST is non-refundable once invoiced.", "otp_h": "Verify your number", "otp_p1": "We'll text a 6-digit code.", "otp_p2": "Enter the code we texted you.", "otp_send": "Send code", "otp_verify": "Verify & reveal", "otp_cancel": "Cancel", "fw1": "Welcome to Ivory Arc Travels.", "fw2": "I'm IVY — your private journey advisor. Before we plan anything, I'd love to understand exactly what you have in mind.", "ftrust": "Registered Indian tour operator · GST 09AYIPT0745R2ZH · private vehicles, transparent pricing — no commission-driven shopping stops, ever.", "fname": "May I know your name?", "fthanks_name": "A pleasure, {name}.", "femail": "Your email address — I'll send your journey estimate here.", "fwa": "And your WhatsApp number, including country code?", "fthanks2": "Thank you. A few more questions before I suggest anything.", "fstart": "IVY arranges journeys departing from Delhi NCR. Where shall we meet you?", "fdate": "When would you like your journey to begin?", "fnights": "How many nights? Enter 0 for a same-day tour — we cover those too.", "fpace7": "A wonderfully paced journey — enough time to truly settle into each destination.", "fpace4": "A focused journey — I'll make every day count.", "fpace1": "A short, curated escape. I'll keep it unhurried and carefully chosen.", "fadults": "How many adults will be travelling?", "fgroup": "Travelling as a group of {adults} adults{chiladd} — group pricing applies{ch25}.", "fchiladd_s": " and {n} child", "fchiladd_p": " and {n} children", "fch25_s": "; your child travels at 25% of the adult rate", "fch25_p": "; children each travel at 25% of the adult rate", "fchildren": "Any children joining the journey?", "fnat": "Your nationality — this determines monument entry fees.", "finterest": "What kind of journey are you hoping for?", "frec": "Based on your {nights}-night {interest} journey — I've identified some excellent options.", "fdayintro": "For a same-day {interest} trip from Delhi NCR, here are my recommendations:", "frecs": "Here are my recommendations for your journey:", "fcustom": "Here are the destinations for a {interest} journey:", "falloc": "Let's decide the nights at each destination. Departing from Delhi NCR.", "fsingle": "I'll plan {nights} in {dest}.", "fday": "A day journey to {dest} — departing Delhi NCR and returning the same evening.", "faddons": "Would you like to add any experiences?", "fhotelmulti": "Now, your accommodation — I arrange each city separately.", "fhotelsingle": "Would you like me to arrange your accommodation?", "fguide": "Would you like a private guide?", "fcur1": "Thank you — I have everything I need.", "fcur2": "I'm reviewing your selections and preparing your personalised journey...", "fveh": "Which vehicle would you prefer?", "iheritage": "Heritage", "ipilgrimage": "Pilgrimage", "imountains": "Mountains", "iwildlife": "Wildlife", "overlay_title": "Plan your North India journey", "overlay_sub": "Choose your language and currency to begin.", "overlay_begin": "Begin", "ch_yes_rec": "Yes, show recommendations", "ch_choose_self": "I\'ll choose myself", "fnights_day": "Same-day tour (no overnight)"}, "es": {"welcome_h": "Bienvenido — planifiquemos tu Norte de India", "welcome_sub": "Un presupuesto privado y transparente en unos toques. Verificamos tu número antes de mostrar la cifra final.", "l_name": "Tu nombre", "l_email": "Correo (te enviaremos tu presupuesto aquí)", "l_interest": "¿Qué te atrae del Norte de India?", "dest_h": "Elige tus destinos", "dest_sub": "Esto es lo que preparamos para tu interés — elige todos los que te atraigan.", "trip_h": "Tu viaje", "trip_sub": "Para planear algo realista, sin prisas.", "l_arrival": "Ciudad de llegada", "l_tourdays": "Días libres para el tour", "note_days": "¿También por trabajo o familia? Indica solo los días realmente libres para viajar — planificamos en torno al resto.", "l_adults": "Adultos", "l_children": "Niños", "l_nat": "Nacionalidad (para entradas)", "nat_foreign": "Extranjero", "nat_indian": "Indio", "mode_h": "¿Cómo te gustaría viajar?", "mode_curated": "Diseñado por IVY", "mode_custom": "Crea tu propia ruta", "curated_sub": "Define las noches en cada lugar. El precio sube al nivel más alto de tu ruta y nunca baja (nuestra regla de niveles).", "l_guide": "¿Deseas un guía privado?", "guide_none": "Sin guía", "guide_en": "Inglés · ₹2.000/día", "guide_other": "Otro idioma · ₹3.500/día", "custom_sub": "Traza tu ruta por carretera. Las distancias son estimadas ahora y se confirman con precisión en tu propuesta.", "l_nights": "Noches en ruta", "l_stops": "Tus paradas (en orden)", "btn_addstop": "Añadir parada", "l_vehicle": "Vehículo", "addons_h": "Extras y experiencias", "addons_sub": "Todo lo que podemos integrar en tu ruta — opcional.", "stays_h": "Alojamiento", "stays_sub": "Opcional. Coste real del hotel + un 10% de coordinación transparente — nunca comisión.", "l_dates": "Fechas del tour (para tarifas en vivo)", "btn_loadhotels": "Ver hoteles en vivo para estas fechas", "est_h": "Tu presupuesto", "reveal_btn": "Verificar mi número y ver el presupuesto", "reveal_note": "Enviamos un código por SMS para confirmar que eres tú y luego mostramos tu presupuesto. Práctica habitual — mantiene tu plan privado.", "pay_btn": "Asegura tus fechas — paga el 10%", "pay_note": "10% ahora para empezar · 50% una semana antes · saldo el día anterior. Un especialista te contactará pronto.", "est_lbl": "Estimado por persona, por día", "sched_h": "Calendario de pagos", "sched_now": "Para empezar ahora — 10%", "sched_mid": "Al menos 7 días antes — 40%", "sched_bal": "24 horas antes — saldo 50%", "sched_note": "Cancelación gratuita hasta 7 días antes; el GST no es reembolsable una vez facturado.", "otp_h": "Verifica tu número", "otp_p1": "Te enviaremos un código de 6 dígitos.", "otp_p2": "Introduce el código que te enviamos.", "otp_send": "Enviar código", "otp_verify": "Verificar y ver", "otp_cancel": "Cancelar", "fw1": "Bienvenido a Ivory Arc Travels.", "fw2": "Soy IVY — tu asesora de viajes privada. Antes de planificar nada, me gustaría entender exactamente qué tienes en mente.", "ftrust": "Agencia de turismo india registrada · IVA 09AYIPT0745R2ZH · vehículos privados, precios transparentes — sin paradas comerciales por comisión.", "fname": "¿Puedo saber tu nombre?", "fthanks_name": "Un placer, {name}.", "femail": "Tu correo electrónico — te enviaré el presupuesto del viaje aquí.", "fwa": "¿Y tu número de WhatsApp con el prefijo de país?", "fthanks2": "Gracias. Algunas preguntas más antes de hacer sugerencias.", "fstart": "IVY organiza viajes que parten de Delhi NCR. ¿Dónde nos encontramos?", "fdate": "¿Cuándo te gustaría comenzar tu viaje?", "fnights": "¿Cuántas noches? Ingresa 0 para una excursión de un día — también las ofrecemos.", "fpace7": "Un viaje maravillosamente estructurado — tiempo para disfrutar cada lugar.", "fpace4": "Un viaje concentrado — haré que cada día valga la pena.", "fpace1": "Una escapada corta y elegante. Tranquila y bien elegida.", "fadults": "¿Cuántos adultos viajarán?", "fgroup": "Grupo de {adults} adultos{chiladd} — se aplica precio grupal{ch25}.", "fchiladd_s": " y {n} niño", "fchiladd_p": " y {n} niños", "fch25_s": "; tu hijo/a viaja al 25% de la tarifa adulta", "fch25_p": "; los niños viajan al 25% de la tarifa adulta", "fchildren": "¿Hay niños que se unan al viaje?", "fnat": "Tu nacionalidad — determina las tarifas de entrada a los monumentos.", "finterest": "¿Qué tipo de viaje esperas?", "frec": "Para tu viaje de {nights} noches de {interest} — he encontrado opciones excelentes.", "fdayintro": "Para una excursión {interest} de un día desde Delhi NCR, mis recomendaciones:", "frecs": "Mis recomendaciones para tu viaje:", "fcustom": "Destinos disponibles para un viaje de {interest}:", "falloc": "Decidamos las noches en cada destino. Partiendo de Delhi NCR.", "fsingle": "Organizaré {nights} en {dest}.", "fday": "Excursión de un día a {dest} — salida desde Delhi NCR y regreso esa misma tarde.", "faddons": "¿Te gustaría añadir alguna experiencia?", "fhotelmulti": "Ahora el alojamiento — organizo cada ciudad por separado.", "fhotelsingle": "¿Te gustaría que organice tu alojamiento?", "fguide": "¿Te gustaría un guía privado?", "fcur1": "Gracias — tengo todo lo que necesito.", "fcur2": "Estoy revisando tus elecciones y preparando tu viaje personalizado...", "fveh": "¿Qué vehículo prefieres?", "iheritage": "Patrimonio", "ipilgrimage": "Peregrinación", "imountains": "Montañas", "iwildlife": "Naturaleza", "overlay_title": "Planifica tu viaje al Norte de la India", "overlay_sub": "Elige tu idioma y moneda para comenzar.", "overlay_begin": "Comenzar", "ch_yes_rec": "Sí, mostrar recomendaciones", "ch_choose_self": "Elegiré yo mismo", "fnights_day": "Excursión de día (sin alojamiento)"}, "de": {"welcome_h": "Willkommen — planen wir Ihren Norden Indiens", "welcome_sub": "Ein privater, transparenter Kostenvoranschlag in wenigen Schritten. Ihre Nummer wird bestätigt, bevor wir die Endsumme zeigen.", "l_name": "Ihr Name", "l_email": "E-Mail (wir senden Ihren Voranschlag hierhin)", "l_interest": "Was zieht Sie nach Nordindien?", "dest_h": "Wählen Sie Ihre Ziele", "dest_sub": "Das kuratieren wir für Ihr Interesse — wählen Sie alles, was Sie reizt.", "trip_h": "Ihre Reise", "trip_sub": "Damit wir realistisch planen, ohne Hetze.", "l_arrival": "Ankunftsstadt", "l_tourdays": "Freie Tage für die Tour", "note_days": "Auch beruflich oder familiär hier? Geben Sie nur die wirklich freien Reisetage an — den Rest planen wir herum.", "l_adults": "Erwachsene", "l_children": "Kinder", "l_nat": "Nationalität (für Eintritte)", "nat_foreign": "Ausländer", "nat_indian": "Inder", "mode_h": "Wie möchten Sie reisen?", "mode_curated": "Von IVY kuratiert", "mode_custom": "Eigene Route erstellen", "curated_sub": "Legen Sie die Nächte je Ort fest. Der Preis steigt auf das höchste Niveau Ihrer Route und sinkt nie (unsere Stufenregel).", "l_guide": "Möchten Sie einen privaten Reiseführer?", "guide_none": "Kein Reiseführer", "guide_en": "Englisch · ₹2.000/Tag", "guide_other": "Andere Sprache · ₹3.500/Tag", "custom_sub": "Zeichnen Sie Ihre Route. Entfernungen werden jetzt geschätzt und im Angebot genau bestätigt.", "l_nights": "Nächte unterwegs", "l_stops": "Ihre Stopps (in Reihenfolge)", "btn_addstop": "Stopp hinzufügen", "l_vehicle": "Fahrzeug", "addons_h": "Extras & Erlebnisse", "addons_sub": "Alles, was wir in Ihre Route einweben können — optional.", "stays_h": "Unterkünfte", "stays_sub": "Optional. Echter Hotelpreis + transparente 10% Koordination — nie Provision.", "l_dates": "Tourdaten (für Live-Preise)", "btn_loadhotels": "Live-Hotels für diese Daten anzeigen", "est_h": "Ihr Kostenvoranschlag", "reveal_btn": "Nummer bestätigen & Voranschlag anzeigen", "reveal_note": "Wir senden einen SMS-Code zur Bestätigung und zeigen dann Ihren Voranschlag. Übliche Praxis — hält Ihren Plan privat.", "pay_btn": "Termine sichern — 10% zahlen", "pay_note": "10% jetzt zum Start · 50% eine Woche vorher · Rest am Vortag. Ein Spezialist meldet sich in Kürze.", "est_lbl": "Geschätzt pro Person, pro Tag", "sched_h": "Zahlungsplan", "sched_now": "Jetzt zum Start — 10%", "sched_mid": "Mindestens 7 Tage vorher — 40%", "sched_bal": "24 Stunden vorher — Rest 50%", "sched_note": "Kostenlose Stornierung bis 7 Tage vorher; GST ist nach Rechnung nicht erstattbar.", "otp_h": "Bestätigen Sie Ihre Nummer", "otp_p1": "Wir senden einen 6-stelligen Code.", "otp_p2": "Geben Sie den gesendeten Code ein.", "otp_send": "Code senden", "otp_verify": "Bestätigen & anzeigen", "otp_cancel": "Abbrechen", "fw1": "Willkommen bei Ivory Arc Travels.", "fw2": "Ich bin IVY — Ihre private Reiseberaterin. Bevor wir planen, möchte ich genau verstehen, was Sie sich vorstellen.", "ftrust": "Registrierter indischer Reiseveranstalter · USt. 09AYIPT0745R2ZH · private Fahrzeuge, transparente Preise — niemals provisionsbasierte Einkaufsstopps.", "fname": "Darf ich Ihren Namen erfahren?", "fthanks_name": "Sehr erfreut, {name}.", "femail": "Ihre E-Mail-Adresse — ich schicke Ihnen Ihr Reisebudget dorthin.", "fwa": "Und Ihre WhatsApp-Nummer mit Ländervorwahl?", "fthanks2": "Danke. Noch einige Fragen, bevor ich etwas vorschlage.", "fstart": "IVY organisiert Reisen ab Delhi NCR. Wo sollen wir Sie treffen?", "fdate": "Wann möchten Sie Ihre Reise beginnen?", "fnights": "Wie viele Nächte? 0 eingeben für einen Tagesausflug — wir bieten diese auch an.", "fpace7": "Eine herrlich strukturierte Reise — genug Zeit, jeden Ort wirklich zu erleben.", "fpace4": "Eine fokussierte Reise — ich mache jeden Tag bedeutsam.", "fpace1": "Ein kurzer, eleganter Ausflug. Entspannt und sorgfältig gewählt.", "fadults": "Wie viele Erwachsene reisen mit?", "fgroup": "Gruppe von {adults} Erwachsenen{chiladd} — Gruppenpreise gelten{ch25}.", "fchiladd_s": " und {n} Kind", "fchiladd_p": " und {n} Kinder", "fch25_s": "; Ihr Kind reist zum 25% des Erwachsenenpreises", "fch25_p": "; Kinder reisen zum 25% des Erwachsenenpreises", "fchildren": "Reisen auch Kinder mit?", "fnat": "Ihre Nationalität — bestimmt die Eintrittsgebühren.", "finterest": "Was für eine Reise wünschen Sie sich?", "frec": "Für Ihre {nights}-nächtige {interest}-Reise — hervorragende Optionen gefunden.", "fdayintro": "Für einen {interest}-Tagesausflug ab Delhi NCR, meine Empfehlungen:", "frecs": "Meine Empfehlungen für Ihre Reise:", "fcustom": "Verfügbare Ziele für eine {interest}-Reise:", "falloc": "Legen wir die Nächte an jedem Ziel fest. Abfahrt ab Delhi NCR.", "fsingle": "Ich arrangiere {nights} in {dest}.", "fday": "Tagesausflug nach {dest} — Abfahrt aus Delhi NCR, Rückkehr am selben Abend.", "faddons": "Möchten Sie Ihrer Reise besondere Erlebnisse hinzufügen?", "fhotelmulti": "Nun zur Unterkunft — ich arrangiere jede Stadt separat.", "fhotelsingle": "Soll ich Ihre Unterkunft arrangieren?", "fguide": "Möchten Sie einen privaten Reiseführer?", "fcur1": "Danke — ich habe alles, was ich brauche.", "fcur2": "Ich überprüfe Ihre Auswahl und bereite Ihre persönliche Reise vor...", "fveh": "Welches Fahrzeug bevorzugen Sie?", "iheritage": "Kulturerbe", "ipilgrimage": "Pilgerreise", "imountains": "Berge", "iwildlife": "Wildtiere", "overlay_title": "Planen Sie Ihre Nordindien-Reise", "overlay_sub": "Wählen Sie Sprache und Währung, um zu beginnen.", "overlay_begin": "Beginnen", "ch_yes_rec": "Ja, Empfehlungen anzeigen", "ch_choose_self": "Ich wähle selbst", "fnights_day": "Tagesreise (ohne Übernachtung)"}, "fr": {"welcome_h": "Bienvenue — planifions votre Nord de l'Inde", "welcome_sub": "Une estimation privée et transparente en quelques clics. Votre numéro est vérifié avant d'afficher le montant final.", "l_name": "Votre nom", "l_email": "E-mail (nous y enverrons votre estimation)", "l_interest": "Qu'est-ce qui vous attire dans le Nord de l'Inde ?", "dest_h": "Choisissez vos destinations", "dest_sub": "Voici ce que nous proposons pour votre intérêt — choisissez tout ce qui vous attire.", "trip_h": "Votre voyage", "trip_sub": "Pour planifier quelque chose de réaliste, sans précipitation.", "l_arrival": "Ville d'arrivée", "l_tourdays": "Jours libres pour le circuit", "note_days": "Ici aussi pour le travail ou la famille ? Indiquez seulement les jours réellement libres — nous planifions autour du reste.", "l_adults": "Adultes", "l_children": "Enfants", "l_nat": "Nationalité (pour les entrées)", "nat_foreign": "Étranger", "nat_indian": "Indien", "mode_h": "Comment souhaitez-vous voyager ?", "mode_curated": "Conçu par IVY", "mode_custom": "Créez votre itinéraire", "curated_sub": "Définissez les nuits par lieu. Le prix monte au niveau le plus élevé de votre itinéraire et ne baisse jamais (notre règle de paliers).", "l_guide": "Souhaitez-vous un guide privé ?", "guide_none": "Sans guide", "guide_en": "Anglais · ₹2 000/jour", "guide_other": "Autre langue · ₹3 500/jour", "custom_sub": "Tracez votre route. Les distances sont estimées maintenant et confirmées précisément dans votre proposition.", "l_nights": "Nuits sur la route", "l_stops": "Vos étapes (dans l'ordre)", "btn_addstop": "Ajouter une étape", "l_vehicle": "Véhicule", "addons_h": "Extras et expériences", "addons_sub": "Tout ce que nous pouvons intégrer à votre itinéraire — facultatif.", "stays_h": "Hébergements", "stays_sub": "Facultatif. Coût réel de l'hôtel + 10% de coordination transparente — jamais de commission.", "l_dates": "Dates du circuit (pour les tarifs en direct)", "btn_loadhotels": "Voir les hôtels en direct pour ces dates", "est_h": "Votre estimation", "reveal_btn": "Vérifier mon numéro et voir l'estimation", "reveal_note": "Nous envoyons un code par SMS pour confirmer que c'est vous, puis affichons votre estimation. Pratique courante — garde votre projet privé.", "pay_btn": "Réservez vos dates — payez 10%", "pay_note": "10% maintenant pour commencer · 50% une semaine avant · solde la veille. Un spécialiste vous contactera bientôt.", "est_lbl": "Estimation par personne, par jour", "sched_h": "Échéancier de paiement", "sched_now": "Pour commencer maintenant — 10%", "sched_mid": "Au moins 7 jours avant — 40%", "sched_bal": "24 heures avant — solde 50%", "sched_note": "Annulation gratuite jusqu'à 7 jours avant ; la GST n'est pas remboursable une fois facturée.", "otp_h": "Vérifiez votre numéro", "otp_p1": "Nous enverrons un code à 6 chiffres.", "otp_p2": "Saisissez le code reçu.", "otp_send": "Envoyer le code", "otp_verify": "Vérifier et afficher", "otp_cancel": "Annuler", "fw1": "Bienvenue chez Ivory Arc Travels.", "fw2": "Je suis IVY — votre conseillère de voyage privée. Avant de planifier quoi que ce soit, j'aimerais comprendre exactement ce que vous avez en tête.", "ftrust": "Agence de voyage indienne enregistrée · N° TVA 09AYIPT0745R2ZH · véhicules privés, tarifs transparents — jamais d'arrêts shopping à commission.", "fname": "Puis-je connaître votre prénom ?", "fthanks_name": "Enchanté(e), {name}.", "femail": "Votre adresse e-mail — je vous enverrai votre estimation de voyage ici.", "fwa": "Et votre numéro WhatsApp avec l'indicatif du pays ?", "fthanks2": "Merci. Quelques questions supplémentaires avant de faire des suggestions.", "fstart": "IVY organise des voyages au départ de Delhi NCR. Où devons-nous vous rejoindre ?", "fdate": "Quand souhaitez-vous commencer votre voyage ?", "fnights": "Combien de nuits ? Entrez 0 pour une excursion à la journée — nous les proposons aussi.", "fpace7": "Un voyage magnifiquement rythmé — assez de temps pour s'imprégner de chaque lieu.", "fpace4": "Un voyage ciblé — je ferai de chaque journée un moment précieux.", "fpace1": "Une escapade courte et élégante. Sereine et soigneusement choisie.", "fadults": "Combien d'adultes voyageront ?", "fgroup": "Groupe de {adults} adultes{chiladd} — tarification de groupe applicable{ch25}.", "fchiladd_s": " et {n} enfant", "fchiladd_p": " et {n} enfants", "fch25_s": " ; votre enfant voyage à 25% du tarif adulte", "fch25_p": " ; les enfants voyagent à 25% du tarif adulte", "fchildren": "Y a-t-il des enfants qui participent au voyage ?", "fnat": "Votre nationalité — elle détermine les droits d'entrée aux monuments.", "finterest": "Quel type de voyage espérez-vous ?", "frec": "Pour votre voyage de {nights} nuits en mode {interest} — j'ai d'excellentes options.", "fdayintro": "Pour une excursion {interest} à la journée depuis Delhi NCR, mes recommandations :", "frecs": "Mes recommandations pour votre voyage :", "fcustom": "Destinations disponibles pour un voyage {interest} :", "falloc": "Décidons du nombre de nuits dans chaque destination. Départ de Delhi NCR.", "fsingle": "Je préparerai {nights} à {dest}.", "fday": "Excursion à la journée vers {dest} — départ de Delhi NCR, retour le soir même.", "faddons": "Souhaitez-vous ajouter des expériences à votre voyage ?", "fhotelmulti": "Passons à l'hébergement — j'organise chaque ville séparément.", "fhotelsingle": "Souhaitez-vous que j'organise votre hébergement ?", "fguide": "Souhaitez-vous un guide privé ?", "fcur1": "Merci — j'ai tout ce qu'il me faut.", "fcur2": "Je passe en revue vos choix et prépare votre voyage personnalisé...", "fveh": "Quel véhicule préférez-vous ?", "iheritage": "Patrimoine", "ipilgrimage": "Pèlerinage", "imountains": "Montagnes", "iwildlife": "Faune & Nature", "overlay_title": "Planifiez votre voyage en Inde du Nord", "overlay_sub": "Choisissez votre langue et votre devise pour commencer.", "overlay_begin": "Commencer", "ch_yes_rec": "Oui, afficher les recommandations", "ch_choose_self": "Je choisirai moi-même", "fnights_day": "Excursion à la journée (sans nuit)"}, "hi": {"welcome_h": "स्वागत है — आइए आपकी उत्तर भारत यात्रा बनाएँ", "welcome_sub": "कुछ ही टैप में निजी, पारदर्शी अनुमान। अंतिम राशि दिखाने से पहले हम आपका नंबर सत्यापित करते हैं।", "l_name": "आपका नाम", "l_email": "ईमेल (हम आपका अनुमान यहाँ भेजेंगे)", "l_interest": "उत्तर भारत में आपको क्या आकर्षित करता है?", "dest_h": "अपने गंतव्य चुनें", "dest_sub": "आपकी रुचि के लिए हम यह तैयार करते हैं — जो भी पसंद आए चुनें।", "trip_h": "आपकी यात्रा", "trip_sub": "ताकि हम वास्तविक योजना बनाएँ, बिना जल्दबाज़ी के।", "l_arrival": "आगमन शहर", "l_tourdays": "टूर के लिए खाली दिन", "note_days": "क्या आप काम या परिवार के लिए भी आए हैं? केवल वे दिन भरें जो वास्तव में यात्रा के लिए खाली हैं — बाकी के अनुसार हम योजना बनाएँगे।", "l_adults": "वयस्क", "l_children": "बच्चे", "l_nat": "राष्ट्रीयता (प्रवेश शुल्क हेतु)", "nat_foreign": "विदेशी", "nat_indian": "भारतीय", "mode_h": "आप कैसे यात्रा करना चाहेंगे?", "mode_curated": "IVY द्वारा तैयार", "mode_custom": "अपना मार्ग बनाएँ", "curated_sub": "हर स्थान के लिए रातें तय करें। मूल्य आपके मार्ग के उच्चतम स्तर तक बढ़ता है और कभी घटता नहीं (हमारा टियर नियम)।", "l_guide": "क्या आप निजी गाइड चाहेंगे?", "guide_none": "कोई गाइड नहीं", "guide_en": "अंग्रेज़ी · ₹2,000/दिन", "guide_other": "अन्य भाषा · ₹3,500/दिन", "custom_sub": "अपना सड़क मार्ग बनाएँ। दूरियाँ अभी अनुमानित हैं और प्रस्ताव में सटीक पुष्टि की जाएँगी।", "l_nights": "रास्ते में रातें", "l_stops": "आपके पड़ाव (क्रम में)", "btn_addstop": "पड़ाव जोड़ें", "l_vehicle": "वाहन", "addons_h": "अतिरिक्त और अनुभव", "addons_sub": "जो कुछ हम आपके मार्ग में जोड़ सकते हैं — सब वैकल्पिक।", "stays_h": "ठहराव", "stays_sub": "वैकल्पिक। होटल की वास्तविक लागत + पारदर्शी 10% समन्वय — कभी कमीशन नहीं।", "l_dates": "टूर तिथियाँ (लाइव दरों हेतु)", "btn_loadhotels": "इन तिथियों के लिए लाइव होटल देखें", "est_h": "आपका अनुमान", "reveal_btn": "मेरा नंबर सत्यापित करें और अनुमान देखें", "reveal_note": "हम पुष्टि के लिए SMS से एक कोड भेजते हैं, फिर आपका अनुमान दिखाते हैं। सामान्य प्रक्रिया — आपकी योजना निजी रखती है।", "pay_btn": "अपनी तिथियाँ सुरक्षित करें — 10% भुगतान करें", "pay_note": "शुरू करने के लिए अभी 10% · एक सप्ताह पहले 50% · शेष एक दिन पहले। एक विशेषज्ञ शीघ्र संपर्क करेगा।", "est_lbl": "प्रति व्यक्ति, प्रति दिन अनुमानित", "sched_h": "भुगतान अनुसूची", "sched_now": "अभी शुरू करने हेतु — 10%", "sched_mid": "कम से कम 7 दिन पहले — 40%", "sched_bal": "24 घंटे पहले — शेष 50%", "sched_note": "7 दिन पहले तक नि:शुल्क रद्दीकरण; चालान बनने के बाद GST वापसी योग्य नहीं।", "otp_h": "अपना नंबर सत्यापित करें", "otp_p1": "हम 6 अंकों का कोड भेजेंगे।", "otp_p2": "भेजा गया कोड दर्ज करें।", "otp_send": "कोड भेजें", "otp_verify": "सत्यापित करें और देखें", "otp_cancel": "रद्द करें", "fw1": "Ivory Arc Travels में आपका स्वागत है।", "fw2": "मैं IVY हूँ — आपकी निजी यात्रा सलाहकार। कुछ भी योजना बनाने से पहले, मैं ठीक से समझना चाहूँगी कि आप क्या चाहते हैं।", "ftrust": "पंजीकृत भारतीय टूर ऑपरेटर · GST 09AYIPT0745R2ZH · निजी वाहन, पारदर्शी मूल्य — कोई कमीशन-आधारित खरीदारी नहीं।", "fname": "क्या मैं आपका नाम जान सकती हूँ?", "fthanks_name": "{name}, मिलकर अच्छा लगा।", "femail": "आपका ईमेल पता — मैं यहाँ आपका यात्रा अनुमान भेजूँगी।", "fwa": "और आपका WhatsApp नंबर, देश कोड सहित?", "fthanks2": "धन्यवाद। कुछ और प्रश्न, फिर मैं सुझाव दूँगी।", "fstart": "IVY की यात्राएँ दिल्ली NCR से शुरू होती हैं। हम आपसे कहाँ मिलें?", "fdate": "आप अपनी यात्रा कब शुरू करना चाहेंगे?", "fnights": "कितनी रातें? एक दिन के टूर के लिए 0 डालें — हम वह भी कवर करते हैं।", "fpace7": "एक शानदार यात्रा — हर जगह बसने के लिए पर्याप्त समय।", "fpace4": "एक केंद्रित यात्रा — हर दिन को सार्थक बनाऊँगी।", "fpace1": "एक संक्षिप्त, सुंदर पलायन। शांत और सुविचारित।", "fadults": "कितने वयस्क यात्रा करेंगे?", "fgroup": "{adults} वयस्कों{chiladd} के समूह में यात्रा — समूह मूल्य निर्धारण लागू{ch25}।", "fchiladd_s": " और {n} बच्चे", "fchiladd_p": " और {n} बच्चों", "fch25_s": "; आपका बच्चा वयस्क दर के 25% पर यात्रा करता है", "fch25_p": "; बच्चे वयस्क दर के 25% पर यात्रा करते हैं", "fchildren": "क्या कोई बच्चे भी साथ आ रहे हैं?", "fnat": "आपकी राष्ट्रीयता — स्मारक प्रवेश शुल्क के लिए आवश्यक।", "finterest": "आप किस तरह की यात्रा चाहते हैं?", "frec": "आपकी {nights} रात की {interest} यात्रा के लिए — मेरे पास बेहतरीन विकल्प हैं।", "fdayintro": "दिल्ली NCR से {interest} एक दिवसीय यात्रा के लिए मेरी सिफारिशें:", "frecs": "आपकी यात्रा के लिए मेरी सिफारिशें:", "fcustom": "{interest} यात्रा के लिए उपलब्ध गंतव्य:", "falloc": "आइए हर गंतव्य की रातें तय करें। दिल्ली NCR से प्रस्थान।", "fsingle": "{dest} में {nights} की व्यवस्था करूँगी।", "fday": "{dest} की एक दिवसीय यात्रा — दिल्ली NCR से प्रस्थान और उसी शाम वापसी।", "faddons": "क्या आप यात्रा में कोई अनुभव जोड़ना चाहेंगे?", "fhotelmulti": "अब आवास — मैं प्रत्येक शहर के लिए अलग व्यवस्था करती हूँ।", "fhotelsingle": "क्या मैं आपके ठहरने की व्यवस्था करूँ?", "fguide": "क्या आप एक निजी गाइड चाहेंगे?", "fcur1": "धन्यवाद — मुझे जो चाहिए था, मिल गया।", "fcur2": "मैं आपकी पसंद की समीक्षा कर रही हूँ और आपकी व्यक्तिगत यात्रा तैयार कर रही हूँ...", "fveh": "आप कौन सा वाहन पसंद करेंगे?", "iheritage": "विरासत", "ipilgrimage": "तीर्थयात्रा", "imountains": "पर्वत", "iwildlife": "वन्यजीव", "overlay_title": "अपनी उत्तर भारत यात्रा की योजना बनाएँ", "overlay_sub": "शुरू करने के लिए भाषा और मुद्रा चुनें।", "overlay_begin": "शुरू करें", "ch_yes_rec": "हाँ, सिफ़ारिशें दिखाएँ", "ch_choose_self": "मैं खुद चुनूँगा/चुनूँगी", "fnights_day": "एक-दिन का टूर (रात नहीं)"}}
+const T={"en": {"welcome_h": "Welcome — let's plan your North India", "welcome_sub": "A private, transparent estimate in a few taps. Your number is verified before we share the final figure.", "l_name": "Your name", "l_email": "Email (we'll send your estimate here)", "l_interest": "What's calling you to North India?", "dest_h": "Choose your destinations", "dest_sub": "Here's what we curate for your interest — pick all that pull at you.", "trip_h": "Your trip", "trip_sub": "So we plan something realistic, not rushed.", "l_arrival": "Arrival city", "l_tourdays": "Days free for the tour", "note_days": "Here for work or family too? Enter only the days actually free to travel — we'll plan around the rest.", "l_adults": "Adults", "l_children": "Children", "l_nat": "Nationality (for entries)", "nat_foreign": "Foreign", "nat_indian": "Indian", "mode_h": "How would you like to travel?", "mode_curated": "Curated by IVY", "mode_custom": "Build your own route", "curated_sub": "Set the nights for each place. Pricing rises to the highest level on your route and never drops (our tier rule).", "l_guide": "Would you like a private guide?", "guide_none": "No guide", "guide_en": "English · ₹2,000/day", "guide_other": "Other language · ₹3,500/day", "custom_sub": "Trace your road trip. Distances are estimated now and confirmed precisely in your proposal.", "l_nights": "Nights on the road", "l_stops": "Your stops (in order)", "btn_addstop": "Add stop", "l_vehicle": "Vehicle", "addons_h": "Add-ons & experiences", "addons_sub": "Everything we can weave into your route — all optional.", "stays_h": "Stays", "stays_sub": "Optional. Live hotel cost + a transparent 10% coordination — never a commission.", "l_dates": "Tour dates (for live rates)", "btn_loadhotels": "See live hotels for these dates", "est_h": "Your estimate", "reveal_btn": "Verify my number & reveal the estimate", "reveal_note": "We send a one-time code by SMS to confirm it's you, then show your full estimate. Standard practice — keeps your plan private to you.", "pay_btn": "Secure my dates — pay 10% commitment", "pay_note": "10% now to begin arrangements · 50% a week before · balance the day before. A specialist follows up shortly.", "est_lbl": "Estimated per person, per day", "sched_h": "Payment schedule", "sched_now": "To begin now — 10%", "sched_mid": "At least 7 days before — 40%", "sched_bal": "24 hours before — balance 50%", "sched_note": "Free cancellation up to 7 days before; GST is non-refundable once invoiced.", "otp_h": "Verify your number", "otp_p1": "We'll text a 6-digit code.", "otp_p2": "Enter the code we texted you.", "otp_send": "Send code", "otp_verify": "Verify & reveal", "otp_cancel": "Cancel", "fw1": "Welcome to Ivory Arc Travels.", "fw2": "I'm IVY — your private journey advisor. Before we plan anything, I'd love to understand exactly what you have in mind.", "ftrust": "Registered Indian tour operator · GST 09AYIPT0745R2ZH · private vehicles, transparent pricing — no commission-driven shopping stops, ever.", "fname": "May I know your name?", "fthanks_name": "A pleasure, {name}.", "femail": "Your email address — I'll send your journey estimate here.", "fwa": "And your WhatsApp number, including country code?", "fthanks2": "Thank you. A few more questions before I suggest anything.", "fstart": "IVY arranges journeys departing from Delhi NCR. Where shall we meet you?", "fdate": "When would you like your journey to begin?", "fnights": "How many nights? Enter 0 for a same-day tour — we cover those too.", "fpace7": "A wonderfully paced journey — enough time to truly settle into each destination.", "fpace4": "A focused journey — I'll make every day count.", "fpace1": "A short, curated escape. I'll keep it unhurried and carefully chosen.", "fadults": "How many adults will be travelling?", "fgroup": "Travelling as a group of {adults} adults{chiladd} — group pricing applies{ch25}.", "fchiladd_s": " and {n} child", "fchiladd_p": " and {n} children", "fch25_s": "; your child travels at 25% of the adult rate", "fch25_p": "; children each travel at 25% of the adult rate", "fchildren": "Any children joining the journey?", "fnat": "Your nationality — this determines monument entry fees.", "finterest": "What kind of journey are you hoping for?", "frec": "Based on your {nights}-night {interest} journey — I've identified some excellent options.", "fdayintro": "For a same-day {interest} trip from Delhi NCR, here are my recommendations:", "frecs": "Here are my recommendations for your journey:", "fcustom": "Here are the destinations for a {interest} journey:", "falloc": "Let's decide the nights at each destination. Departing from Delhi NCR.", "fsingle": "I'll plan {nights} in {dest}.", "fday": "A day journey to {dest} — departing Delhi NCR and returning the same evening.", "faddons": "Would you like to add any experiences?", "fhotelmulti": "Now, your accommodation — I arrange each city separately.", "fhotelsingle": "Would you like me to arrange your accommodation?", "fguide": "Would you like a private guide?", "fcur1": "Thank you — I have everything I need.", "fcur2": "I'm reviewing your selections and preparing your personalised journey...", "fveh": "Which vehicle would you prefer?", "iheritage": "Heritage", "ipilgrimage": "Pilgrimage", "imountains": "Mountains", "iwildlife": "Wildlife", "overlay_title": "Plan your North India journey", "overlay_sub": "Choose your language and currency to begin.", "overlay_begin": "Begin", "ch_yes_rec": "Yes, show recommendations", "ch_choose_self": "I\'ll choose myself", "fnights_day": "Same-day tour (no overnight)", "unlock_pill": "verify to unlock", "est_ref":"Your Curated Journey","est_summary":"Journey Summary","est_startloc":"Start Location","est_dates":"Travel Dates","est_duration":"Duration","est_guests":"Guests","est_nat":"Nationality","est_route":"Selected Route","est_accom":"Accommodation · City by City","est_rooms":"Rooms","est_vehicle":"Vehicle","est_selected":"Selected","est_exp":"Experiences & Add-ons","est_invest":"Investment Breakdown","est_gst":"GST (5%)","est_total":"Grand Total","est_ppd":"per person, per day","est_pp":"per person total","est_sched":"Payment Schedule","est_s1":"Advance to confirm (10%)","est_s2":"At least 7 days before (50%)","est_s3":"24 hours before (balance)","est_incl":"What's Included","btn_confirm":"Confirm","btn_confirm_date":"Confirm date","btn_continue_without":"Continue without","btn_add_selected":"Add selected","n_night":"{n} night","n_nights":"{n} nights","otp_resend":"Resend code","otp_change":"Change number","fx_note":"Converted at today's indicative rate — billing is processed in INR."}, "es": {"welcome_h": "Bienvenido — planifiquemos tu Norte de India", "welcome_sub": "Un presupuesto privado y transparente en unos toques. Verificamos tu número antes de mostrar la cifra final.", "l_name": "Tu nombre", "l_email": "Correo (te enviaremos tu presupuesto aquí)", "l_interest": "¿Qué te atrae del Norte de India?", "dest_h": "Elige tus destinos", "dest_sub": "Esto es lo que preparamos para tu interés — elige todos los que te atraigan.", "trip_h": "Tu viaje", "trip_sub": "Para planear algo realista, sin prisas.", "l_arrival": "Ciudad de llegada", "l_tourdays": "Días libres para el tour", "note_days": "¿También por trabajo o familia? Indica solo los días realmente libres para viajar — planificamos en torno al resto.", "l_adults": "Adultos", "l_children": "Niños", "l_nat": "Nacionalidad (para entradas)", "nat_foreign": "Extranjero", "nat_indian": "Indio", "mode_h": "¿Cómo te gustaría viajar?", "mode_curated": "Diseñado por IVY", "mode_custom": "Crea tu propia ruta", "curated_sub": "Define las noches en cada lugar. El precio sube al nivel más alto de tu ruta y nunca baja (nuestra regla de niveles).", "l_guide": "¿Deseas un guía privado?", "guide_none": "Sin guía", "guide_en": "Inglés · ₹2.000/día", "guide_other": "Otro idioma · ₹3.500/día", "custom_sub": "Traza tu ruta por carretera. Las distancias son estimadas ahora y se confirman con precisión en tu propuesta.", "l_nights": "Noches en ruta", "l_stops": "Tus paradas (en orden)", "btn_addstop": "Añadir parada", "l_vehicle": "Vehículo", "addons_h": "Extras y experiencias", "addons_sub": "Todo lo que podemos integrar en tu ruta — opcional.", "stays_h": "Alojamiento", "stays_sub": "Opcional. Coste real del hotel + un 10% de coordinación transparente — nunca comisión.", "l_dates": "Fechas del tour (para tarifas en vivo)", "btn_loadhotels": "Ver hoteles en vivo para estas fechas", "est_h": "Tu presupuesto", "reveal_btn": "Verificar mi número y ver el presupuesto", "reveal_note": "Enviamos un código por SMS para confirmar que eres tú y luego mostramos tu presupuesto. Práctica habitual — mantiene tu plan privado.", "pay_btn": "Asegura tus fechas — paga el 10%", "pay_note": "10% ahora para empezar · 50% una semana antes · saldo el día anterior. Un especialista te contactará pronto.", "est_lbl": "Estimado por persona, por día", "sched_h": "Calendario de pagos", "sched_now": "Para empezar ahora — 10%", "sched_mid": "Al menos 7 días antes — 40%", "sched_bal": "24 horas antes — saldo 50%", "sched_note": "Cancelación gratuita hasta 7 días antes; el GST no es reembolsable una vez facturado.", "otp_h": "Verifica tu número", "otp_p1": "Te enviaremos un código de 6 dígitos.", "otp_p2": "Introduce el código que te enviamos.", "otp_send": "Enviar código", "otp_verify": "Verificar y ver", "otp_cancel": "Cancelar", "fw1": "Bienvenido a Ivory Arc Travels.", "fw2": "Soy IVY — tu asesora de viajes privada. Antes de planificar nada, me gustaría entender exactamente qué tienes en mente.", "ftrust": "Agencia de turismo india registrada · IVA 09AYIPT0745R2ZH · vehículos privados, precios transparentes — sin paradas comerciales por comisión.", "fname": "¿Puedo saber tu nombre?", "fthanks_name": "Un placer, {name}.", "femail": "Tu correo electrónico — te enviaré el presupuesto del viaje aquí.", "fwa": "¿Y tu número de WhatsApp con el prefijo de país?", "fthanks2": "Gracias. Algunas preguntas más antes de hacer sugerencias.", "fstart": "IVY organiza viajes que parten de Delhi NCR. ¿Dónde nos encontramos?", "fdate": "¿Cuándo te gustaría comenzar tu viaje?", "fnights": "¿Cuántas noches? Ingresa 0 para una excursión de un día — también las ofrecemos.", "fpace7": "Un viaje maravillosamente estructurado — tiempo para disfrutar cada lugar.", "fpace4": "Un viaje concentrado — haré que cada día valga la pena.", "fpace1": "Una escapada corta y elegante. Tranquila y bien elegida.", "fadults": "¿Cuántos adultos viajarán?", "fgroup": "Grupo de {adults} adultos{chiladd} — se aplica precio grupal{ch25}.", "fchiladd_s": " y {n} niño", "fchiladd_p": " y {n} niños", "fch25_s": "; tu hijo/a viaja al 25% de la tarifa adulta", "fch25_p": "; los niños viajan al 25% de la tarifa adulta", "fchildren": "¿Hay niños que se unan al viaje?", "fnat": "Tu nacionalidad — determina las tarifas de entrada a los monumentos.", "finterest": "¿Qué tipo de viaje esperas?", "frec": "Para tu viaje de {nights} noches de {interest} — he encontrado opciones excelentes.", "fdayintro": "Para una excursión {interest} de un día desde Delhi NCR, mis recomendaciones:", "frecs": "Mis recomendaciones para tu viaje:", "fcustom": "Destinos disponibles para un viaje de {interest}:", "falloc": "Decidamos las noches en cada destino. Partiendo de Delhi NCR.", "fsingle": "Organizaré {nights} en {dest}.", "fday": "Excursión de un día a {dest} — salida desde Delhi NCR y regreso esa misma tarde.", "faddons": "¿Te gustaría añadir alguna experiencia?", "fhotelmulti": "Ahora el alojamiento — organizo cada ciudad por separado.", "fhotelsingle": "¿Te gustaría que organice tu alojamiento?", "fguide": "¿Te gustaría un guía privado?", "fcur1": "Gracias — tengo todo lo que necesito.", "fcur2": "Estoy revisando tus elecciones y preparando tu viaje personalizado...", "fveh": "¿Qué vehículo prefieres?", "iheritage": "Patrimonio", "ipilgrimage": "Peregrinación", "imountains": "Montañas", "iwildlife": "Naturaleza", "overlay_title": "Planifica tu viaje al Norte de la India", "overlay_sub": "Elige tu idioma y moneda para comenzar.", "overlay_begin": "Comenzar", "ch_yes_rec": "Sí, mostrar recomendaciones", "ch_choose_self": "Elegiré yo mismo", "fnights_day": "Excursión de día (sin alojamiento)", "unlock_pill": "verifique para desbloquear", "est_ref":"Su viaje a medida","est_summary":"Resumen del viaje","est_startloc":"Punto de partida","est_dates":"Fechas de viaje","est_duration":"Duración","est_guests":"Viajeros","est_nat":"Nacionalidad","est_route":"Ruta seleccionada","est_accom":"Alojamiento · ciudad por ciudad","est_rooms":"Habitaciones","est_vehicle":"Vehículo","est_selected":"Seleccionado","est_exp":"Experiencias y extras","est_invest":"Desglose de la inversión","est_gst":"GST (5%)","est_total":"Total general","est_ppd":"por persona y día","est_pp":"total por persona","est_sched":"Calendario de pagos","est_s1":"Anticipo para confirmar (10%)","est_s2":"Al menos 7 días antes (50%)","est_s3":"24 horas antes (saldo)","est_incl":"Qué incluye","btn_confirm":"Confirmar","btn_confirm_date":"Confirmar fecha","btn_continue_without":"Continuar sin extras","btn_add_selected":"Añadir seleccionados","n_night":"{n} noche","n_nights":"{n} noches","otp_resend":"Reenviar código","otp_change":"Cambiar número","fx_note":"Convertido al tipo indicativo de hoy — la facturación se procesa en INR."}, "de": {"welcome_h": "Willkommen — planen wir Ihren Norden Indiens", "welcome_sub": "Ein privater, transparenter Kostenvoranschlag in wenigen Schritten. Ihre Nummer wird bestätigt, bevor wir die Endsumme zeigen.", "l_name": "Ihr Name", "l_email": "E-Mail (wir senden Ihren Voranschlag hierhin)", "l_interest": "Was zieht Sie nach Nordindien?", "dest_h": "Wählen Sie Ihre Ziele", "dest_sub": "Das kuratieren wir für Ihr Interesse — wählen Sie alles, was Sie reizt.", "trip_h": "Ihre Reise", "trip_sub": "Damit wir realistisch planen, ohne Hetze.", "l_arrival": "Ankunftsstadt", "l_tourdays": "Freie Tage für die Tour", "note_days": "Auch beruflich oder familiär hier? Geben Sie nur die wirklich freien Reisetage an — den Rest planen wir herum.", "l_adults": "Erwachsene", "l_children": "Kinder", "l_nat": "Nationalität (für Eintritte)", "nat_foreign": "Ausländer", "nat_indian": "Inder", "mode_h": "Wie möchten Sie reisen?", "mode_curated": "Von IVY kuratiert", "mode_custom": "Eigene Route erstellen", "curated_sub": "Legen Sie die Nächte je Ort fest. Der Preis steigt auf das höchste Niveau Ihrer Route und sinkt nie (unsere Stufenregel).", "l_guide": "Möchten Sie einen privaten Reiseführer?", "guide_none": "Kein Reiseführer", "guide_en": "Englisch · ₹2.000/Tag", "guide_other": "Andere Sprache · ₹3.500/Tag", "custom_sub": "Zeichnen Sie Ihre Route. Entfernungen werden jetzt geschätzt und im Angebot genau bestätigt.", "l_nights": "Nächte unterwegs", "l_stops": "Ihre Stopps (in Reihenfolge)", "btn_addstop": "Stopp hinzufügen", "l_vehicle": "Fahrzeug", "addons_h": "Extras & Erlebnisse", "addons_sub": "Alles, was wir in Ihre Route einweben können — optional.", "stays_h": "Unterkünfte", "stays_sub": "Optional. Echter Hotelpreis + transparente 10% Koordination — nie Provision.", "l_dates": "Tourdaten (für Live-Preise)", "btn_loadhotels": "Live-Hotels für diese Daten anzeigen", "est_h": "Ihr Kostenvoranschlag", "reveal_btn": "Nummer bestätigen & Voranschlag anzeigen", "reveal_note": "Wir senden einen SMS-Code zur Bestätigung und zeigen dann Ihren Voranschlag. Übliche Praxis — hält Ihren Plan privat.", "pay_btn": "Termine sichern — 10% zahlen", "pay_note": "10% jetzt zum Start · 50% eine Woche vorher · Rest am Vortag. Ein Spezialist meldet sich in Kürze.", "est_lbl": "Geschätzt pro Person, pro Tag", "sched_h": "Zahlungsplan", "sched_now": "Jetzt zum Start — 10%", "sched_mid": "Mindestens 7 Tage vorher — 40%", "sched_bal": "24 Stunden vorher — Rest 50%", "sched_note": "Kostenlose Stornierung bis 7 Tage vorher; GST ist nach Rechnung nicht erstattbar.", "otp_h": "Bestätigen Sie Ihre Nummer", "otp_p1": "Wir senden einen 6-stelligen Code.", "otp_p2": "Geben Sie den gesendeten Code ein.", "otp_send": "Code senden", "otp_verify": "Bestätigen & anzeigen", "otp_cancel": "Abbrechen", "fw1": "Willkommen bei Ivory Arc Travels.", "fw2": "Ich bin IVY — Ihre private Reiseberaterin. Bevor wir planen, möchte ich genau verstehen, was Sie sich vorstellen.", "ftrust": "Registrierter indischer Reiseveranstalter · USt. 09AYIPT0745R2ZH · private Fahrzeuge, transparente Preise — niemals provisionsbasierte Einkaufsstopps.", "fname": "Darf ich Ihren Namen erfahren?", "fthanks_name": "Sehr erfreut, {name}.", "femail": "Ihre E-Mail-Adresse — ich schicke Ihnen Ihr Reisebudget dorthin.", "fwa": "Und Ihre WhatsApp-Nummer mit Ländervorwahl?", "fthanks2": "Danke. Noch einige Fragen, bevor ich etwas vorschlage.", "fstart": "IVY organisiert Reisen ab Delhi NCR. Wo sollen wir Sie treffen?", "fdate": "Wann möchten Sie Ihre Reise beginnen?", "fnights": "Wie viele Nächte? 0 eingeben für einen Tagesausflug — wir bieten diese auch an.", "fpace7": "Eine herrlich strukturierte Reise — genug Zeit, jeden Ort wirklich zu erleben.", "fpace4": "Eine fokussierte Reise — ich mache jeden Tag bedeutsam.", "fpace1": "Ein kurzer, eleganter Ausflug. Entspannt und sorgfältig gewählt.", "fadults": "Wie viele Erwachsene reisen mit?", "fgroup": "Gruppe von {adults} Erwachsenen{chiladd} — Gruppenpreise gelten{ch25}.", "fchiladd_s": " und {n} Kind", "fchiladd_p": " und {n} Kinder", "fch25_s": "; Ihr Kind reist zum 25% des Erwachsenenpreises", "fch25_p": "; Kinder reisen zum 25% des Erwachsenenpreises", "fchildren": "Reisen auch Kinder mit?", "fnat": "Ihre Nationalität — bestimmt die Eintrittsgebühren.", "finterest": "Was für eine Reise wünschen Sie sich?", "frec": "Für Ihre {nights}-nächtige {interest}-Reise — hervorragende Optionen gefunden.", "fdayintro": "Für einen {interest}-Tagesausflug ab Delhi NCR, meine Empfehlungen:", "frecs": "Meine Empfehlungen für Ihre Reise:", "fcustom": "Verfügbare Ziele für eine {interest}-Reise:", "falloc": "Legen wir die Nächte an jedem Ziel fest. Abfahrt ab Delhi NCR.", "fsingle": "Ich arrangiere {nights} in {dest}.", "fday": "Tagesausflug nach {dest} — Abfahrt aus Delhi NCR, Rückkehr am selben Abend.", "faddons": "Möchten Sie Ihrer Reise besondere Erlebnisse hinzufügen?", "fhotelmulti": "Nun zur Unterkunft — ich arrangiere jede Stadt separat.", "fhotelsingle": "Soll ich Ihre Unterkunft arrangieren?", "fguide": "Möchten Sie einen privaten Reiseführer?", "fcur1": "Danke — ich habe alles, was ich brauche.", "fcur2": "Ich überprüfe Ihre Auswahl und bereite Ihre persönliche Reise vor...", "fveh": "Welches Fahrzeug bevorzugen Sie?", "iheritage": "Kulturerbe", "ipilgrimage": "Pilgerreise", "imountains": "Berge", "iwildlife": "Wildtiere", "overlay_title": "Planen Sie Ihre Nordindien-Reise", "overlay_sub": "Wählen Sie Sprache und Währung, um zu beginnen.", "overlay_begin": "Beginnen", "ch_yes_rec": "Ja, Empfehlungen anzeigen", "ch_choose_self": "Ich wähle selbst", "fnights_day": "Tagesreise (ohne Übernachtung)", "unlock_pill": "zum Anzeigen verifizieren", "est_ref":"Ihre kuratierte Reise","est_summary":"Reiseübersicht","est_startloc":"Startpunkt","est_dates":"Reisedaten","est_duration":"Dauer","est_guests":"Reisende","est_nat":"Nationalität","est_route":"Gewählte Route","est_accom":"Unterkunft · Stadt für Stadt","est_rooms":"Zimmer","est_vehicle":"Fahrzeug","est_selected":"Ausgewählt","est_exp":"Erlebnisse & Extras","est_invest":"Kostenaufstellung","est_gst":"GST (5 %)","est_total":"Gesamtsumme","est_ppd":"pro Person und Tag","est_pp":"gesamt pro Person","est_sched":"Zahlungsplan","est_s1":"Anzahlung zur Bestätigung (10 %)","est_s2":"Mindestens 7 Tage vorher (50 %)","est_s3":"24 Stunden vorher (Rest)","est_incl":"Inklusivleistungen","btn_confirm":"Bestätigen","btn_confirm_date":"Datum bestätigen","btn_continue_without":"Ohne Extras fortfahren","btn_add_selected":"Auswahl hinzufügen","n_night":"{n} Nacht","n_nights":"{n} Nächte","otp_resend":"Code erneut senden","otp_change":"Nummer ändern","fx_note":"Zum heutigen Richtkurs umgerechnet — Abrechnung erfolgt in INR."}, "fr": {"welcome_h": "Bienvenue — planifions votre Nord de l'Inde", "welcome_sub": "Une estimation privée et transparente en quelques clics. Votre numéro est vérifié avant d'afficher le montant final.", "l_name": "Votre nom", "l_email": "E-mail (nous y enverrons votre estimation)", "l_interest": "Qu'est-ce qui vous attire dans le Nord de l'Inde ?", "dest_h": "Choisissez vos destinations", "dest_sub": "Voici ce que nous proposons pour votre intérêt — choisissez tout ce qui vous attire.", "trip_h": "Votre voyage", "trip_sub": "Pour planifier quelque chose de réaliste, sans précipitation.", "l_arrival": "Ville d'arrivée", "l_tourdays": "Jours libres pour le circuit", "note_days": "Ici aussi pour le travail ou la famille ? Indiquez seulement les jours réellement libres — nous planifions autour du reste.", "l_adults": "Adultes", "l_children": "Enfants", "l_nat": "Nationalité (pour les entrées)", "nat_foreign": "Étranger", "nat_indian": "Indien", "mode_h": "Comment souhaitez-vous voyager ?", "mode_curated": "Conçu par IVY", "mode_custom": "Créez votre itinéraire", "curated_sub": "Définissez les nuits par lieu. Le prix monte au niveau le plus élevé de votre itinéraire et ne baisse jamais (notre règle de paliers).", "l_guide": "Souhaitez-vous un guide privé ?", "guide_none": "Sans guide", "guide_en": "Anglais · ₹2 000/jour", "guide_other": "Autre langue · ₹3 500/jour", "custom_sub": "Tracez votre route. Les distances sont estimées maintenant et confirmées précisément dans votre proposition.", "l_nights": "Nuits sur la route", "l_stops": "Vos étapes (dans l'ordre)", "btn_addstop": "Ajouter une étape", "l_vehicle": "Véhicule", "addons_h": "Extras et expériences", "addons_sub": "Tout ce que nous pouvons intégrer à votre itinéraire — facultatif.", "stays_h": "Hébergements", "stays_sub": "Facultatif. Coût réel de l'hôtel + 10% de coordination transparente — jamais de commission.", "l_dates": "Dates du circuit (pour les tarifs en direct)", "btn_loadhotels": "Voir les hôtels en direct pour ces dates", "est_h": "Votre estimation", "reveal_btn": "Vérifier mon numéro et voir l'estimation", "reveal_note": "Nous envoyons un code par SMS pour confirmer que c'est vous, puis affichons votre estimation. Pratique courante — garde votre projet privé.", "pay_btn": "Réservez vos dates — payez 10%", "pay_note": "10% maintenant pour commencer · 50% une semaine avant · solde la veille. Un spécialiste vous contactera bientôt.", "est_lbl": "Estimation par personne, par jour", "sched_h": "Échéancier de paiement", "sched_now": "Pour commencer maintenant — 10%", "sched_mid": "Au moins 7 jours avant — 40%", "sched_bal": "24 heures avant — solde 50%", "sched_note": "Annulation gratuite jusqu'à 7 jours avant ; la GST n'est pas remboursable une fois facturée.", "otp_h": "Vérifiez votre numéro", "otp_p1": "Nous enverrons un code à 6 chiffres.", "otp_p2": "Saisissez le code reçu.", "otp_send": "Envoyer le code", "otp_verify": "Vérifier et afficher", "otp_cancel": "Annuler", "fw1": "Bienvenue chez Ivory Arc Travels.", "fw2": "Je suis IVY — votre conseillère de voyage privée. Avant de planifier quoi que ce soit, j'aimerais comprendre exactement ce que vous avez en tête.", "ftrust": "Agence de voyage indienne enregistrée · N° TVA 09AYIPT0745R2ZH · véhicules privés, tarifs transparents — jamais d'arrêts shopping à commission.", "fname": "Puis-je connaître votre prénom ?", "fthanks_name": "Enchanté(e), {name}.", "femail": "Votre adresse e-mail — je vous enverrai votre estimation de voyage ici.", "fwa": "Et votre numéro WhatsApp avec l'indicatif du pays ?", "fthanks2": "Merci. Quelques questions supplémentaires avant de faire des suggestions.", "fstart": "IVY organise des voyages au départ de Delhi NCR. Où devons-nous vous rejoindre ?", "fdate": "Quand souhaitez-vous commencer votre voyage ?", "fnights": "Combien de nuits ? Entrez 0 pour une excursion à la journée — nous les proposons aussi.", "fpace7": "Un voyage magnifiquement rythmé — assez de temps pour s'imprégner de chaque lieu.", "fpace4": "Un voyage ciblé — je ferai de chaque journée un moment précieux.", "fpace1": "Une escapade courte et élégante. Sereine et soigneusement choisie.", "fadults": "Combien d'adultes voyageront ?", "fgroup": "Groupe de {adults} adultes{chiladd} — tarification de groupe applicable{ch25}.", "fchiladd_s": " et {n} enfant", "fchiladd_p": " et {n} enfants", "fch25_s": " ; votre enfant voyage à 25% du tarif adulte", "fch25_p": " ; les enfants voyagent à 25% du tarif adulte", "fchildren": "Y a-t-il des enfants qui participent au voyage ?", "fnat": "Votre nationalité — elle détermine les droits d'entrée aux monuments.", "finterest": "Quel type de voyage espérez-vous ?", "frec": "Pour votre voyage de {nights} nuits en mode {interest} — j'ai d'excellentes options.", "fdayintro": "Pour une excursion {interest} à la journée depuis Delhi NCR, mes recommandations :", "frecs": "Mes recommandations pour votre voyage :", "fcustom": "Destinations disponibles pour un voyage {interest} :", "falloc": "Décidons du nombre de nuits dans chaque destination. Départ de Delhi NCR.", "fsingle": "Je préparerai {nights} à {dest}.", "fday": "Excursion à la journée vers {dest} — départ de Delhi NCR, retour le soir même.", "faddons": "Souhaitez-vous ajouter des expériences à votre voyage ?", "fhotelmulti": "Passons à l'hébergement — j'organise chaque ville séparément.", "fhotelsingle": "Souhaitez-vous que j'organise votre hébergement ?", "fguide": "Souhaitez-vous un guide privé ?", "fcur1": "Merci — j'ai tout ce qu'il me faut.", "fcur2": "Je passe en revue vos choix et prépare votre voyage personnalisé...", "fveh": "Quel véhicule préférez-vous ?", "iheritage": "Patrimoine", "ipilgrimage": "Pèlerinage", "imountains": "Montagnes", "iwildlife": "Faune & Nature", "overlay_title": "Planifiez votre voyage en Inde du Nord", "overlay_sub": "Choisissez votre langue et votre devise pour commencer.", "overlay_begin": "Commencer", "ch_yes_rec": "Oui, afficher les recommandations", "ch_choose_self": "Je choisirai moi-même", "fnights_day": "Excursion à la journée (sans nuit)", "unlock_pill": "vérifiez pour débloquer", "est_ref":"Votre voyage sur mesure","est_summary":"Résumé du voyage","est_startloc":"Point de départ","est_dates":"Dates de voyage","est_duration":"Durée","est_guests":"Voyageurs","est_nat":"Nationalité","est_route":"Itinéraire choisi","est_accom":"Hébergement · ville par ville","est_rooms":"Chambres","est_vehicle":"Véhicule","est_selected":"Sélectionné","est_exp":"Expériences et options","est_invest":"Détail de l'investissement","est_gst":"GST (5 %)","est_total":"Total général","est_ppd":"par personne et par jour","est_pp":"total par personne","est_sched":"Échéancier de paiement","est_s1":"Acompte de confirmation (10 %)","est_s2":"Au moins 7 jours avant (50 %)","est_s3":"24 heures avant (solde)","est_incl":"Ce qui est inclus","btn_confirm":"Confirmer","btn_confirm_date":"Confirmer la date","btn_continue_without":"Continuer sans options","btn_add_selected":"Ajouter la sélection","n_night":"{n} nuit","n_nights":"{n} nuits","otp_resend":"Renvoyer le code","otp_change":"Changer de numéro","fx_note":"Converti au taux indicatif du jour — la facturation est traitée en INR."}, "hi": {"welcome_h": "स्वागत है — आइए आपकी उत्तर भारत यात्रा बनाएँ", "welcome_sub": "कुछ ही टैप में निजी, पारदर्शी अनुमान। अंतिम राशि दिखाने से पहले हम आपका नंबर सत्यापित करते हैं।", "l_name": "आपका नाम", "l_email": "ईमेल (हम आपका अनुमान यहाँ भेजेंगे)", "l_interest": "उत्तर भारत में आपको क्या आकर्षित करता है?", "dest_h": "अपने गंतव्य चुनें", "dest_sub": "आपकी रुचि के लिए हम यह तैयार करते हैं — जो भी पसंद आए चुनें।", "trip_h": "आपकी यात्रा", "trip_sub": "ताकि हम वास्तविक योजना बनाएँ, बिना जल्दबाज़ी के।", "l_arrival": "आगमन शहर", "l_tourdays": "टूर के लिए खाली दिन", "note_days": "क्या आप काम या परिवार के लिए भी आए हैं? केवल वे दिन भरें जो वास्तव में यात्रा के लिए खाली हैं — बाकी के अनुसार हम योजना बनाएँगे।", "l_adults": "वयस्क", "l_children": "बच्चे", "l_nat": "राष्ट्रीयता (प्रवेश शुल्क हेतु)", "nat_foreign": "विदेशी", "nat_indian": "भारतीय", "mode_h": "आप कैसे यात्रा करना चाहेंगे?", "mode_curated": "IVY द्वारा तैयार", "mode_custom": "अपना मार्ग बनाएँ", "curated_sub": "हर स्थान के लिए रातें तय करें। मूल्य आपके मार्ग के उच्चतम स्तर तक बढ़ता है और कभी घटता नहीं (हमारा टियर नियम)।", "l_guide": "क्या आप निजी गाइड चाहेंगे?", "guide_none": "कोई गाइड नहीं", "guide_en": "अंग्रेज़ी · ₹2,000/दिन", "guide_other": "अन्य भाषा · ₹3,500/दिन", "custom_sub": "अपना सड़क मार्ग बनाएँ। दूरियाँ अभी अनुमानित हैं और प्रस्ताव में सटीक पुष्टि की जाएँगी।", "l_nights": "रास्ते में रातें", "l_stops": "आपके पड़ाव (क्रम में)", "btn_addstop": "पड़ाव जोड़ें", "l_vehicle": "वाहन", "addons_h": "अतिरिक्त और अनुभव", "addons_sub": "जो कुछ हम आपके मार्ग में जोड़ सकते हैं — सब वैकल्पिक।", "stays_h": "ठहराव", "stays_sub": "वैकल्पिक। होटल की वास्तविक लागत + पारदर्शी 10% समन्वय — कभी कमीशन नहीं।", "l_dates": "टूर तिथियाँ (लाइव दरों हेतु)", "btn_loadhotels": "इन तिथियों के लिए लाइव होटल देखें", "est_h": "आपका अनुमान", "reveal_btn": "मेरा नंबर सत्यापित करें और अनुमान देखें", "reveal_note": "हम पुष्टि के लिए SMS से एक कोड भेजते हैं, फिर आपका अनुमान दिखाते हैं। सामान्य प्रक्रिया — आपकी योजना निजी रखती है।", "pay_btn": "अपनी तिथियाँ सुरक्षित करें — 10% भुगतान करें", "pay_note": "शुरू करने के लिए अभी 10% · एक सप्ताह पहले 50% · शेष एक दिन पहले। एक विशेषज्ञ शीघ्र संपर्क करेगा।", "est_lbl": "प्रति व्यक्ति, प्रति दिन अनुमानित", "sched_h": "भुगतान अनुसूची", "sched_now": "अभी शुरू करने हेतु — 10%", "sched_mid": "कम से कम 7 दिन पहले — 40%", "sched_bal": "24 घंटे पहले — शेष 50%", "sched_note": "7 दिन पहले तक नि:शुल्क रद्दीकरण; चालान बनने के बाद GST वापसी योग्य नहीं।", "otp_h": "अपना नंबर सत्यापित करें", "otp_p1": "हम 6 अंकों का कोड भेजेंगे।", "otp_p2": "भेजा गया कोड दर्ज करें।", "otp_send": "कोड भेजें", "otp_verify": "सत्यापित करें और देखें", "otp_cancel": "रद्द करें", "fw1": "Ivory Arc Travels में आपका स्वागत है।", "fw2": "मैं IVY हूँ — आपकी निजी यात्रा सलाहकार। कुछ भी योजना बनाने से पहले, मैं ठीक से समझना चाहूँगी कि आप क्या चाहते हैं।", "ftrust": "पंजीकृत भारतीय टूर ऑपरेटर · GST 09AYIPT0745R2ZH · निजी वाहन, पारदर्शी मूल्य — कोई कमीशन-आधारित खरीदारी नहीं।", "fname": "क्या मैं आपका नाम जान सकती हूँ?", "fthanks_name": "{name}, मिलकर अच्छा लगा।", "femail": "आपका ईमेल पता — मैं यहाँ आपका यात्रा अनुमान भेजूँगी।", "fwa": "और आपका WhatsApp नंबर, देश कोड सहित?", "fthanks2": "धन्यवाद। कुछ और प्रश्न, फिर मैं सुझाव दूँगी।", "fstart": "IVY की यात्राएँ दिल्ली NCR से शुरू होती हैं। हम आपसे कहाँ मिलें?", "fdate": "आप अपनी यात्रा कब शुरू करना चाहेंगे?", "fnights": "कितनी रातें? एक दिन के टूर के लिए 0 डालें — हम वह भी कवर करते हैं।", "fpace7": "एक शानदार यात्रा — हर जगह बसने के लिए पर्याप्त समय।", "fpace4": "एक केंद्रित यात्रा — हर दिन को सार्थक बनाऊँगी।", "fpace1": "एक संक्षिप्त, सुंदर पलायन। शांत और सुविचारित।", "fadults": "कितने वयस्क यात्रा करेंगे?", "fgroup": "{adults} वयस्कों{chiladd} के समूह में यात्रा — समूह मूल्य निर्धारण लागू{ch25}।", "fchiladd_s": " और {n} बच्चे", "fchiladd_p": " और {n} बच्चों", "fch25_s": "; आपका बच्चा वयस्क दर के 25% पर यात्रा करता है", "fch25_p": "; बच्चे वयस्क दर के 25% पर यात्रा करते हैं", "fchildren": "क्या कोई बच्चे भी साथ आ रहे हैं?", "fnat": "आपकी राष्ट्रीयता — स्मारक प्रवेश शुल्क के लिए आवश्यक।", "finterest": "आप किस तरह की यात्रा चाहते हैं?", "frec": "आपकी {nights} रात की {interest} यात्रा के लिए — मेरे पास बेहतरीन विकल्प हैं।", "fdayintro": "दिल्ली NCR से {interest} एक दिवसीय यात्रा के लिए मेरी सिफारिशें:", "frecs": "आपकी यात्रा के लिए मेरी सिफारिशें:", "fcustom": "{interest} यात्रा के लिए उपलब्ध गंतव्य:", "falloc": "आइए हर गंतव्य की रातें तय करें। दिल्ली NCR से प्रस्थान।", "fsingle": "{dest} में {nights} की व्यवस्था करूँगी।", "fday": "{dest} की एक दिवसीय यात्रा — दिल्ली NCR से प्रस्थान और उसी शाम वापसी।", "faddons": "क्या आप यात्रा में कोई अनुभव जोड़ना चाहेंगे?", "fhotelmulti": "अब आवास — मैं प्रत्येक शहर के लिए अलग व्यवस्था करती हूँ।", "fhotelsingle": "क्या मैं आपके ठहरने की व्यवस्था करूँ?", "fguide": "क्या आप एक निजी गाइड चाहेंगे?", "fcur1": "धन्यवाद — मुझे जो चाहिए था, मिल गया।", "fcur2": "मैं आपकी पसंद की समीक्षा कर रही हूँ और आपकी व्यक्तिगत यात्रा तैयार कर रही हूँ...", "fveh": "आप कौन सा वाहन पसंद करेंगे?", "iheritage": "विरासत", "ipilgrimage": "तीर्थयात्रा", "imountains": "पर्वत", "iwildlife": "वन्यजीव", "overlay_title": "अपनी उत्तर भारत यात्रा की योजना बनाएँ", "overlay_sub": "शुरू करने के लिए भाषा और मुद्रा चुनें।", "overlay_begin": "शुरू करें", "ch_yes_rec": "हाँ, सिफ़ारिशें दिखाएँ", "ch_choose_self": "मैं खुद चुनूँगा/चुनूँगी", "fnights_day": "एक-दिन का टूर (रात नहीं)", "unlock_pill": "अनलॉक हेतु सत्यापित करें", "est_ref":"आपकी विशेष यात्रा","est_summary":"यात्रा सारांश","est_startloc":"प्रारंभ स्थान","est_dates":"यात्रा तिथियाँ","est_duration":"अवधि","est_guests":"यात्री","est_nat":"राष्ट्रीयता","est_route":"चयनित मार्ग","est_accom":"आवास · शहर अनुसार","est_rooms":"कमरे","est_vehicle":"वाहन","est_selected":"चयनित","est_exp":"अनुभव और ऐड-ऑन","est_invest":"निवेश विवरण","est_gst":"जीएसटी (5%)","est_total":"कुल योग","est_ppd":"प्रति व्यक्ति, प्रति दिन","est_pp":"प्रति व्यक्ति कुल","est_sched":"भुगतान अनुसूची","est_s1":"पुष्टि हेतु अग्रिम (10%)","est_s2":"कम से कम 7 दिन पहले (50%)","est_s3":"24 घंटे पहले (शेष)","est_incl":"क्या शामिल है","btn_confirm":"पुष्टि करें","btn_confirm_date":"तिथि पुष्टि करें","btn_continue_without":"इसके बिना आगे बढ़ें","btn_add_selected":"चयनित जोड़ें","n_night":"{n} रात","n_nights":"{n} रातें","otp_resend":"कोड पुनः भेजें","otp_change":"नंबर बदलें","fx_note":"आज की सांकेतिक दर पर परिवर्तित — बिलिंग INR में होगी।"}}
 function t(k){return (T[S.lang]&&T[S.lang][k])||T.en[k]||k;}
 function tf(k,v){let s=t(k)||k;if(v)Object.entries(v).forEach(([x,y])=>{
   while(s.includes('{'+x+'}'))s=s.replace('{'+x+'}',y!=null?y:'');});return s;}
+/* ═ i18n parity check (dev-visible only) ═ */
+(function(){try{const ref=Object.keys(T.en);
+  for(const l of ['hi','es','de','fr']){
+    const miss=ref.filter(k=>!(k in T[l]));
+    const extra=Object.keys(T[l]).filter(k=>!(k in T.en));
+    if(miss.length||extra.length)console.warn('[i18n]',l,'missing:',miss,'extra:',extra);}}catch(e){}})();
+/* ═ CONFIG — single source for tunables ═ */
+const CONFIG={
+  PAY:{ADVANCE:0.10,MID:0.50},
+  GST:0.05,
+  GROUP_BANDS:[[2,0],[4,1000],[6,2500],[10,3500]],
+  CHILD_RATE:0.25,
+  EXTRA_BED_NIGHTLY:2000,
+  KM_FLOOR_PER_DAY:300, ROAD_FACTOR:1.055,
+  DRIVER_NIGHT:1000, COORD_PCT:0.10, COORD_PER_PAX:200,
+  GUIDE:{english:2000,other:3500},
+  ESCALATE_ABOVE:10,
+  DELAY:{INTRO_CAP:1200,CAP:600,BASE:300,PER_CHAR:6},
+  WHATSAPP:'917455037397', EMAIL:'hello@ivoryarctravels.com',
+};
+/* ═ Utilities: sanitizer + validators + lazy SDK loader ═ */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const V={
+  email:v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()),
+  phoneE164:v=>/^\+[1-9]\d{9,14}$/.test(v.replace(/[\s\-]/g,'')),
+  name:v=>v.trim().length>1&&v.trim().length<=60,
+};
+const _loaded={};
+function loadScript(src){return _loaded[src]||(_loaded[src]=new Promise((res,rej)=>{
+  const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{delete _loaded[src];rej(new Error('load failed: '+src));};
+  document.head.appendChild(s);}));}
+async function ensureFirebase(){
+  if(window.firebase&&firebase.auth)return;
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
+  if(!DEMO){try{firebase.initializeApp(FIREBASE_CONFIG);}catch(e){}}}
+function ensureRazorpay(){return window.Razorpay?Promise.resolve():loadScript('https://checkout.razorpay.com/v1/checkout.js');}
+function ensureJsPDF(){return (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');}
 
 /* ======================== STATE ======================== */
 const S={
@@ -292,34 +336,70 @@ const DEST_META={
   mathura_vrindavan:{min:1,ideal:2,km:160},vaishno_devi:{min:2,ideal:4,km:600},
   golden_triangle:{min:3,ideal:5,km:280},
 };
+const DEST_CATS={
+  golden_triangle:['Heritage'], delhi:['Heritage','Food'], agra:['Heritage'],
+  jaipur:['Heritage','Luxury Retreat'], udaipur:['Heritage','Luxury Retreat'], jodhpur:['Heritage'],
+  pushkar:['Spiritual','Heritage'], haridwar:['Spiritual'],
+  rishikesh:['Spiritual','Adventure','Weekend Escape'],
+  mathura_vrindavan:['Spiritual'], varanasi:['Spiritual','Heritage'], ayodhya:['Spiritual'],
+  amritsar:['Spiritual','Heritage'], kainchi_dham:['Spiritual','Hill Station'],
+  vaishno_devi:['Spiritual','Adventure'], jwala_ji:['Spiritual'], chintpurni:['Spiritual'],
+  jim_corbett:['Wildlife','Nature','Weekend Escape'], ranthambore:['Wildlife','Nature'],
+  shimla_manali:['Hill Station','Adventure','Nature','Weekend Escape'],
+  dharamshala:['Hill Station','Spiritual','Nature'], dalhousie:['Hill Station','Nature','Weekend Escape'],
+  mussoorie:['Hill Station','Weekend Escape'], nainital:['Hill Station','Nature','Weekend Escape'],
+  chandigarh:['Heritage','Food','Weekend Escape'],
+};
+const INTEREST_TO_CATS={
+  Heritage:['Heritage','Luxury Retreat'],
+  Pilgrimage:['Spiritual'],
+  Mountains:['Hill Station','Adventure','Nature'],
+  Wildlife:['Wildlife'],
+};
+function destsForInterest(interest){
+  const want=INTEREST_TO_CATS[interest]||[];
+  return Object.keys(DEST).filter(k=>{const dc=DEST_CATS[k]||[];return want.some(c=>dc.includes(c));});}
+const DEST_DESC={
+  golden_triangle:'India\'s definitive first journey — imperial Delhi, the Taj at Agra, and rose-pink Jaipur.',
+  delhi:'Two cities in one — Mughal lanes of Old Delhi against Lutyens\' imperial avenues.',
+  agra:'Home of the Taj Mahal — marble poetry at sunrise, Mughal kitchens by night.',
+  jaipur:'The Pink City — hilltop Amber Fort, palace courtyards and bazaar treasure.',
+  udaipur:'The City of Lakes — white palaces mirrored in Pichola, India\'s most romantic address.',
+  jodhpur:'The Blue City beneath mighty Mehrangarh — Rajasthan at its most cinematic.',
+  pushkar:'A sacred lake ringed by ghats and one of the world\'s only Brahma temples.',
+  haridwar:'Where the Ganges meets the plains — the fire-lit Ganga Aarti at Har Ki Pauri.',
+  rishikesh:'Yoga capital of the world — river rafting, ashrams and Himalayan foothills.',
+  mathura_vrindavan:'Krishna\'s birthplace — temple bells, Yamuna ghats and living devotion.',
+  varanasi:'The eternal city — dawn boat rides past ghats older than history.',
+  ayodhya:'Birthplace of Lord Ram — the grand new Ram Mandir and the Saryu aarti.',
+  amritsar:'The Golden Temple\'s shimmering sanctum and the roar of the Wagah border.',
+  kainchi_dham:'Neem Karoli Baba\'s hillside ashram — serenity in the Kumaon foothills.',
+  vaishno_devi:'The great mountain pilgrimage — 13 km of devotion to the holy cave shrine.',
+  jwala_ji:'The eternal flame temple of the Kangra valley.',
+  chintpurni:'The revered Shakti Peetha of Himachal\'s low hills.',
+  jim_corbett:'India\'s oldest national park — tiger country along the Kosi river.',
+  ranthambore:'Tigers among thousand-year ruins — India\'s most photogenic safari.',
+  shimla_manali:'Colonial ridge-town charm to Himalayan adventure in the Kullu valley.',
+  dharamshala:'Home of the Dalai Lama — Tibetan monasteries above pine forests.',
+  dalhousie:'Raj-era hill station beside Khajjiar, India\'s \'mini Switzerland\'.',
+  mussoorie:'The Queen of Hills — Landour\'s bakeries and Garhwal panoramas.',
+  nainital:'A jade lake in the Kumaon hills, ringed by colonial promenades.',
+  chandigarh:'Le Corbusier\'s modernist city — gardens, lakes and the Capitol Complex.',
+};
 const INTEREST_CATS={
   Heritage:['HERITAGE'],Pilgrimage:['SPIRITUAL','PILGRIMAGE'],
-  Mountains:['HIMALAYAN'],Wildlife:['WILDLIFE'],
+  Mountains:['MOUNTAINS'],Wildlife:['WILDLIFE'],
 };
 // Phase 7: interest-filtered destinations
 const INTEREST_DESTS={
-  Heritage:['golden_triangle','delhi','agra','jaipur','jodhpur','udaipur','pushkar'],
-  Pilgrimage:['mathura_vrindavan','varanasi','ayodhya','haridwar','rishikesh','amritsar','vaishno_devi','jwala_ji','chintpurni','kainchi_dham'],
-  Mountains:['shimla_manali','dharamshala','dalhousie','mussoorie','nainital','chandigarh'],
-  Wildlife:['jim_corbett','ranthambore'],
+  Heritage:destsForInterest('Heritage'),
+  Pilgrimage:destsForInterest('Pilgrimage'),
+  Mountains:destsForInterest('Mountains'),
+  Wildlife:destsForInterest('Wildlife'),
 };
 
 /* ======================== ROUTE-SPECIFIC ADD-ONS ======= */
-const ROUTE_ADDONS={
-  golden_triangle:   ['g-staj','g-vip','g-mdinner','g-turban','g-balloon','g-rdinner','g-owalk','g-photo','a-tonga','a-hwalk','d-food','j-camel'],
-  rajasthan_royal:   ['j-camel','j-turban','j-block','j-balloon','j-rdinner','j-jwalk'],
-  sacred_ganges:     ['r-raft1','r-yoga','r-aarti','r-nkanth','v-boat','v-aarti','v-bless'],
-  sacred_ayodhya:    ['m-iskcon','m-boat','m-flower','m-ericks','m-holi'],
-  chandigarh_himalayas:['sm-para','sm-snow','sm-spa','sm-camp','sm-bike'],
-  shimla_manali:     ['sm-para','mn-para','sm-snow','mn-snow','sm-spa','mn-spa','sm-camp'],
-  taj_tigers:        ['a-staj','a-photo','a-tonga','a-marble','c-bij','c-bird','c-photo'],
-  golden_temple_hills:['am-wvip','am-fwalk','am-langar','am-pmuseum','am-gobind'],
-  vaishno_devi:      ['vd-heli','vd-vip','vd-shivk','vd-patni'],
-  corbett_wildlife:  ['c-bij','c-ele','c-night','c-bird','c-fish','c-photo'],
-  mathura_vrindavan: ['m-iskcon','m-boat','m-flower','m-ericks','m-holi'],
-  varanasi_ayodhya:  ['v-boat','v-aarti','v-silk','v-bless','v-cook'],
-};
-
+/* Experiences derive strictly from each selected destination (DEST[k].exp === k). */
 const CURATED_ROUTES=[
   {id:'golden_triangle',    cat:'HERITAGE',  name:'Golden Triangle',          dests:['golden_triangle'],                          desc:'Delhi · Agra · Jaipur'},
   {id:'rajasthan_royal',    cat:'HERITAGE',  name:'Rajasthan Royal Circuit',  dests:['jaipur','jodhpur','udaipur','pushkar'],      desc:'Jaipur · Jodhpur · Udaipur · Pushkar'},
@@ -427,7 +507,7 @@ function comfortScore(){
   return{stars:2,label:'Rushed',msg:'This plan involves long driving days. I would suggest adding a night or simplifying the route.'};}
 
 /* ======================== PRICING ENGINE (UNCHANGED) === */
-function bandRed(ad){return ad<=2?0:ad<=4?1000:ad<=6?2500:3500;}
+function bandRed(ad){for(const[mx,red] of CONFIG.GROUP_BANDS)if(ad<=mx)return red;return CONFIG.GROUP_BANDS[CONFIG.GROUP_BANDS.length-1][1];}
 function rooms(ad){return Math.max(Math.ceil(ad/2),1);}
 function fmt(inr){const f=FX[S.cur];return f.s+Math.round(inr/f.r).toLocaleString();}
 function findExp(id){for(const k in EXPER){const f=EXPER[k].find(e=>e.id===id);if(f)return f;}return null;}
@@ -435,8 +515,8 @@ function findExp(id){for(const k in EXPER){const f=EXPER[k].find(e=>e.id===id);i
 function addonCost(){let tot=0;Object.keys(S.addons).forEach(id=>{
   const pax=S.addons[id];if(!pax)return;
   const e=findExp(id);if(!e)return;
-  let c=e.t==='pp'?e.price*pax:e.price;if(e.coord)c+=200*pax;tot+=c;});return tot;}
-function hotelCost(nts){if(S.hotel==='none'||!nts)return[0,0];
+  let c=e.t==='pp'?e.price*pax:e.price;if(e.coord)c+=CONFIG.COORD_PER_PAX*pax;tot+=c;});return tot;}
+function hotelCost(nts){if(S.hotel==='none'||!nts)return[0,0,0];
   const plan=(typeof cityNightPlan==='function')?cityNightPlan():[];
   let room=0;
   if(plan.length){
@@ -444,34 +524,48 @@ function hotelCost(nts){if(S.hotel==='none'||!nts)return[0,0];
       const n=ch.nightly>0?ch.nightly:(S.hotelNightly>0?S.hotelNightly:HOTELS[S.hotel].n);
       room+=n*rooms(S.adults)*c.nights;});
   }else{const n=S.hotelNightly>0?S.hotelNightly:HOTELS[S.hotel].n;room=n*rooms(S.adults)*nts;}
-  return[room,Math.round(room*0.10)];}
+  const beds=S.children>0?S.children*CONFIG.EXTRA_BED_NIGHTLY*nts:0;
+  return[room,Math.round((room+beds)*CONFIG.COORD_PCT),beds];}
 function compute(){
   const ad=S.adults,ch=S.children,guests=ad+ch;
-  if(ad>10)return{escalate:true};
+  if(ad>CONFIG.ESCALATE_ABOVE)return{escalate:true};
   let items=[],days=0,nts=0;
   if(S.mode==='curated'){
     let runMax=0,rack=0;
     S.dest.forEach(k=>{const d=DEST[k];const dys=S.nights[k]||1;days+=dys;
       runMax=Math.max(runMax,d.base);const rate=runMax-bandRed(ad);
-      rack+=(ad*rate+ch*0.25*rate)*dys;});
+      rack+=(ad*rate+ch*CONFIG.CHILD_RATE*rate)*dys;});
     nts=Math.max(days-1,0);
     items.push(['Journey services (private transportation + sightseeing)',Math.round(rack)]);
   } else {
     nts=S.customNights;days=nts+1;
     let sum=0;for(let i=0;i<S.route.length-1;i++){const a=CITY[S.route[i]],b=CITY[S.route[i+1]];if(a&&b)sum+=km(a,b);}
-    const floor=300*(nts+1);const billable=Math.round(Math.max(sum,floor)*1.055);
+    const floor=CONFIG.KM_FLOOR_PER_DAY*(nts+1);const billable=Math.round(Math.max(sum,floor)*CONFIG.ROAD_FACTOR);
     const trans=billable*VEH[S.veh].r;
     items.push(['Transportation: '+billable+' km at ₹'+VEH[S.veh].r+'/km ('+VEH[S.veh].l+')',trans]);
-    if(nts>0)items.push(['Driver overnight: '+nts+' night'+(nts>1?'s':''),1000*nts]);
+    if(nts>0)items.push(['Driver overnight: '+nts+' night'+(nts>1?'s':''),CONFIG.DRIVER_NIGHT*nts]);
   }
-  if(S.mode==='curated'){const gr={english:2000,other:3500}[S.guide]||0;if(gr)items.push(['Private guide ('+days+' days)',gr*days]);}
+  if(S.mode==='curated'){const gr=CONFIG.GUIDE[S.guide]||0;if(gr)items.push(['Private guide ('+days+' days)',gr*days]);}
   const add=addonCost();if(add)items.push(['Selected experiences & add-ons',add]);
-  const[room,coord]=hotelCost(nts);
+  const[room,coord,beds]=hotelCost(nts);
   if(room){items.push(['Accommodation ('+rooms(ad)+' room'+(rooms(ad)>1?'s':'')+' · '+nts+' night'+(nts>1?'s':'')+')',room]);
+           if(beds)items.push(['Extra beds for '+ch+' child'+(ch>1?'ren':'')+' ('+nts+' night'+(nts>1?'s':'')+')',beds]);
            items.push(['Accommodation coordination (10%)',coord]);}
-  const sub=items.reduce((a,b)=>a+b[1],0);const gst=Math.round(sub*0.05);const total=sub+gst;
+  const sub=items.reduce((a,b)=>a+b[1],0);const gst=Math.round(sub*CONFIG.GST);const total=sub+gst;
   const ppd=guests&&days?total/(guests*days):0;const disc=bandRed(ad);
   return{items,sub,gst,total,ppd,days,guests,nts,disc};}
+/* ═ summaryModel — single source for estimate card, PDF (A18 local dates) ═ */
+function summaryModel(){
+  const q=compute();if(!q||q.escalate||!q.items)return q;
+  const adv=Math.round(q.total*CONFIG.PAY.ADVANCE),mid=Math.round(q.total*CONFIG.PAY.MID),bal=q.total-adv-mid;
+  const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
+  const startLabel=S.startLocation==='hotel_delhi'&&S.startHotelName?esc(S.startHotelName)+', Delhi NCR'
+    :S.startLocation==='noida_airport'?'Noida International Airport (Jewar)':'Delhi Airport (IGI)';
+  const sd=S.startDate?S.startDate.split('-').map(Number):null;
+  const d0=sd?new Date(sd[0],sd[1]-1,sd[2]):null;
+  const d1=d0?new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+S.customNights):null;
+  const fdt=d=>d?d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'}):'TBC';
+  return Object.assign(q,{adv,mid,bal,route,startLabel,dateStart:fdt(d0),dateEnd:fdt(d1),rooms:rooms(S.adults),guestsLabel:S.adults+' adult'+(S.adults>1?'s':'')+(S.children?' \u00b7 '+S.children+' child'+(S.children>1?'ren':''):'')});}
 
 /* ======================== CHAT ENGINE ================== */
 const $=id=>document.getElementById(id);
@@ -481,22 +575,29 @@ function nowTS(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:
 function scrollBot(){const b=$('chatBg');b.scrollTop=b.scrollHeight;}
 function addBot(html){
   const d=document.createElement('div');d.className='msg bot';
-  d.innerHTML=`<div class="mav"><img src="${LOGO}"></div>
+  d.innerHTML=`<div class="mav"><img src="${LOGO}" alt=""></div>
     <div class="bubble bot-bubble">${html}<span class="ts">${nowTS()}</span></div>`;
   MSGS().appendChild(d);scrollBot();}
 // Phase 1: NO ticks, timestamps only
-function addUser(text){
+function addUser(text,stepId){
   const d=document.createElement('div');d.className='msg user';
-  d.innerHTML=`<div class="bubble user-bubble">${text}<span class="ts">${nowTS()}</span></div>`;
+  const editable=stepId?'data-edit="'+stepId+'" role="button" tabindex="0" title="Tap to change this answer" style="cursor:pointer"':'';
+  d.innerHTML=`<div class="bubble user-bubble" ${editable}>${esc(text)}<span class="ts">${nowTS()}</span>${stepId?'<span style="display:block;font-size:10px;color:var(--gold-text);text-align:right">tap to edit</span>':''}</div>`;
+  if(stepId){const b=d.querySelector('[data-edit]');
+    const fire=()=>editAnswer(stepId);
+    b.onclick=fire;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fire();}};}
   MSGS().appendChild(d);scrollBot();}
 let _typ=null;
 function showTyping(){_typ=document.createElement('div');_typ.className='msg bot';
-  _typ.innerHTML=`<div class="mav"><img src="${LOGO}"></div>
+  _typ.innerHTML=`<div class="mav"><img src="${LOGO}" alt=""></div>
     <div class="bubble bot-bubble"><div class="td"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
   MSGS().appendChild(_typ);scrollBot();}
 function hideTyping(){if(_typ){_typ.remove();_typ=null;}}
+let _botCount=0;
 function botSay(html,delay,done){
-  const d=Math.min(delay||(900+html.replace(/<[^>]+>/g,'').length*11),2800);
+  _botCount++;
+  const cap=_botCount<=3?CONFIG.DELAY.INTRO_CAP:CONFIG.DELAY.CAP;
+  const d=Math.min(delay||(CONFIG.DELAY.BASE+html.replace(/<[^>]+>/g,'').length*CONFIG.DELAY.PER_CHAR),cap);
   showTyping();setTimeout(()=>{hideTyping();addBot(html);if(done)done();},d);}
 
 /* ======================== PHASE 2: NAME CLEANING ======= */
@@ -508,23 +609,49 @@ function cleanName(v){
 
 /* ======================== FLOW (Phases 3–12) =========== */
 let FLOW_IDX=0;
+/* ═ PERSIST + REPLAY + EDIT (A10/C1) ═ */
+const ANSWERS=[];
+const PERSIST_KEY='ivy_session_v1';
+function persist(){try{sessionStorage.setItem(PERSIST_KEY,JSON.stringify({S,ANSWERS}));}catch(e){}}
+function clearPersist(){try{sessionStorage.removeItem(PERSIST_KEY);}catch(e){}}
+function tryRestore(){
+  let d=null;try{d=JSON.parse(sessionStorage.getItem(PERSIST_KEY)||'null');}catch(e){}
+  if(!d||!d.ANSWERS||!d.ANSWERS.length)return false;
+  Object.assign(S,d.S);d.ANSWERS.forEach(a=>ANSWERS.push(a));
+  return true;}
+function replay(){
+  MSGS().innerHTML='';IA().innerHTML='';FLOW_IDX=0;
+  const amap={};ANSWERS.forEach(a=>amap[a.id]=a);
+  while(FLOW_IDX<FLOW.length){
+    const step=FLOW[FLOW_IDX++];
+    if(step.cond&&!step.cond())continue;
+    if(step.type==='bot'){const raw=typeof step.text==='function'?step.text():step.text;if(raw)addBot(raw);continue;}
+    if(step.type==='estimate'){showEstimate();return;}
+    const bt=typeof step.botText==='function'?step.botText():step.botText;
+    if(bt)addBot(bt);
+    const a=amap[step.id];
+    if(a){if(step.onAnswer)step.onAnswer(a.raw);addUser(a.display,step.id);continue;}
+    renderInput(step);return;}}
+function editAnswer(stepId){
+  const i=ANSWERS.findIndex(a=>a.id===stepId);if(i<0)return;
+  ANSWERS.length=i;persist();replay();scrollBot();}
 const FLOW=[
   {type:'bot',text:()=>tf('fw1'),delay:700},
   {type:'bot',text:()=>tf('fw2'),delay:1000},
   {type:'bot',text:()=>'<span style="font-size:12.5px;color:var(--muted)">'+tf('ftrust')+'</span>',delay:900},
   // Phase 2: name with greeting strip
   {id:'name',type:'ask',botText:()=>tf('fname'),inputType:'text',
-    placeholder:'e.g. Sarah Williams',validate:v=>v.trim().length>1,
+    placeholder:'e.g. Sarah Williams',validate:V.name,
     onAnswer:v=>{S.name=cleanName(v);},display:v=>cleanName(v)},
-  {type:'bot',text:()=>tf('fthanks_name',{name:'<b>'+S.name+'</b>'}),delay:600},
+  {type:'bot',text:()=>tf('fthanks_name',{name:'<b>'+esc(S.name)+'</b>'}),delay:600},
   {id:'email',type:'ask',botText:()=>tf('femail'),inputType:'email',
-    placeholder:'you@email.com',validate:v=>v.includes('@')&&v.includes('.'),
+    placeholder:'you@email.com',validate:V.email,
     onAnswer:v=>{S.email=v.trim();savePartialLead();},display:v=>v},
   // Phase 4: WhatsApp number early
   {id:'wa',type:'ask',botText:()=>tf('fwa'),inputType:'phone',
     placeholder:'+91 98765 43210',
-    validate:v=>/^\+?[\d\s\-]{8,15}$/.test(v.replace(/\s/g,'')),
-    onAnswer:v=>{S.phone=v.trim();const ph=$('phone');if(ph)ph.value=v.trim();},display:v=>v},
+    validate:V.phoneE164,
+    onAnswer:v=>{S.phone=v.replace(/[\s\-]/g,'');const ph=$('phone');if(ph)ph.value=S.phone;},display:v=>v},
   {type:'bot',text:()=>tf('fthanks2'),delay:700},
   // Phase 3: start location (replaces "arrival city")
   {id:'start_loc',type:'ask',
@@ -539,7 +666,7 @@ const FLOW=[
   {id:'nights',type:'ask',botText:()=>tf('fnights'),inputType:'stepper',
     min:0,max:21,initial:3,
     onAnswer:v=>{S.customNights=v;},
-    display:v=>v===0?t('fnights_day'):v+(v===1?' night':' nights')},
+    display:v=>v===0?t('fnights_day'):tf(v===1?'n_night':'n_nights',{n:v})},
   {id:'adults',type:'ask',botText:()=>tf('fadults'),inputType:'stepper',
     min:1,max:12,initial:2,
     onAnswer:v=>{S.adults=v;autoVeh();},
@@ -615,7 +742,7 @@ const FLOW=[
   {id:'nights_alloc',type:'ask',
     botText:()=>tf('falloc'),
     inputType:'nights_alloc',cond:()=>S.dest.length>1&&S.customNights>0,
-    onAnswer:v=>{/* S.nights already set inside the renderer's iaAllocOk handler */},
+    onAnswer:v=>{S.nights={};S.dest.forEach((k,i)=>{S.nights[k]=i===0?(v[k]||0)+1:(v[k]||0);});},
     display:v=>Object.entries(v).map(([k,n])=>(DEST[k]?DEST[k].name:k)+': '+n+'n').join(' · ')},
   {type:'bot',text:()=>{if(S.dest.length===1){S.nights={};S.nights[S.dest[0]]=S.customNights+1;
     const nLabel=S.customNights===1?'1 night':S.customNights+' nights';
@@ -680,49 +807,66 @@ function renderInput(step){
     case 'day_tour_cards':{
       const catMap={Heritage:['Heritage'],Pilgrimage:['Pilgrimage'],Mountains:['Mountains'],Wildlife:['Wildlife']};
       const cats=catMap[S.interest]||[];
-      const dtList=cats.length?DAY_TOURS.filter(d=>cats.includes(d.cat)):DAY_TOURS;
-      const show=dtList.length?dtList:DAY_TOURS;
+      const want=INTEREST_TO_CATS[S.interest]||[];
+      const show=DAY_TOURS.filter(d=>{const dc=DEST_CATS[d.dest]||[];return !want.length||want.some(c=>dc.includes(c));});
+      if(!show.length){
+        ia.innerHTML=`<div class="ia-card"><span class="cat">Day journeys from Delhi NCR</span>
+          <div class="feas-warn"><b>An honest note:</b> true ${esc(S.interest.toLowerCase())} escapes need at least one night away — none sit within same-day range of Delhi NCR.</div>
+          <button class="ia-continue" id="iaGoOvernight">Plan an overnight ${esc(S.interest.toLowerCase())} journey instead</button></div>`;
+        $('iaGoOvernight').onclick=()=>editAnswer('nights');return;}
       ia.innerHTML=`<div class="ia-card"><span class="cat">Day journeys from Delhi NCR</span>
         <div class="route-cards">`+
-        show.map(d=>`<div class="route-card" data-dtid="${d.id}">
+        show.map(d=>`<button type="button" class="cardify route-card" data-dtid="${d.id}">
           <div class="rc-cat">${d.cat}</div>
           <div class="rc-nm">${d.name}</div>
           <div class="rc-desc">${d.desc}</div>
           <div class="rc-nights">Round trip ≈ ${d.km*2} km &nbsp;·&nbsp; Return same day</div>
-        </div>`).join('')+`</div></div>`;
+        </button>`).join('')+`</div></div>`;
       ia.querySelectorAll('[data-dtid]').forEach(c=>c.onclick=()=>{
         const dt=DAY_TOURS.find(d=>d.id===c.dataset.dtid);if(!dt)return;
         submitStep(step,dt,dt.name);});break;}
     case 'text':case 'email':{
-      ia.innerHTML=`<div class="ia-simple"><input type="${step.inputType}" id="chatIn" placeholder="${step.placeholder||''}" autocomplete="off"><button class="ia-send" id="iaSend">&#8594;</button></div>`;
+      ia.innerHTML=`<div class="ia-simple"><input type="${step.inputType}" id="chatIn" placeholder="${step.placeholder||''}" autocomplete="off" aria-label="${((typeof step.botText==='function'?step.botText():step.botText)||'').replace(/<[^>]+>/g,'').replace(/"/g,'&quot;')}"><button class="ia-send" id="iaSend">&#8594;</button></div>`;
       const inp=$('chatIn');inp.focus();
       const go=()=>{const v=inp.value.trim();if(!v||(step.validate&&!step.validate(v)))return;submitStep(step,v,step.display?step.display(v):v);};
       $('iaSend').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();};break;}
     case 'phone':{
-      ia.innerHTML=`<div class="ia-simple"><input type="tel" id="chatIn" placeholder="${step.placeholder||'+91 XXXXX XXXXX'}" autocomplete="tel"><button class="ia-send" id="iaSend">&#8594;</button></div>`;
+      ia.innerHTML=`<div class="ia-simple"><input type="tel" id="chatIn" placeholder="${step.placeholder||'+91 XXXXX XXXXX'}" autocomplete="tel" aria-label="${((typeof step.botText==='function'?step.botText():step.botText)||'').replace(/<[^>]+>/g,'').replace(/"/g,'&quot;')}"><button class="ia-send" id="iaSend">&#8594;</button></div>`;
       const inp=$('chatIn');inp.focus();
-      const go=()=>{const v=inp.value.trim();if(!v||(step.validate&&!step.validate(v))){inp.style.borderColor='#B33333';return;}submitStep(step,v,step.display?step.display(v):v);};
+      const go=()=>{const v=inp.value.trim();
+        if(!v||(step.validate&&!step.validate(v))){
+          inp.style.borderColor='#B33333';
+          let hh=$('phoneHint');if(!hh){hh=document.createElement('div');hh.id='phoneHint';hh.style.cssText='font-size:11.5px;color:#B33333;margin-top:4px;padding-left:6px';inp.parentNode.appendChild(hh);}
+          hh.textContent='Please include your country code, e.g. +91 for India, +1 for USA/Canada, +44 for UK.';return;}
+        submitStep(step,v,step.display?step.display(v):v);};
       $('iaSend').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();};break;}
     case 'date':{
       ia.innerHTML=`<div class="ia-card"><span class="cat">Journey start date</span>
         <input type="date" id="chatDate" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;color:var(--ink);display:block;margin-bottom:220px">
-        <button class="ia-continue" id="iaDateOk" style="margin-top:0">Confirm date</button></div>`;
+        <button class="ia-continue" id="iaDateOk" style="margin-top:0">${t('btn_confirm_date')}</button></div>`;
       const mn=new Date().toISOString().split('T')[0];$('chatDate').min=mn;$('chatDate').value=S.startDate||mn;
       $('iaDateOk').onclick=()=>{const v=$('chatDate').value;if(!v)return;submitStep(step,v,step.display(v));};break;}
     case 'stepper':{
-      let val=S[{nights:'customNights',adults:'adults',children:'children'}[step.id]]||step.initial||1;
-      const render=()=>{const stepLbl=step.id==='nights'?(val===0?'Day tour (same-day return)':val+(val===1?' night':' nights')):'';
+      const sk={nights:'customNights',adults:'adults',children:'children'}[step.id];
+      let val=(S[sk]!==undefined&&S[sk]!==null&&S[sk]!=='')?S[sk]:(step.initial??1);
+      const render=()=>{const stepLbl=step.id==='nights'?(val===0?'Day tour (same-day return)':tf(val===1?'n_night':'n_nights',{n:val})):'';
+        const escal=step.id==='adults'&&val>CONFIG.ESCALATE_ABOVE;
         ia.innerHTML=`<div class="ia-card">
         <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0;flex-wrap:wrap">
           <div>
-            <div class="stepper"><button id="sM">&#8722;</button><span id="sV">${val}</span><button id="sP">&#43;</button></div>
-            ${stepLbl?`<div style="text-align:center;font-size:12px;color:var(--gold);margin-top:4px">${stepLbl}</div>`:''}
+            <div class="stepper"><button id="sM" aria-label="decrease">&#8722;</button><span id="sV" aria-live="polite">${val}</span><button id="sP" aria-label="increase">&#43;</button></div>
+            ${stepLbl?`<div style="text-align:center;font-size:12px;color:var(--gold-text);margin-top:4px">${stepLbl}</div>`:''}
           </div>
-          <button class="ia-continue" style="width:auto;padding:11px 28px;margin:0" id="iaSOk">Confirm</button>
-        </div></div>`;
+          ${escal?'':'<button class="ia-continue" style="width:auto;padding:11px 28px;margin:0" id="iaSOk">'+t('btn_confirm')+'</button>'}
+        </div>
+        ${escal?`<div class="feas-warn" style="margin-top:8px"><b>A group of ${val}?</b> Wonderful — journeys above ${CONFIG.ESCALATE_ABOVE} guests are arranged personally by our team for the best rates.
+          <a href="https://wa.me/${CONFIG.WHATSAPP}?text=${encodeURIComponent('Hello! We are a group of '+val+' planning a North India journey.')}"
+             style="display:block;margin-top:8px;background:var(--bright);color:#064A20;text-decoration:none;border-radius:8px;padding:11px;text-align:center;font-weight:600">Message us on WhatsApp</a>
+          <a href="mailto:${CONFIG.EMAIL}" style="display:block;margin-top:6px;text-align:center;font-size:12px;color:var(--muted)">or email ${CONFIG.EMAIL}</a></div>`:''}
+        </div>`;
         $('sM').onclick=()=>{val=Math.max(step.min||0,val-1);render();};
         $('sP').onclick=()=>{val=Math.min(step.max||99,val+1);render();};
-        $('iaSOk').onclick=()=>submitStep(step,val,step.display(val));};render();break;}
+        const ok=$('iaSOk');if(ok)ok.onclick=()=>submitStep(step,val,step.display(val));};render();break;}
     case 'choices':{
       ia.innerHTML=`<div class="ia-card"><div class="qr-btns">`+
         step.choices.map(c=>`<button class="qr-btn" data-cv="${c.v}">${c.tkey?t(c.tkey):c.label}</button>`).join('')+`</div></div>`;
@@ -737,7 +881,7 @@ function renderInput(step){
       let sel=null,hotelName='',hotelAddress='',hotelPlaceId='';
       const render=()=>{
         ia.innerHTML=`<div class="ia-card"><span class="cat">Your starting point</span>`+
-          opts.map(o=>`<div class="start-opt ${sel&&sel.id===o.id?'on':''}" data-oid="${o.id}"><div class="so-title">${o.label}</div><div class="so-sub">${o.sub}</div></div>`).join('')+
+          opts.map(o=>`<button type="button" class="cardify start-opt ${sel&&sel.id===o.id?'on':''}" data-oid="${o.id}" aria-pressed="${!!(sel&&sel.id===o.id)}"><div class="so-title">${o.label}</div><div class="so-sub">${o.sub}</div></button>`).join('')+
           (sel&&sel.id==='hotel_delhi'?`<div style="margin-top:10px">
             <input type="text" id="hotelInp" placeholder="Start typing your hotel name\u2026" autocomplete="off" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink)">
             <div id="hotelAddr" class="muted" style="font-size:11.5px;margin-top:4px"></div></div>`:'')+
@@ -764,11 +908,11 @@ function renderInput(step){
         {v:'Wildlife',icon:'&#129430;',sub:'Tiger reserves, national parks'},
       ];
       ia.innerHTML=`<div class="ia-card"><span class="cat">Journey type</span><div class="int-grid">`+
-        interests.map(i=>`<div class="int-card" data-iv="${i.v}">
+        interests.map(i=>`<button type="button" class="cardify int-card" data-iv="${i.v}">
           <div class="ic-icon">${i.icon}</div>
           <div class="ic-lbl">${i.v}</div>
           <div class="ic-sub">${i.sub}</div>
-        </div>`).join('')+`</div></div>`;
+        </button>`).join('')+`</div></div>`;
       ia.querySelectorAll('[data-iv]').forEach(c=>c.onclick=()=>submitStep(step,c.dataset.iv,c.dataset.iv));break;}
     // Phase 5: recommendation gate
     case 'rec_gate':{
@@ -786,15 +930,18 @@ function renderInput(step){
         const fitInterest=!cats.length||cats.includes(r.cat);
         return fitDuration&&fitInterest;
       });
-      const list=filtered.length?filtered:(CURATED_ROUTES.filter(r=>(ROUTE_META[r.id]||{min:1}).min<=Math.max(S.customNights,1)));
-      ia.innerHTML=`<div class="ia-card"><span class="cat">Recommended journeys</span>
+      const sameInterest=CURATED_ROUTES.filter(r=>!cats.length||cats.includes(r.cat));
+      const relaxed=!filtered.length;
+      const list=filtered.length?filtered:sameInterest;
+      const relaxNote=relaxed&&list.length?`<div class="feas-warn" style="margin-bottom:8px"><b>A note:</b> no ${esc(S.interest.toLowerCase())} journey fits ${S.customNights} night${S.customNights!==1?'s':''} — these are the ${esc(S.interest.toLowerCase())} journeys I arrange; tap one and I\'ll suggest the right duration, or tap your nights answer above to adjust.</div>`:'';
+      ia.innerHTML=`<div class="ia-card"><span class="cat">Recommended journeys</span>${relaxNote}
         <div class="route-cards">`+
-        list.map(r=>{const m=ROUTE_META[r.id];return`<div class="route-card" data-rid="${r.id}">
+        list.map(r=>{const m=ROUTE_META[r.id];return`<button type="button" class="cardify route-card" data-rid="${r.id}">
           <div class="rc-cat">${r.cat}</div>
           <div class="rc-nm">${r.name}</div>
           <div class="rc-desc">${r.desc}</div>
           ${m?`<div class="rc-nights">Ideal: ${m.ideal} nights · Min: ${m.min} nights</div>`:''}
-        </div>`;}).join('')+`</div></div>`;
+        </button>`;}).join('')+`</div></div>`;
       ia.querySelectorAll('.route-card').forEach(c=>c.onclick=()=>submitStep(step,c.dataset.rid,step.display(c.dataset.rid)));break;}
     // Phase 7: interest-filtered destination picker
     case 'dest_multi':{
@@ -804,13 +951,13 @@ function renderInput(step){
         const warn=sel.length>1&&sel.length-1>S.customNights;
         ia.innerHTML=`<div class="ia-card"><span class="cat">${S.interest} destinations</span>
           <div class="dest-cards">`+
-          allowed.map(k=>{const idx=sel.indexOf(k);return`<div class="dest-card ${idx>=0?'on':''}" data-dk="${k}">
+          allowed.map(k=>{const idx=sel.indexOf(k);return`<button type="button" class="cardify dest-card ${idx>=0?'on':''}" data-dk="${k}" aria-pressed="${idx>=0}">
             <div class="dc-nm">${DEST[k].name}</div>
             <div class="dc-rt">${FX[S.cur].s}${Math.round(DEST[k].base/FX[S.cur].r).toLocaleString()}/day</div>
             ${idx>=0?`<div class="dc-ord">Stop ${idx+1}</div>`:''}
-          </div>`;}).join('')+`</div>`+
+          </button>`;}).join('')+`</div>`+
           (warn?`<div style="background:#FEF9EC;border:1px solid var(--gold);border-radius:6px;padding:8px;margin-top:8px;font-size:12.5px;color:#8B6B2A">Too many destinations for ${S.customNights} nights. Consider fewer stops or more nights.</div>`:'')+
-          `<button class="ia-continue" id="iaDestOk" ${sel.length<1?'disabled':''}>Confirm ${sel.length} destination${sel.length!==1?'s':''}</button></div>`;
+          `<button class="ia-continue" id="iaDestOk" ${sel.length<1?'disabled':''}>${t('btn_confirm')} · ${sel.length}</button></div>`;
         ia.querySelectorAll('.dest-card').forEach(c=>c.onclick=()=>{const k=c.dataset.dk;const i=sel.indexOf(k);i<0?sel.push(k):sel.splice(i,1);render();});
         $('iaDestOk').onclick=()=>{if(!sel.length)return;submitStep(step,sel,step.display(sel));};};render();break;}
     // Nights allocation
@@ -824,11 +971,10 @@ function renderInput(step){
           S.dest.map(k=>`<div class="alloc-row"><span style="font-weight:600;font-size:13.5px">${DEST[k]?DEST[k].name:k}</span>
             <div class="stepper" style="transform:scale(.88)"><button data-ak="${k}" data-d="-1">&#8722;</button><span>${alloc[k]||0}</span><button data-ak="${k}" data-d="1">&#43;</button></div></div>`).join('')+
           `<div style="font-size:12px;color:${ok?'#5A7A4A':'#B85C00'};padding:8px 0 4px">${used} of ${S.customNights} nights allocated</div>
-          <button class="ia-continue" id="iaAllocOk" ${ok?'':'disabled'}>Confirm allocation</button></div>`;
+          <button class="ia-continue" id="iaAllocOk" ${ok?'':'disabled'}>${t('btn_confirm')}</button></div>`;
         ia.querySelectorAll('[data-ak]').forEach(b=>b.onclick=()=>{const k=b.dataset.ak,d=+b.dataset.d;alloc[k]=Math.max(0,(alloc[k]||0)+d);render();});
         // +1 on first dest = the transit/arrival day; keeps compute() days=customNights+1 → nts=customNights
         $('iaAllocOk').onclick=()=>{if(used!==S.customNights)return;
-          S.dest.forEach((k,i)=>{ S.nights[k]= i===0 ? (alloc[k]||0)+1 : (alloc[k]||0); });
           const disp=S.dest.map(k=>(DEST[k]?DEST[k].name:k)+': '+(alloc[k]||0)+'n').join(' · ');
           submitStep(step,alloc,disp);};};render();break;}
     // Blockers 1+3+4: city-by-city accommodation, live SerpAPI per city, no demo language
@@ -836,11 +982,13 @@ function renderInput(step){
       const plan=cityNightPlan();
       let tier='none';const picks={};const live={};
       const fmtD=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
+      let _fetchToken=0;
       const fetchCity=async(c)=>{
+        const myToken=_fetchToken;
         live[c.k]=null;render();
         const city=(DEST[c.k]?DEST[c.k].name:c.k).split(' &')[0];
-        const ci=c.arr?c.arr.toISOString().split('T')[0]:'';
-        const co=c.dep?c.dep.toISOString().split('T')[0]:'';
+        let ci=c.arr?c.arr.toISOString().split('T')[0]:'';
+        let co=c.dep?c.dep.toISOString().split('T')[0]:'';
         const min={comfort:3,premium:4,luxury:5}[tier]||3;
         // Fallback: if date chain produced no dates, estimate from startDate+cumulative nights
         if(!ci||!co){
@@ -857,30 +1005,33 @@ function renderInput(step){
           const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
           const d=await fetch(u).then(r=>r.json());
           if(!d.properties)throw new Error('hotelsjson action not found in Code.gs \u2014 paste the addition and redeploy');
-          live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min).slice(0,4)
+          if(myToken!==_fetchToken)return;
+          live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class).slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
+              img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
+              loc:(p.gps_coordinates?'':''),
               nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
-        }catch(e){live[c.k]=undefined;console.warn('[IVY] Hotels:',e.message);}
+        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.warn('[IVY] Hotels:',e.message);}
         render();};
       const render=()=>{
         const pc=Object.keys(picks).length;
         ia.innerHTML=`<div class="ia-card"><span class="cat">Accommodation</span>
           <div class="qr-btns">`+
-          Object.keys(HOTELS).map(hh=>`<button class="qr-btn ${tier===hh?'on':''}" data-ht="${hh}">${HOTELS[hh].l}</button>`).join('')+`</div>`+
+          Object.keys(HOTELS).map(hh=>`<button class="qr-btn ${tier===hh?'on':''}" data-ht="${hh}" aria-pressed="${tier===hh}">${HOTELS[hh].l}</button>`).join('')+`</div>`+
           (tier!=='none'&&plan.length?plan.map(c=>{
             const pk=picks[c.k];const lv=live[c.k];
             return `<div class="city-hotel"><div class="chc-head"><b>${c.name}</b><span>${c.nights} night${c.nights>1?'s':''}${c.arr?' \u00b7 '+fmtD(c.arr)+' \u2013 '+fmtD(c.dep):''}</span></div>`+
-              (pk?`<div class="hotel-row on"><b style="font-size:13.5px">${pk.name}</b>${pk.stars?' \u00b7 '+pk.stars+'&#9733;':''}${pk.rating?' \u00b7 '+pk.rating+' rated':''}<br><span style="color:var(--gold);font-size:12.5px">${fmt(pk.nightly)} per night</span></div>`:'')+
+              (pk?`<div class="hotel-row on"><b style="font-size:13.5px">${esc(pk.name)}</b>${pk.stars?' \u00b7 '+pk.stars+'&#9733;':''}${pk.rating?' \u00b7 '+pk.rating+' rated':''}<br><span style="color:var(--gold-text);font-size:12.5px">${fmt(pk.nightly)} per night</span></div>`:'')+
               (lv===null?'<p class="muted" style="font-size:12px;margin-top:6px">Checking live availability\u2026</p>':
-               Array.isArray(lv)&&lv.length?lv.map((hh,i)=>`<div class="hotel-row ${pk&&pk.name===hh.name?'on':''}" data-ck="${c.k}" data-hi="${i}"><b style="font-size:13.5px">${hh.name}</b> \u00b7 ${hh.stars||''}&#9733;${hh.rating?' \u00b7 '+hh.rating+' rated':''} \u00b7 ${hh.area}<br><span style="color:var(--gold);font-size:12.5px">${fmt(hh.nightly)} per night</span></div>`).join(''):
+               Array.isArray(lv)&&lv.length?lv.map((hh,i)=>`<button type="button" class="cardify hotel-row ${pk&&pk.name===hh.name?'on':''}" data-ck="${c.k}" data-hi="${i}" aria-pressed="${!!(pk&&pk.name===hh.name)}" style="display:flex;gap:10px;align-items:center">${hh.img?`<img src="${esc(hh.img)}" alt="" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0">`:''}<span style="flex:1;min-width:0"><b style="font-size:13.5px">${esc(hh.name)}</b><br><span style="font-size:12px;color:var(--muted)">${hh.stars?hh.stars+'&#9733; \u00b7 ':''}${hh.rating?hh.rating+'/5 rated \u00b7 ':''}${esc(hh.area)}</span><br><span style="color:var(--gold-text);font-size:12.5px;font-weight:600">${fmt(hh.nightly)} per night</span></span></button>`).join(''):
                Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches for these dates \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
                (pk?'':'<p class="muted" style="font-size:12px;margin-top:6px">Your Journey Manager will confirm live options for these dates within 2 hours of your enquiry.</p>'))+
             `</div>`;}).join('')+
             `<div class="hotel-notice">Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.</div>`:'')+
-          `<button class="ia-continue" id="iaHotelOk" ${tier==='none'?'disabled':''}>Confirm accommodation${pc?' ('+pc+' propert'+(pc>1?'ies':'y')+' selected)':''}</button>
+          `<button class="ia-continue" id="iaHotelOk" ${tier==='none'?'disabled':''}>${t('btn_confirm')}${pc?' ('+pc+')':''}</button>
           <button class="ia-skip" id="iaHotelSkip">I'll arrange my own stays</button></div>`;
         ia.querySelectorAll('[data-ht]').forEach(b=>b.onclick=()=>{
-          tier=b.dataset.ht;Object.keys(live).forEach(k=>delete live[k]);Object.keys(picks).forEach(k=>delete picks[k]);
+          tier=b.dataset.ht;_fetchToken++;Object.keys(live).forEach(k=>delete live[k]);Object.keys(picks).forEach(k=>delete picks[k]);
           render();if(tier!=='none')plan.forEach(c=>fetchCity(c));});
         ia.querySelectorAll('[data-ck]').forEach(el=>el.onclick=()=>{const k=el.dataset.ck;const hh=(live[k]||[])[+el.dataset.hi];if(hh){picks[k]=hh;render();}});
         $('iaHotelOk').onclick=()=>{if(tier==='none')return;
@@ -892,25 +1043,27 @@ function renderInput(step){
       render();break;}
     // Phase 10: vehicle after hotel
     case 'vehicle':{
-      const rec=recVehicle();
+      const rec=recVehicle();const curated=S.mode==='curated';
       ia.innerHTML=`<div class="ia-card"><span class="cat">Transportation</span>`+
-        Object.entries(VEH).map(([k,v])=>`<div class="veh-btn ${S.veh===k?'on':''}" data-vk="${k}">
-          <div><div style="font-weight:600;font-size:14px">${v.l}</div><div style="font-size:12px;color:var(--muted)">&#8377;${v.r}/km &middot; ${v.g}</div></div>
+        (curated?`<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Private vehicle is included in your journey — choose your preferred class.</div>`:'')+
+        Object.entries(VEH).map(([k,v])=>`<button type="button" class="cardify veh-btn ${S.veh===k?'on':''}" data-vk="${k}" aria-pressed="${S.veh===k}" style="display:flex">
+          <div><div style="font-weight:600;font-size:14px">${v.l}</div>
+          <div style="font-size:12px;color:var(--muted)">${curated
+            ?(k==='luxury'?'Premium fleet — supplement confirmed by your Journey Manager':'Included &middot; '+v.g+' guests')
+            :'&#8377;'+v.r+'/km &middot; '+v.g}</div></div>
           ${k===rec?`<span class="veh-tag">Recommended</span>`:''}
-        </div>`).join('')+`</div>`;
+        </button>`).join('')+`</div>`;
       ia.querySelectorAll('[data-vk]').forEach(b=>b.onclick=()=>submitStep(step,b.dataset.vk,step.display(b.dataset.vk)));break;}
     // Phase 11: route-specific addons with participant count
     case 'addons':{
-      const routeIds=ROUTE_ADDONS[S.selectedRouteId]||null;
       const expList=[];
-      if(routeIds){routeIds.forEach(id=>{const e=findExp(id);if(e&&e.price>0)expList.push(e);});}
-      else{const seen={};S.dest.forEach(k=>{const ex=DEST[k]&&DEST[k].exp;if(!ex||seen[ex])return;seen[ex]=1;(EXPER[ex]||[]).filter(e=>e.price>0).forEach(e=>expList.push(e));});}
+      {const seen={};S.dest.forEach(k=>{const ex=DEST[k]&&DEST[k].exp;if(!ex||seen[ex])return;seen[ex]=1;(EXPER[ex]||[]).filter(e=>e.price>0).forEach(e=>expList.push(e));});}
       if(!expList.length){ia.innerHTML=`<div class="ia-card"><p class="muted" style="font-size:13px">No specific experiences available for this selection.</p><button class="ia-continue" id="iaSkip">Continue</button></div>`;$('iaSkip').onclick=()=>submitStep(step,{},step.display({}));return;}
       // S.addons[id] = participant count (0 = not selected)
       let sel={};expList.forEach(e=>{sel[e.id]=0;});
       const render=()=>{
         ia.innerHTML=`<div class="ia-card"><span class="cat">Experiences</span>`+
-          expList.map(e=>{const on=sel[e.id]>0;const pax=sel[e.id]||S.adults;return`<div class="addon-row ${on?'on':''}" data-eid="${e.id}">
+          expList.map(e=>{const on=sel[e.id]>0;const pax=sel[e.id]||S.adults;return`<div class="addon-row ${on?'on':''}" data-eid="${e.id}" role="button" tabindex="0" aria-pressed="${on}">
             <div class="ar-lbl">${e.label}</div>
             <div class="ar-price">${e.t==='pp'?FX[S.cur].s+Math.round(e.price/FX[S.cur].r).toLocaleString()+' per person':''+FX[S.cur].s+Math.round(e.price/FX[S.cur].r).toLocaleString()+' per group'}</div>
             ${on&&e.t==='pp'?`<div class="pax-sel">
@@ -919,82 +1072,88 @@ function renderInput(step){
               <span style="font-size:11px;color:var(--gold)">${FX[S.cur].s}${Math.round(e.price*pax/FX[S.cur].r).toLocaleString()}</span>
             </div>`:''}
           </div>`;}).join('')+
-          `<button class="ia-continue" id="iaAddOk">Add selected</button>
-          <button class="ia-skip" id="iaAddSkip">Continue without</button></div>`;
-        expList.forEach(e=>{const el=ia.querySelector(`[data-eid="${e.id}"]`);if(el)el.onclick=(ev)=>{if(ev.target.closest('[data-pid]'))return;sel[e.id]=sel[e.id]>0?0:S.adults;render();};});
+          `<button class="ia-continue" id="iaAddOk">${t('btn_add_selected')}</button>
+          <button class="ia-skip" id="iaAddSkip">${t('btn_continue_without')}</button></div>`;
+        expList.forEach(e=>{const el=ia.querySelector(`[data-eid="${e.id}"]`);if(el){el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click();}};el.onclick=(ev)=>{if(ev.target.closest('[data-pid]'))return;sel[e.id]=sel[e.id]>0?0:S.adults;render();};}});
         ia.querySelectorAll('[data-pid]').forEach(b=>b.onclick=(ev)=>{ev.stopPropagation();const id=b.dataset.pid,d=+b.dataset.d;sel[id]=Math.max(1,Math.min(S.adults,(sel[id]||S.adults)+d));render();});
         $('iaAddOk').onclick=()=>submitStep(step,Object.fromEntries(Object.entries(sel).filter(([,v])=>v>0)),step.display(sel));
         $('iaAddSkip').onclick=()=>submitStep(step,{},step.display({}));};render();break;}
   }
+  const _f=ia.querySelector('input,button:not([disabled])');
+  if(_f)setTimeout(()=>{try{_f.focus({preventScroll:true});}catch(e){_f.focus();}},50);
 }
 
 function submitStep(step,raw,display){
   if(step.validate&&!step.validate(raw))return;
   if(step.onAnswer)step.onAnswer(raw);IA().innerHTML='';
-  const txt=typeof display==='string'?display:typeof display==='object'&&display.label?display.label:JSON.stringify(display);
-  addUser(txt);setTimeout(nextStep,350);}
+  const txt=typeof display==='string'?display:typeof display==='object'&&display.label?display.label:String(display);
+  if(step.id){const i=ANSWERS.findIndex(a=>a.id===step.id);const rec={id:step.id,raw,display:txt};
+    if(i>=0){ANSWERS.length=i;ANSWERS.push(rec);}else ANSWERS.push(rec);persist();
+    if(LIVE_READY){try{navigator.sendBeacon(APPS_SCRIPT_URL,JSON.stringify({action:'step',id:step.id,lang:S.lang}));}catch(e){}}}
+  addUser(txt,step.id);setTimeout(nextStep,350);}
 
 /* ======================== PROPOSAL REVEAL (Phase 13) === */
 function showEstimate(){
-  const q=compute();
+  const q=summaryModel();
   if(!q||!q.items){addBot('I\'m unable to calculate an estimate. Please refresh and start again.');return;}
-  if(q.escalate){addBot('For groups of more than 10 we handle arrangements personally. Please contact us directly at hello@ivoryarctravels.com.');return;}
-  const now=Math.round(q.total*0.10),mid=Math.round(q.total*0.40),bal=q.total-now-mid;
-  const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' &rarr; '):S.route.join(' &rarr; ');
-  const dateDis=S.startDate?new Date(S.startDate).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'}):'TBC';
-  const dateEnd=S.startDate&&S.customNights?(()=>{const d=new Date(S.startDate);d.setDate(d.getDate()+S.customNights);return d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'});})():'TBC';
+  if(q.escalate){addBot('For groups of more than '+CONFIG.ESCALATE_ABOVE+' we handle arrangements personally. Please contact us directly at <a href="mailto:'+CONFIG.EMAIL+'">'+CONFIG.EMAIL+'</a>.');return;}
+  if(!S._leadSent){S._leadSent=true;persist();sendLead('IVY-unverified');}
+  const now=q.adv,mid=q.mid,bal=q.bal;
+  const route=q.route.split(' → ').join(' &rarr; ');
+  const dateDis=q.dateStart;
+  const dateEnd=q.dateEnd;
   const nightsDetail=S.dest.filter(k=>S.nights[k]>0).map(k=>{const n=k===S.dest[0]?S.nights[k]-1:S.nights[k];return n>0?(DEST[k]?DEST[k].name:k)+': '+n+'n':'';}).filter(Boolean).join(' &middot; ')||'&mdash;';
   // Phase 11: addon quantities in display
   const addonLines=Object.entries(S.addons).filter(([,v])=>v>0).map(([id,pax])=>{const e=findExp(id);if(!e)return'';return`<div class="est-pair"><span class="est-pl">${e.label}${e.t==='pp'?' &times; '+pax:''}</span><span class="est-pv">${fmt(e.t==='pp'?e.price*pax:e.price)}</span></div>`;}).join('');
-  const startLabel=S.startLocation==='hotel_delhi'&&S.startHotelName?S.startHotelName+', Delhi NCR':
-    S.startLocation==='noida_airport'?'Noida International Airport (Jewar)':'Delhi Airport (IGI)';
+  const startLabel=q.startLabel;
   const roomCount=rooms(S.adults);
   const discLine=q.disc>0?`<div class="est-disc">Group discount applied &mdash; &#8377;${q.disc.toLocaleString()}/person/day</div>`:'';
   const card=`<div class="est-card">
     <div class="est-ch">
-      <div class="est-ref">Your Curated Journey &middot; ${S.ref||'Pending verification'}</div>
-      <div class="est-ch-title">Your Curated Journey</div>
+      <div class="est-ref">${t('est_ref')} &middot; ${S.ref||'&#8212;'}</div>
+      <div class="est-ch-title">${t('est_ref')}</div>
       <div style="font-size:10.5px;color:var(--muted);margin-top:3px">Prepared ${new Date().toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}</div>
     </div>
     <div class="est-sec">
-      <div class="est-sl">Journey Summary</div>
-      <div class="est-pair"><span class="est-pl">Start Location</span><span class="est-pv">${startLabel}</span></div>
-      <div class="est-pair"><span class="est-pl">Travel Dates</span><span class="est-pv">${dateDis} &ndash; ${dateEnd}</span></div>
-      <div class="est-pair"><span class="est-pl">Duration</span><span class="est-pv">${q.nts} night${q.nts!==1?'s':''} &middot; ${q.days} days</span></div>
-      <div class="est-pair"><span class="est-pl">Guests</span><span class="est-pv">${S.adults} adult${S.adults>1?'s':''}${S.children?' &middot; '+S.children+' child'+(S.children>1?'ren':''):''}</span></div>
-      <div class="est-pair"><span class="est-pl">Nationality</span><span class="est-pv">${S.nat==='foreign'?'International visitor':'Indian national'}</span></div>
+      <div class="est-sl">${t('est_summary')}</div>
+      <div class="est-pair"><span class="est-pl">${t('est_startloc')}</span><span class="est-pv">${startLabel}</span></div>
+      <div class="est-pair"><span class="est-pl">${t('est_dates')}</span><span class="est-pv">${dateDis} &ndash; ${dateEnd}</span></div>
+      <div class="est-pair"><span class="est-pl">${t('est_duration')}</span><span class="est-pv">${q.nts} night${q.nts!==1?'s':''} &middot; ${q.days} days</span></div>
+      <div class="est-pair"><span class="est-pl">${t('est_guests')}</span><span class="est-pv">${S.adults} adult${S.adults>1?'s':''}${S.children?' &middot; '+S.children+' child'+(S.children>1?'ren':''):''}</span></div>
+      <div class="est-pair"><span class="est-pl">${t('est_nat')}</span><span class="est-pv">${S.nat==='foreign'?t('nat_foreign'):t('nat_indian')}</span></div>
     </div>
     <div class="est-sec">
-      <div class="est-sl">Selected Route</div>
+      <div class="est-sl">${t('est_route')}</div>
       <div class="est-route-disp">${route}</div>
       ${S.dest.length>1?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${nightsDetail}</div>`:''}
     </div>`+
     (S.hotel!=='none'?(()=>{const plan=cityNightPlan();const fd=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
       let rows='';
       if(plan.length){rows=plan.map(c=>{const ch=(S.cityHotels||{})[c.k]||{};
-        const nm=ch.name?ch.name+(ch.stars?' \u00b7 '+ch.stars+'&#9733;':''):HOTELS[S.hotel].l+' (to be confirmed)';
+        const nm=ch.name?esc(ch.name)+(ch.stars?' \u00b7 '+ch.stars+'&#9733;':''):HOTELS[S.hotel].l+' (to be confirmed)';
         return `<div class="est-pair"><span class="est-pl">${c.name} \u00b7 ${c.nights}n${c.arr?' \u00b7 '+fd(c.arr)+'\u2013'+fd(c.dep):''}</span><span class="est-pv">${nm}</span></div>`;}).join('');}
       else{rows=`<div class="est-pair"><span class="est-pl">Category</span><span class="est-pv">${HOTELS[S.hotel].l}</span></div>`;}
-      return `<div class="est-sec"><div class="est-sl">Accommodation \u00b7 City by City</div>${rows}
-        <div class="est-pair"><span class="est-pl">Rooms</span><span class="est-pv">${roomCount} room${roomCount>1?'s':''}</span></div>
+      return `<div class="est-sec"><div class="est-sl">${t('est_accom')}</div>${rows}
+        <div class="est-pair"><span class="est-pl">${t('est_rooms')}</span><span class="est-pv">${roomCount} room${roomCount>1?'s':''}</span></div>
         <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55">Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.</div>
       </div>`;})():'')+ 
-    `<div class="est-sec"><div class="est-sl">Vehicle</div>
-      <div class="est-pair"><span class="est-pl">Selected</span><span class="est-pv">${VEH[S.veh].l}</span></div>
+    `<div class="est-sec"><div class="est-sl">${t('est_vehicle')}</div>
+      <div class="est-pair"><span class="est-pl">${t('est_selected')}</span><span class="est-pv">${VEH[S.veh].l}</span></div>
     </div>`+
-    (addonLines?`<div class="est-sec"><div class="est-sl">Experiences &amp; Add-ons</div>${addonLines}</div>`:'')+
-    `<div class="est-sec"><div class="est-sl">Investment Breakdown</div>`+
+    (addonLines?`<div class="est-sec"><div class="est-sl">${t('est_exp')}</div>${addonLines}</div>`:'')+
+    `<div class="est-sec"><div class="est-sl">${t('est_invest')}</div>`+
     q.items.map(it=>`<div class="est-item"><span class="est-item-l">${it[0]}</span><span class="est-item-r">${fmt(it[1])}</span></div>`).join('')+
-    `<div class="est-gst"><span>GST (5%)</span><span>${fmt(q.gst)}</span></div>
+    `<div class="est-gst"><span>${t('est_gst')}</span><span>${fmt(q.gst)}</span></div>
     </div>
-    <div class="est-total-row"><span>Grand Total</span><span>${fmt(q.total)}</span></div>
-    <div class="est-ppd-row">Approximately ${fmt(q.ppd)} per person, per day &middot; ${fmt(q.total/q.guests)} per person total</div>
-    <div class="est-sec"><div class="est-sl">Payment Schedule</div>
-      <div class="est-sched-row"><span class="est-sched-label">Advance to confirm (10%)</span><span class="est-sched-adv">${fmt(now)}</span></div>
-      <div class="est-sched-row"><span class="est-sched-label">At least 7 days before (40%)</span><span>${fmt(mid)}</span></div>
-      <div class="est-sched-row"><span class="est-sched-label">24 hours before (balance)</span><span>${fmt(bal)}</span></div>
+    <div class="est-total-row"><span>${t('est_total')}${S.verified?'':'<span class="unlock-pill">'+t('unlock_pill')+'</span>'}</span><span id="estTotal" class="${S.verified?'':'locked-amt'}">${fmt(q.total)}</span></div>
+    <div class="est-ppd-row"><span class="${S.verified?'':'locked-amt'}" data-lock>${fmt(q.ppd)} ${t('est_ppd')} &middot; ${fmt(q.total/q.guests)} ${t('est_pp')}</span></div>
+    ${S.cur!=='INR'?'<div style="padding:6px 16px;background:#FBF6EA;font-size:11px;color:#8B6B2A;text-align:center;border-bottom:1px solid #EDE5D8">'+t('fx_note')+'</div>':''}
+    <div class="est-sec"><div class="est-sl">${t('est_sched')}</div>
+      <div class="est-sched-row"><span class="est-sched-label">${t('est_s1')}</span><span class="est-sched-adv ${S.verified?'':'locked-amt'}" data-lock>${fmt(now)}</span></div>
+      <div class="est-sched-row"><span class="est-sched-label">${t('est_s2')}</span><span class="${S.verified?'':'locked-amt'}" data-lock>${fmt(mid)}</span></div>
+      <div class="est-sched-row"><span class="est-sched-label">${t('est_s3')}</span><span class="${S.verified?'':'locked-amt'}" data-lock>${fmt(bal)}</span></div>
     </div>
-    <div class="est-sec"><div class="est-sl">What's Included</div>
+    <div class="est-sec"><div class="est-sl">${t('est_incl')}</div>
       <div class="est-incl-item">Private air-conditioned vehicle with vetted professional driver</div>
       <div class="est-incl-item">Fuel, tolls and parking throughout the journey</div>
       <div class="est-incl-item">Sealed mineral water in vehicle throughout</div>
@@ -1014,52 +1173,135 @@ function showEstimate(){
     // Phase 15: itinerary CTA after short delay
     setTimeout(()=>botSay(`<div class="cta-card"><p>Would you like IVY to prepare a detailed day-by-day itinerary for you?</p>
       <button id="cta-yes">YES, CONTINUE</button></div>`,400,()=>{
-      const b=$('cta-yes');if(b)b.onclick=()=>{b.closest('.cta-card').innerHTML='<p style="color:var(--gold);font-weight:600;font-size:14px">Noted — your Journey Manager will include a detailed itinerary in their follow-up call.</p>';S.itinerary=true;};
+      const b=$('cta-yes');if(b)b.onclick=()=>{
+        S.itinerary=true;persist();sendLead('IVY-itinerary');
+        b.closest('.cta-card').innerHTML='<p style="color:var(--gold-text);font-weight:600;font-size:14px">Opening WhatsApp \u2014 your itinerary request is ready to send to IVY.</p>';
+        window.open('https://wa.me/'+IVY_WA+'?text='+encodeURIComponent(buildItineraryPayload()),'_blank');};
     }),1500);
   });}
 
+
+/* ── Detailed-itinerary handoff → IVY WhatsApp (+91 97115 44624) ── */
+const IVY_WA='919711544624';
+function buildItineraryPayload(){
+  const m=summaryModel();
+  const nl=String.fromCharCode(10);
+  const L=[];
+  L.push('IVY ITINERARY REQUEST \u2728');
+  L.push('Ref: '+(S.ref||'pending verification'));
+  L.push('');
+  L.push('\u2014 TRAVELLER \u2014');
+  L.push('Name: '+(S.name||'\u2014'));
+  L.push('WhatsApp: '+(S.phone||'\u2014'));
+  L.push('Email: '+(S.email||'\u2014'));
+  L.push('Nationality: '+(S.nat==='foreign'?'International visitor':'Indian national'));
+  L.push('');
+  L.push('\u2014 JOURNEY \u2014');
+  L.push('Dates: '+m.dateStart+' \u2192 '+m.dateEnd);
+  L.push('Duration: '+m.nts+' night'+(m.nts!==1?'s':'')+' \u00b7 '+m.days+' day'+(m.days!==1?'s':''));
+  L.push('Guests: '+m.guestsLabel);
+  L.push('Interest: '+S.interest);
+  L.push('Pickup: '+m.startLabel);
+  L.push('Route: '+m.route);
+  S.dest.forEach((k,ix)=>{const n=ix===0?Math.max(0,(S.nights[k]||1)-1):(S.nights[k]||0);
+    if(n>0)L.push('  \u2022 '+(DEST[k]?DEST[k].name:k)+': '+n+'n');});
+  L.push('');
+  L.push('\u2014 SELECTIONS \u2014');
+  if(S.hotel==='none'){L.push('Hotels: own arrangements');}
+  else{L.push('Hotels: '+HOTELS[S.hotel].l);
+    Object.entries(S.cityHotels||{}).forEach(([k,ch])=>{
+      L.push('  \u2022 '+(DEST[k]?DEST[k].name:k)+': '+ch.name+(ch.stars?' '+ch.stars+'\u2605':'')+(ch.nightly?' \u00b7 \u20b9'+ch.nightly.toLocaleString()+'/n':''));});
+    L.push('Rooms: '+m.rooms+(S.children?' + '+S.children+' extra bed'+(S.children>1?'s':''):''));}
+  L.push('Vehicle: '+VEH[S.veh].l);
+  if(S.mode==='curated')L.push('Guide: '+(S.guide==='none'?'No guide':S.guide==='english'?'English-speaking':'Other language'));
+  const ax=Object.entries(S.addons||{}).filter(([,v])=>v>0);
+  if(ax.length){L.push('Experiences:');ax.forEach(([id,pax])=>{const e=findExp(id);if(e)L.push('  \u2022 '+e.label+(e.t==='pp'?' \u00d7'+pax:''));});}
+  else L.push('Experiences: none selected');
+  L.push('');
+  L.push('\u2014 ESTIMATE \u2014');
+  L.push('Budget: '+fmt(m.total)+' ('+S.cur+')'+(S.cur!=='INR'?' \u2248 \u20b9'+m.total.toLocaleString():''));
+  L.push('Per person: '+fmt(Math.round(m.total/m.guests)));
+  L.push('Language: '+S.lang.toUpperCase());
+  L.push('');
+  L.push('Please prepare my detailed day-by-day itinerary. \ud83d\ude4f');
+  return L.join(nl);}
+
 function showPostVerify(){
   IA().innerHTML=`<div class="ia-card" style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="ia-continue" id="iaPayBtn" style="flex:1;min-width:170px">Confirm journey &mdash; pay ${fmt(Math.round(compute().total*0.10))}</button>
+    <button class="ia-continue" id="iaPayBtn" style="flex:1;min-width:170px">Confirm journey &mdash; pay ${fmt(Math.round(compute().total*CONFIG.PAY.ADVANCE))}</button>
     <button class="ia-continue" id="iaPdfBtn" style="flex:1;min-width:110px;background:var(--ink);color:#fff">Download proposal</button>
   </div>`;
   $('iaPayBtn').onclick=doPay;$('iaPdfBtn').onclick=generatePDF;}
 
 /* ======================== FIREBASE OTP (unchanged) ====== */
 let confirmation=null;
-if(!DEMO){try{firebase.initializeApp(FIREBASE_CONFIG);}catch(e){}}
-function openOtp(){$('otp').style.display='flex';$('otperr').textContent='';}
+function openOtp(){
+  $('otp').style.display='flex';$('otperr').textContent='';
+  try{
+    document.querySelector('#otp h3').textContent=t('otp_h');
+    $('otp1').querySelector('.muted').textContent=t('otp_p1');
+    $('otp2').querySelector('.muted').textContent=t('otp_p2');
+    $('sendcode').textContent=t('otp_send');$('verifycode').textContent=t('otp_verify');
+    $('otpclose').textContent=t('otp_cancel');
+    const rs=$('resendcode');if(rs&&!rs.disabled)rs.textContent=t('otp_resend');
+    const en=$('editnumber');if(en)en.textContent=t('otp_change');
+  }catch(e){}
+  ensureFirebase().catch(()=>{$('otperr').textContent='Could not load verification. Please check your connection and retry.';});
+  $('phone').focus();}
 $('otpclose').onclick=()=>$('otp').style.display='none';
-$('sendcode').onclick=async()=>{
+const OTP_ERR={'auth/invalid-phone-number':'That number doesn\'t look right — please include the country code, e.g. +91…',
+  'auth/too-many-requests':'Too many attempts from this device. Please wait a few minutes and try again.',
+  'auth/quota-exceeded':'SMS limit reached for now — please try again shortly, or message us on WhatsApp.',
+  'auth/code-expired':'That code has expired — tap Resend for a fresh one.',
+  'auth/network-request-failed':'Network hiccup — please check your connection and try again.'};
+function otpErrText(err){return OTP_ERR[err&&err.code]||'Something went wrong sending the code. Please try again.';}
+let _cool=null;
+function startCooldown(){const b=$('resendcode');let s=30;b.disabled=true;b.textContent=t('otp_resend')+' ('+s+')';
+  clearInterval(_cool);_cool=setInterval(()=>{s--;if(s<=0){clearInterval(_cool);b.disabled=false;b.textContent=t('otp_resend');}else b.textContent=t('otp_resend')+' ('+s+')';},1000);}
+async function sendOtp(){
   const phone=$('phone').value.trim();if(!phone){$('otperr').textContent='Please enter your number.';return;}
-  if(DEMO){$('otp1').classList.add('hide');$('otp2').classList.remove('hide');$('otperr').textContent='A 6-digit code has been sent to your number.';console.warn('[IVY] OTP fallback active — set FIREBASE_CONFIG for production SMS verification');return;}
-  try{if(!window._rv){window._rv=new firebase.auth.RecaptchaVerifier('sendcode',{
-      size:'invisible',
-      callback:()=>{/* automatic on solve */},
-      'error-callback':()=>{$('otperr').textContent='reCAPTCHA failed. Please try again.';}});}
+  $('otperr').textContent='';
+  if(DEMO){$('otp1').classList.add('hide');$('otp2').classList.remove('hide');startCooldown();console.warn('[IVY] OTP fallback active — set FIREBASE_CONFIG for production SMS verification');return;}
+  try{await ensureFirebase();
+    if(!window._rv){window._rv=new firebase.auth.RecaptchaVerifier('sendcode',{size:'invisible',
+      callback:()=>{}, 'error-callback':()=>{$('otperr').textContent='reCAPTCHA failed. Please try again.';}});}
     confirmation=await firebase.auth().signInWithPhoneNumber(phone,window._rv);
-    $('otp1').classList.add('hide');$('otp2').classList.remove('hide');
-  }catch(err){$('otperr').textContent=err.message;}};
+    $('otp1').classList.add('hide');$('otp2').classList.remove('hide');$('code').focus();startCooldown();
+  }catch(err){$('otperr').textContent=otpErrText(err);}}
+$('sendcode').onclick=sendOtp;
+$('resendcode').onclick=sendOtp;
+$('editnumber').onclick=()=>{$('otp2').classList.add('hide');$('otp1').classList.remove('hide');$('otperr').textContent='';$('phone').focus();};
 $('verifycode').onclick=async()=>{
   const code=$('code').value.trim();
   if(DEMO){if(code.length>=6){onVerified($('phone').value.trim());}else{$('otperr').textContent='Please enter the 6-digit code.';}return;}
   try{await confirmation.confirm(code);onVerified($('phone').value.trim());}
-  catch(err){$('otperr').textContent='That code did not match. Please try again.';}};
+  catch(err){$('otperr').textContent=(err&&err.code==='auth/code-expired')?otpErrText(err):'That code did not match. Please try again.';}};
+/* 4.5 focus trap + Escape */
+$('otp').addEventListener('keydown',e=>{
+  if(e.key==='Escape'){$('otp').style.display='none';return;}
+  if(e.key!=='Tab')return;
+  const els=[...$('otp').querySelectorAll('input,button:not([disabled])')].filter(el=>el.offsetParent);
+  if(!els.length)return;const first=els[0],last=els[els.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 function onVerified(phone){
-  S.verified=true;S.phone=phone;
-  S.ref='IAT-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000);
-  $('otp').style.display='none';sendLead();showPostVerify();}
+  S.verified=true;S.phone=phone;clearPersist();
+  if(!S.ref)S.ref='IAT-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000);
+  $('otp').style.display='none';sendLead('IVY-verified');showPostVerify();
+  document.querySelectorAll('.locked-amt').forEach(el=>el.classList.remove('locked-amt'));
+  document.querySelectorAll('.unlock-pill').forEach(el=>el.remove());}
 
 /* ======================== APPS SCRIPT (unchanged) ======= */
 function savePartialLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'lead',name:S.name,email:S.email,source:'IVY-partial',estimateRef:'PARTIAL-'+Date.now().toString(36).toUpperCase(),destination:'',estimateTotal:'',groupSize:''})}).catch(()=>{});}
-function sendLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
+function sendLead(src){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   const q=compute();
   const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
+  if(!S.ref)S.ref='IAT-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000);
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'lead',name:S.name,email:S.email,phone:S.phone,
-      source:'IVY-estimator-v4',estimateRef:S.ref,destination:route,
+      source:src||'IVY-estimator-v4',estimateRef:S.ref,destination:route,
       estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
       startLocation:S.startLocation+(S.startHotelName?' — '+S.startHotelName:''),
       interest:S.interest,
@@ -1070,100 +1312,234 @@ function sendLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')
       tourStartDate:S.startDate,nights:q.nts,travellingAs:S.nat,
       itineraryRequested:S.itinerary?'Yes':'No'})}).catch(()=>{});}
 async function doPay(){
-  const q=compute();const commit=Math.round(q.total*0.10);
+  try{await ensureRazorpay();}catch(e){alert('Payment module failed to load — please retry.');return;}
+  const q=compute();const commit=Math.round(q.total*CONFIG.PAY.ADVANCE);
   if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0){
     IA().innerHTML='';
     addBot('Thank you'+(S.name?', '+S.name.split(' ')[0]:'')+'. Your Journey Manager will send a secure Razorpay payment link of <b>'+fmt(commit)+'</b> to your WhatsApp within 2 hours to confirm your journey.');
     console.warn('[IVY] Razorpay blocked: APPS_SCRIPT_URL not configured');return;}
   try{const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'createOrder',currency:S.cur==='GBP'?'INR':S.cur,inrAmount:commit,estimateRef:S.ref,name:S.name,email:S.email,phone:S.phone})}).then(x=>x.json());
+    body:JSON.stringify({action:'createOrder',currency:'INR',displayCurrency:S.cur,inrAmount:commit,estimateRef:S.ref,name:S.name,email:S.email,phone:S.phone})}).then(x=>x.json());
     if(!r.success){alert(r.error||'Unable to initiate payment.');return;}
     const rz=new Razorpay({key:r.key_id,order_id:r.order_id,amount:r.amount,currency:r.currency,
-      name:'Ivory Arc Travels',description:'Journey commitment — 10%',
-      handler:function(resp){fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify(Object.assign({action:'verifyPayment',estimateRef:S.ref,amountInr:commit},resp))})
-        .then(x=>x.json()).then(v=>{IA().innerHTML='';addBot(v.success?
+      name:'Ivory Arc Travels',description:'Journey commitment — 10%'+(S.cur!=='INR'?' (billed in INR; shown as '+fmt(commit)+')':''),
+      handler:function(resp){
+        const done=v=>{clearPersist();IA().innerHTML='';addBot(v.success?
           'Your journey is confirmed. Reference: <b>'+(v.booking_reference||S.ref)+'</b>. Your Journey Manager will be in touch within two hours.':
-          'Payment verification failed — please contact hello@ivoryarctravels.com.');});},
+          'Payment verification failed — please contact '+CONFIG.EMAIL+' with reference <b>'+S.ref+'</b>.');};
+        const fail=()=>{
+          try{navigator.sendBeacon(APPS_SCRIPT_URL,JSON.stringify(Object.assign(
+            {action:'paymentPending',estimateRef:S.ref,amountInr:commit,name:S.name,email:S.email,phone:S.phone},resp)));}catch(e){}
+          clearPersist();IA().innerHTML='';addBot('Your payment was received. Confirmation is being finalised — your reference is <b>'+S.ref+
+            '</b> and your Journey Manager will confirm on WhatsApp within 2 hours. Nothing further is needed from you.');};
+        fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify(Object.assign({action:'verifyPayment',estimateRef:S.ref,amountInr:commit},resp))})
+          .then(x=>x.json()).then(done).catch(fail);},
       prefill:{name:S.name,email:S.email,contact:S.phone},theme:{color:'#C9A84C'}});
     rz.open();}catch(e){alert('Payment error: '+e.message);}}
 
 /* ======================== PDF — luxury proposal (Phase 14) */
 function generatePDF(){
-  try{const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
-    const q=compute();const W=210,M=18,G=[201,168,76],K=[42,36,32],L=[140,130,120];
-    const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
-    const now=Math.round(q.total*0.10),mid=Math.round(q.total*0.40),bal=q.total-now-mid;
-    // COVER
-    doc.setFillColor(...K);doc.rect(0,0,W,297,'F');
-    doc.setFillColor(...G);doc.rect(0,0,W,2,'F');
-    doc.setFillColor(60,52,46);doc.rect(M,42,W-2*M,110,'F');
-    doc.setTextColor(...G);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text('IVORY ARC TRAVELS',W/2,32,{align:'center'});
-    doc.setTextColor(255,255,255);doc.setFontSize(22);doc.setFont('helvetica','bold');doc.text('Your Journey Proposal',W/2,78,{align:'center'});
-    doc.setFontSize(11);doc.setFont('helvetica','normal');doc.setTextColor(...G);doc.text(route,W/2,92,{align:'center'});
-    doc.setTextColor(180,170,160);doc.setFontSize(9);
-    doc.text(S.name||'',W/2,106,{align:'center'});doc.text(new Date().toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'}),W/2,114,{align:'center'});doc.text('Ref: '+(S.ref||'—'),W/2,122,{align:'center'});
-    doc.setFillColor(...G);doc.rect(M,166,W-2*M,.4,'F');
-    doc.setTextColor(...G);doc.setFontSize(8);doc.text('Private Transportation · Curated Journeys · Transparent Pricing',W/2,174,{align:'center'});
-    doc.setTextColor(130,120,110);doc.text('hello@ivoryarctravels.com · +91 74550 37397 · ivoryarctravels.com',W/2,182,{align:'center'});
-    // PAGE 2
-    doc.addPage();
-    doc.setFillColor(251,246,234);doc.rect(0,0,W,18,'F');doc.setFillColor(...G);doc.rect(0,0,W,1.5,'F');
-    doc.setTextColor(...K);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('Ivory Arc Travels  ·  Journey Proposal',M,12);
-    doc.setTextColor(...L);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text('Ref: '+(S.ref||'—')+'   ·   '+new Date().toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'}),W-M,12,{align:'right'});
-    let y=28;
-    const sh=(label)=>{doc.setFillColor(251,246,234);doc.rect(M,y-4,W-2*M,7,'F');doc.setFillColor(...G);doc.rect(M,y-4,2,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...G);doc.text(label,M+5,y+0.5);y+=9;};
-    const row=(l,v,b=false)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(9);doc.setTextColor(...K);doc.text(l,M,y);doc.setTextColor(b?0:80,b?0:80,b?0:80);const lines=doc.splitTextToSize(v,100);doc.text(lines,M+50,y);y+=6*lines.length;};
-    sh('JOURNEY SUMMARY');
-    const startLabel=S.startLocation==='hotel_delhi'&&S.startHotelName?S.startHotelName+', Delhi NCR':S.startLocation==='noida_airport'?'Noida International Airport':'Delhi Airport (IGI)';
-    row('Start Location',startLabel);
-    row('Travel Dates',(S.startDate?new Date(S.startDate).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'}):'TBC')+' — '+(S.startDate&&S.customNights?(()=>{const d=new Date(S.startDate);d.setDate(d.getDate()+S.customNights);return d.toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'});})():'TBC'));
-    row('Duration',q.nts+' nights · '+q.days+' days');row('Guests',S.adults+' adult'+(S.adults>1?'s':'')+(S.children?' · '+S.children+' child'+(S.children>1?'ren':''):''));row('Interest',S.interest);y+=2;
-    sh('SELECTED ROUTE');const rl=doc.splitTextToSize(route,W-2*M-6);doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...K);doc.text(rl,M,y);y+=6*rl.length;
-    if(S.dest.length>1){y+=2;S.dest.forEach(k=>{const n=k===S.dest[0]?Math.max(0,(S.nights[k]||1)-1):S.nights[k]||0;if(n>0){doc.setFontSize(8.5);doc.setTextColor(...L);doc.text((DEST[k]?DEST[k].name:k)+': '+n+' night'+(n>1?'s':''),M+4,y);y+=5;}});}
-    y+=4;
-    if(S.hotel!=='none'){sh('ACCOMMODATION \u00b7 CITY BY CITY');
-      const plan=cityNightPlan();const fd=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
-      if(plan.length){plan.forEach(c=>{const ch=(S.cityHotels||{})[c.k]||{};
-        row(c.name+' ('+c.nights+'n'+(c.arr?', '+fd(c.arr)+'\u2013'+fd(c.dep):'')+')',ch.name?ch.name+(ch.stars?' \u00b7 '+ch.stars+'\u2605':''):HOTELS[S.hotel].l+' \u2014 to be confirmed');});}
-      else{row('Category',HOTELS[S.hotel].l);}
-      row('Rooms',rooms(S.adults)+' room'+(rooms(S.adults)>1?'s':''));
-      doc.setFontSize(7.5);doc.setTextColor(...L);
-      const hn=doc.splitTextToSize('Hotel availability and rates change frequently. Final hotel confirmation must be completed at least 24 hours before your journey begins.',W-2*M-4);
-      doc.text(hn,M,y);y+=4*hn.length+2;}
-    sh('VEHICLE & GUIDE');row('Vehicle',VEH[S.veh].l);row('Driver',S.customNights>0?'Overnight driver included':'Day driver');row('Guide',S.guide==='none'?'No guide':S.guide==='english'?'English guide':'Other-language guide');y+=4;
-    if(Object.keys(S.addons).filter(k=>S.addons[k]>0).length){sh('EXPERIENCES');Object.entries(S.addons).filter(([,v])=>v>0).forEach(([id,pax])=>{const e=findExp(id);if(e)row(e.label,e.t==='pp'?pax+' participants':'1 group');});y+=2;}
-    if(y>210){doc.addPage();y=20;}
-    sh('ESTIMATED INVESTMENT');q.items.forEach(it=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...K);doc.text(it[0].substring(0,55),M,y);doc.text(fmt(it[1]),W-M,y,{align:'right'});y+=5.5;});
-    doc.setTextColor(...L);doc.setFontSize(8.5);doc.text('GST (5%)',M,y);doc.text(fmt(q.gst),W-M,y,{align:'right'});y+=6;
-    doc.setFillColor(...K);doc.rect(M,y-3,W-2*M,9,'F');doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text('Grand Total',M+4,y+3.5);doc.text(fmt(q.total),W-M-4,y+3.5,{align:'right'});y+=14;
-    if(q.disc>0){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...G);doc.text('Group discount of ₹'+q.disc.toLocaleString()+'/person/day applied',M,y);y+=7;}
-    sh('PAYMENT SCHEDULE');[['Advance now (10%)',fmt(now)],['At least 7 days before (40%)',fmt(mid)],['24 hours before (balance)',fmt(bal)]].forEach(([l,v])=>{doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...K);doc.text(l,M,y);doc.setFont('helvetica','bold');doc.text(v,W-M,y,{align:'right'});doc.setFont('helvetica','normal');y+=6;});y+=4;
-    if(y>230){doc.addPage();y=20;}
-    sh("WHAT'S INCLUDED");['Private air-conditioned vehicle with vetted driver','Fuel, tolls and parking throughout','Sealed in-vehicle water throughout','Curated sightseeing arrangements','Ivory Arc Journey Manager support','GST (5%) on all line items'].forEach(i=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...L);doc.text('—  '+i,M,y);y+=5;});y+=4;
-    sh('WHAT IS NOT INCLUDED');['International and domestic airfare','Monument entry fees (itemised on request)','Personal expenses and gratuities','Hotel mini-bar, room service, personal incidentals','Travel insurance'].forEach(i=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...L);doc.text('—  '+i,M,y);y+=5;});
-    if(y>245){doc.addPage();y=20;}y+=4;
-    sh('TERMS & CONDITIONS');
-    ['1. Cancellation >7 days before start: full refund. 7 days–48h: 100% excl. GST. 48h–24h: 85%. <24h: no refund.',
-     '2. Hotel costs are live market rates + 10% Ivory Arc coordination. Final invoice supersedes estimates.',
-     '3. Monument entry fees vary by nationality and are charged at actuals.',
-     '4. Ivory Arc Travels · GST registration: 09AYIPT0745R2ZH.',
-     '5. Estimate valid for 7 days. Payment constitutes acceptance of terms.'].forEach(tc=>{const lines=doc.splitTextToSize(tc,W-2*M-4);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...L);doc.text(lines,M,y);y+=5*lines.length+1;});
-    doc.setFillColor(...K);doc.rect(0,280,W,17,'F');doc.setFillColor(...G);doc.rect(0,280,W,1,'F');
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...G);
-    doc.text('Ivory Arc Travels · hello@ivoryarctravels.com · +91 74550 37397 · ivoryarctravels.com · GST 09AYIPT0745R2ZH',W/2,291,{align:'center'});
+  ensureJsPDF().then(_genPDF).catch(()=>alert('PDF module failed to load — please retry.'));}
+function _genPDF(){
+  try{
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
+    const m=summaryModel();
+    if(!m||m.escalate){alert('Please complete your estimate first.');return;}
+    const W=210,H=297,M=20,CW=W-2*M;
+    const INK=[32,27,23],GOLD=[176,141,87],CREAM=[251,246,234],SOFT=[110,104,98],LINE=[224,214,202];
+    const SYM={INR:'Rs ',USD:'$',EUR:'EUR ',GBP:'GBP '};
+    const pf=inr=>{const f=FX[S.cur];const v=Math.round(inr/f.r);return SYM[S.cur]+v.toLocaleString(S.cur==='INR'?'en-IN':'en-US');};
+    const first=(S.name||'Traveller').split(' ')[0];
+    const routeTitle=S.mode==='curated'&&S.selectedRouteId&&CURATED_ROUTES.find(r=>r.id===S.selectedRouteId)
+      ?CURATED_ROUTES.find(r=>r.id===S.selectedRouteId).name
+      :S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' \u00b7 ');
+    let page=1,y=0;
+    const footer=()=>{doc.setFillColor(...INK);doc.rect(0,H-14,W,14,'F');doc.setFillColor(...GOLD);doc.rect(0,H-14,W,.6,'F');
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...GOLD);
+      doc.text('IVORY ARC TRAVELS',M,H-6);
+      doc.setTextColor(190,180,168);
+      doc.text('hello@ivoryarctravels.com  \u00b7  +91 74550 37397  \u00b7  ivoryarctravels.com  \u00b7  GST 09AYIPT0745R2ZH',W-M,H-6,{align:'right'});
+      doc.setTextColor(...GOLD);doc.text(String(page),W/2,H-6,{align:'center'});};
+    const newPage=()=>{footer();doc.addPage();page++;
+      doc.setFillColor(...CREAM);doc.rect(0,0,W,16,'F');doc.setFillColor(...GOLD);doc.rect(0,0,W,1.2,'F');
+      doc.setFont('times','bold');doc.setFontSize(10);doc.setTextColor(...INK);doc.text('Ivory Arc Travels',M,10.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...SOFT);
+      doc.text('Private Journey Proposal  \u00b7  Ref '+(S.ref||'\u2014'),W-M,10.5,{align:'right'});
+      y=26;};
+    const ensure=need=>{if(y+need>H-22)newPage();};
+    const sec=label=>{ensure(16);doc.setFillColor(...GOLD);doc.rect(M,y,7,.8,'F');
+      doc.setFont('times','bold');doc.setFontSize(13);doc.setTextColor(...INK);doc.text(label,M,y+7);
+      y+=13;};
+    const para=(txt,size,color)=>{doc.setFont('helvetica','normal');doc.setFontSize(size||9.5);doc.setTextColor(...(color||SOFT));
+      const ls=doc.splitTextToSize(txt,CW);ensure(ls.length*4.6+2);doc.text(ls,M,y);y+=ls.length*4.6+2;};
+    const kv=(l,v,b)=>{ensure(6);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...SOFT);doc.text(l,M,y);
+      doc.setFont('helvetica',b?'bold':'normal');doc.setTextColor(...INK);
+      const vs=doc.splitTextToSize(String(v),CW-58);doc.text(vs,M+58,y);y+=Math.max(5.2,vs.length*4.6);};
+    const rule=()=>{ensure(5);doc.setDrawColor(...LINE);doc.setLineWidth(.25);doc.line(M,y,W-M,y);y+=5;};
+
+    /* ── COVER ── */
+    doc.setFillColor(...INK);doc.rect(0,0,W,H,'F');
+    doc.setFillColor(...GOLD);doc.rect(0,0,W,2,'F');doc.rect(0,H-2,W,2,'F');
+    doc.setDrawColor(...GOLD);doc.setLineWidth(.4);doc.rect(M-6,30,W-2*(M-6),H-72);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...GOLD);
+    doc.text('I V O R Y   A R C   T R A V E L S',W/2,46,{align:'center'});
+    doc.setFontSize(7.5);doc.setTextColor(190,180,168);
+    doc.text('CURATED HERITAGE & SPIRITUAL JOURNEYS \u00b7 DELHI NCR',W/2,53,{align:'center'});
+    doc.setFont('times','bold');doc.setFontSize(27);doc.setTextColor(255,255,255);
+    const tl=doc.splitTextToSize(routeTitle,CW-10);
+    doc.text(tl,W/2,108,{align:'center'});
+    doc.setFont('times','italic');doc.setFontSize(12);doc.setTextColor(...GOLD);
+    doc.text('A Private Journey Proposal',W/2,108+tl.length*11+6,{align:'center'});
+    doc.setDrawColor(...GOLD);doc.line(W/2-18,150,W/2+18,150);
+    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(235,228,218);
+    doc.text('Prepared exclusively for',W/2,168,{align:'center'});
+    doc.setFont('times','bold');doc.setFontSize(17);doc.setTextColor(255,255,255);
+    doc.text(S.name||'Our Guest',W/2,178,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...GOLD);
+    doc.text(m.dateStart+'  \u2014  '+m.dateEnd,W/2,190,{align:'center'});
+    doc.setFontSize(8.5);doc.setTextColor(170,160,148);
+    doc.text(m.nts+' nights \u00b7 '+m.guestsLabel,W/2,198,{align:'center'});
+    doc.setFontSize(8);doc.setTextColor(...GOLD);
+    doc.text('Reference  '+(S.ref||'Pending verification'),W/2,H-38,{align:'center'});
+    doc.setTextColor(150,140,128);
+    doc.text('Private transportation \u00b7 Transparent pricing \u00b7 No commission stops, ever',W/2,H-30,{align:'center'});
+    footer();doc.addPage();page++;
+    doc.setFillColor(...CREAM);doc.rect(0,0,W,16,'F');doc.setFillColor(...GOLD);doc.rect(0,0,W,1.2,'F');
+    doc.setFont('times','bold');doc.setFontSize(10);doc.setTextColor(...INK);doc.text('Ivory Arc Travels',M,10.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...SOFT);
+    doc.text('Private Journey Proposal  \u00b7  Ref '+(S.ref||'\u2014'),W-M,10.5,{align:'right'});
+    y=26;
+
+    /* ── EXECUTIVE SUMMARY ── */
+    sec('Why This Journey Suits You');
+    const cs=comfortScore();
+    const intLine={Heritage:'a love of living history \u2014 forts, palaces and the stories held in stone',
+      Pilgrimage:'a journey of the spirit \u2014 sacred rivers, temple bells and moments of stillness',
+      Mountains:'the pull of the Himalayas \u2014 pine air, winding roads and wide mountain light',
+      Wildlife:'the thrill of the wild \u2014 tiger country, birdsong and dawn safaris'}[S.interest]||'discovery';
+    para((S.name?first+', this':'This')+' proposal has been shaped around '+intLine+'. Across '+m.nts+' night'+(m.nts!==1?'s':'')+' we travel as you should in India: privately, unhurried, with every detail \u2014 vehicle, stays, experiences \u2014 arranged before you arrive.',10,INK);
+    para('Pacing: '+cs.label+'. '+cs.msg+' Your journey begins and ends in Delhi NCR with door-to-door private transfers'+(S.children?', and we have planned with your '+(S.children>1?'children':'child')+' in mind \u2014 gentler days, family rooms with extra beds, and flexible meal stops.':'.'),9.5);
+    y+=2;
+
+    /* ── DESTINATION HIGHLIGHTS ── */
+    sec('Destination Highlights');
+    S.dest.forEach((k,ix)=>{const n=ix===0?Math.max(0,(S.nights[k]||1)-1):(S.nights[k]||0);
+      ensure(14);
+      doc.setFont('times','bold');doc.setFontSize(11.5);doc.setTextColor(...INK);
+      doc.text((DEST[k]?DEST[k].name:k)+(n>0?'   \u2014   '+n+' night'+(n>1?'s':''):''),M,y);y+=5;
+      doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(...SOFT);
+      const dl=doc.splitTextToSize(DEST_DESC[k]||'',CW);doc.text(dl,M,y);y+=dl.length*4.4+4;});
+    rule();
+
+    /* ── DAY-BY-DAY PREVIEW ── */
+    sec('Your Journey, Day by Day');
+    const plan=cityNightPlan();
+    let dayN=1;
+    const dayRow=(d,t,sub)=>{ensure(12);
+      doc.setFillColor(...CREAM);doc.circle(M+4,y+1.2,4,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...GOLD);doc.text(String(d),M+4,y+2.4,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(...INK);doc.text(t,M+12,y);
+      if(sub){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...SOFT);
+        const ss=doc.splitTextToSize(sub,CW-12);doc.text(ss,M+12,y+4.4);y+=ss.length*4.2;}
+      y+=8;};
+    if(S.customNights===0){
+      const k=S.dest[0];
+      const sig=(EXPER[DEST[k]&&DEST[k].exp]||[]).slice(0,3).map(e=>e.label).join(' \u00b7 ');
+      dayRow(1,'Delhi NCR \u2192 '+(DEST[k]?DEST[k].name:k)+' \u2192 Delhi NCR','Same-day private return journey. '+(sig?'Suggested moments: '+sig+'.':''));
+    }else{
+      const firstCity=plan.length?plan[0].name:(DEST[S.dest[0]]?DEST[S.dest[0]].name:'');
+      dayRow(dayN++,'Arrival \u00b7 Delhi NCR \u2192 '+firstCity,'Your chauffeur meets you at '+m.startLabel+'. Settle in; evening at leisure.');
+      plan.forEach((c,ci)=>{
+        const sig=(EXPER[DEST[c.k]&&DEST[c.k].exp]||[]).slice(0,3).map(e=>e.label).join(' \u00b7 ');
+        for(let dn=0;dn<c.nights;dn++){
+          if(dn===0&&ci>0)dayRow(dayN++,'Drive '+plan[ci-1].name+' \u2192 '+c.name,'Scenic private transfer with curated en-route halts; afternoon introduction to '+c.name+'.');
+          else dayRow(dayN++, (c.nights>1?'Discover ':'A day in ')+c.name, sig?'Signature moments: '+sig+'.':'');
+        }});
+      dayRow(dayN,'Farewell \u00b7 Return to Delhi NCR','Unhurried drive back for your onward departure \u2014 every km still privately yours.');
+    }
+    rule();
+
+    /* ── ACCOMMODATION ── */
+    if(S.hotel!=='none'){
+      sec('Accommodation');
+      kv('Category',HOTELS[S.hotel].l,true);
+      plan.forEach(c=>{const ch=(S.cityHotels||{})[c.k]||{};
+        kv(c.name+' \u00b7 '+c.nights+'n', ch.name?ch.name+(ch.stars?'  '+ch.stars+'\u2605':'')+(ch.rating?'  \u00b7  '+ch.rating+'/5':''):HOTELS[S.hotel].l+' (to be confirmed by your Journey Manager)');});
+      kv('Rooms',m.rooms+' room'+(m.rooms>1?'s':'')+(S.children?'  +  '+S.children+' extra bed'+(S.children>1?'s':''):''));
+      para('Hotel availability and rates move daily; final confirmation is completed at least 24 hours before departure and your invoice reflects live rates plus our transparent 10% coordination.',8);
+      rule();}
+
+    /* ── EXPERIENCES ── */
+    const ax=Object.entries(S.addons||{}).filter(([,v])=>v>0);
+    if(ax.length){sec('Signature Experiences');
+      ax.forEach(([id,pax])=>{const e=findExp(id);if(!e)return;
+        kv(e.label, e.t==='pp'?pax+' guest'+(pax>1?'s':'')+'  \u00b7  '+pf(e.price*pax):'Private group  \u00b7  '+pf(e.price));});
+      rule();}
+
+    /* ── TRANSPORTATION ── */
+    sec('Transportation');
+    kv('Vehicle',VEH[S.veh].l+'  \u00b7  private & air-conditioned',true);
+    kv('Chauffeur',S.customNights>0?'Dedicated driver throughout, overnight halts included':'Dedicated day chauffeur');
+    if(S.mode==='curated')kv('Guide',S.guide==='none'?'No guide selected':S.guide==='english'?'English-speaking accompanying guide':'Accompanying guide \u2014 your language');
+    para('Includes fuel, tolls, parking, inter-city transfers, sealed mineral water on board, and your Ivory Arc Journey Manager on WhatsApp for the length of the journey.',8.5);
+    rule();
+
+    /* ── INVESTMENT ── */
+    if(y>H-110)newPage();
+    sec('Your Investment');
+    m.items.forEach(it=>{ensure(6);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);
+      doc.text(it[0].length>62?it[0].slice(0,60)+'\u2026':it[0],M,y);
+      doc.text(pf(it[1]),W-M,y,{align:'right'});y+=5.4;});
+    ensure(6);doc.setTextColor(...SOFT);doc.setFontSize(9);
+    doc.text('GST (5%)',M,y);doc.text(pf(m.gst),W-M,y,{align:'right'});y+=7;
+    ensure(13);doc.setFillColor(...INK);doc.rect(M,y-4,CW,11,'F');
+    doc.setFont('times','bold');doc.setFontSize(12);doc.setTextColor(255,255,255);
+    doc.text('Grand Total',M+5,y+3);doc.text(pf(m.total),W-M-5,y+3,{align:'right'});y+=13;
+    doc.setFont('helvetica','italic');doc.setFontSize(8.5);doc.setTextColor(...GOLD[0]?GOLD:SOFT);
+    doc.setTextColor(...SOFT);
+    doc.text('\u2248 '+pf(m.ppd)+' per person per day  \u00b7  '+pf(Math.round(m.total/m.guests))+' per person',M,y);y+=5;
+    if(m.disc>0){doc.setFontSize(8.5);doc.setTextColor(...GOLD);
+      doc.text('Group privilege applied \u2014 Rs '+m.disc.toLocaleString('en-IN')+' per person per day',M,y);y+=5;}
+    if(S.cur!=='INR'){doc.setFontSize(7.5);doc.setTextColor(...SOFT);
+      doc.text('Converted at today\u2019s indicative rate; billing is processed in INR.',M,y);y+=5;}
+    y+=3;
+
+    /* ── PAYMENT SCHEDULE ── */
+    sec('Payment Schedule');
+    [['To confirm your dates (10%)',pf(m.adv),true],['At least 7 days before departure (50%)',pf(m.mid),false],['24 hours before departure (balance)',pf(m.bal),false]]
+      .forEach(([l,v,b])=>{ensure(6);doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(9);
+        doc.setTextColor(...(b?GOLD:INK));doc.text(l,M,y);doc.text(v,W-M,y,{align:'right'});y+=5.6;});
+    para('Payments are processed securely via Razorpay. Free cancellation up to 7 days before departure.',8);
+    rule();
+
+    /* ── TERMS ── */
+    if(y>H-70)newPage();
+    sec('Terms & Conditions');
+    ['Cancellation: more than 7 days before departure \u2014 full refund; 7 days to 48 hours \u2014 100% excluding GST; 48 to 24 hours \u2014 85%; under 24 hours \u2014 no refund.',
+     'Hotel costs are live market rates plus a transparent 10% Ivory Arc coordination fee; the final invoice supersedes this estimate.',
+     'Monument entry fees vary by nationality and are charged at actuals.',
+     'Ivory Arc Travels \u00b7 GST registration 09AYIPT0745R2ZH.',
+     'This proposal is valid for 7 days. Payment constitutes acceptance of these terms.']
+     .forEach((tc,ix)=>{const ls=doc.splitTextToSize((ix+1)+'.  '+tc,CW);ensure(ls.length*4+2);
+       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...SOFT);doc.text(ls,M,y);y+=ls.length*4+2;});
+    ensure(14);y+=4;
+    doc.setFont('times','italic');doc.setFontSize(10);doc.setTextColor(...INK);
+    doc.text('We would be honoured to arrange this journey for you'+(S.name?', '+first:'')+'.',M,y);
+    footer();
     doc.save('IvoryArc_Journey_Proposal_'+(S.ref||'draft')+'.pdf');
   }catch(e){alert('Unable to generate PDF. Please contact hello@ivoryarctravels.com');console.error(e);}}
 
 /* ======================== FX + INIT (unchanged) ========= */
 function fetchFX(){fetch('https://api.frankfurter.app/latest?from=USD&to=INR,EUR,GBP').then(r=>r.json()).then(d=>{const x=d&&d.rates;if(!x||!x.INR)return;FX.USD.r=x.INR;if(x.EUR)FX.EUR.r=x.INR/x.EUR;if(x.GBP)FX.GBP.r=x.INR/x.GBP;}).catch(()=>{});}fetchFX();
 $('cur').onchange=e=>{S.cur=e.target.value;};
-$('lang').onchange=e=>{S.lang=e.target.value;};
+$('lang').onchange=e=>{S.lang=e.target.value;document.documentElement.lang=S.lang;};
 // Language overlay init — start conversation only after language+currency are chosen
 (function(){
   let _lang='en',_cur='INR';
   document.querySelectorAll('.l-btn').forEach(b=>b.onclick=()=>{
-    _lang=b.dataset.l; S.lang=_lang; $('lang').value=_lang;
+    _lang=b.dataset.l; S.lang=_lang; $('lang').value=_lang;document.documentElement.lang=_lang;
     document.querySelectorAll('.l-btn').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     // Update overlay sub-text in selected language
@@ -1180,7 +1556,10 @@ $('lang').onchange=e=>{S.lang=e.target.value;};
   $('beginBtn').onclick=()=>{
     $('langOverlay').style.display='none';
     $('dateBadge').textContent=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
-    nextStep();
+    if(tryRestore()){
+      addBot('Welcome back'+(S.name?', <b>'+esc(S.name.split(' ')[0])+'</b>':'')+' — I\'ve kept everything you told me.');
+      replay();
+    } else nextStep();
   };
 })();
 </script>
