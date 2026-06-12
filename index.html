@@ -1004,14 +1004,14 @@ function renderInput(step){
         try{
           const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
           const d=await fetch(u).then(r=>r.json());
-          if(!d.properties)throw new Error('hotelsjson action not found in Code.gs \u2014 paste the addition and redeploy');
+          if(!d.properties){const hint=d&&d.error?d.error:'No response';throw new Error('Hotels unavailable: '+hint+' \u2014 check SERPAPI_KEY in Script Properties and confirm the deployment is current (Deploy → Manage → edit → New version).');}
           if(myToken!==_fetchToken)return;
           live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class).slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
               img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
               loc:(p.gps_coordinates?'':''),
               nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
-        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.warn('[IVY] Hotels:',e.message);}
+        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.error('[IVY] Hotels fetch failed:',e.message,'| URL:',u);render();}
         render();};
       const render=()=>{
         const pc=Object.keys(picks).length;
@@ -1097,7 +1097,7 @@ function showEstimate(){
   const q=summaryModel();
   if(!q||!q.items){addBot('I\'m unable to calculate an estimate. Please refresh and start again.');return;}
   if(q.escalate){addBot('For groups of more than '+CONFIG.ESCALATE_ABOVE+' we handle arrangements personally. Please contact us directly at <a href="mailto:'+CONFIG.EMAIL+'">'+CONFIG.EMAIL+'</a>.');return;}
-  if(!S._leadSent){S._leadSent=true;persist();sendLead('IVY-unverified');}
+  if(!S._leadSent){S._leadSent=true;persist();captureEstimate_();}
   const now=q.adv,mid=q.mid,bal=q.bal;
   const route=q.route.split(' → ').join(' &rarr; ');
   const dateDis=q.dateStart;
@@ -1292,6 +1292,23 @@ function onVerified(phone){
   document.querySelectorAll('.unlock-pill').forEach(el=>el.remove());}
 
 /* ======================== APPS SCRIPT (unchanged) ======= */
+/* Sheet-only capture at estimate render — NO email, NO WhatsApp, ever.
+   Gives you the full route+budget for follow-up without notification spam. */
+function captureEstimate_(){
+  if(DEMO||!LIVE_READY)return;
+  const q=compute();if(!q||q.escalate)return;
+  const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
+  fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({
+      action:'capture_only',          // dedicated no-notify action in Code.gs
+      name:S.name,email:S.email,phone:S.phone||'',
+      source:'IVY-estimate-viewed',   // never in NOTIFY_SOURCES — double-safe
+      estimateRef:S.ref,destination:route,
+      estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
+      interest:S.interest,tourStartDate:S.startDate,nights:q.nts,
+      travellingAs:S.nat,vehicle:VEH[S.veh].l,
+      hotelSelection:S.hotel==='none'?'No stays':HOTELS[S.hotel].l
+    })}).catch(()=>{});}
 function savePartialLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'lead',name:S.name,email:S.email,source:'IVY-partial',estimateRef:'PARTIAL-'+Date.now().toString(36).toUpperCase(),destination:'',estimateTotal:'',groupSize:''})}).catch(()=>{});}
