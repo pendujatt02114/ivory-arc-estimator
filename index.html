@@ -1022,11 +1022,19 @@ function renderInput(step){
         const min={comfort:3,premium:4,luxury:5}[tier]||3;
         if(!LIVE_READY){live[c.k]=undefined;render();return;}
         try{
-          const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co;
+          // STAGE 1 — build request; pass tier + actual adults for server-side hotel_class filter
+          const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co+'&tier='+tier+'&adults='+Math.min(S.adults||2,30);
+          console.log('[IVY Hotels] S1 request →',{city,ci,co,tier,adults:S.adults,url:u});
           const d=await fetch(u).then(r=>r.json());
-          if(!d.properties){const hint=d&&d.error?d.error:'No response';throw new Error('Hotels unavailable: '+hint);}
+          // STAGE 6 FIX: ![] === false in JS — must also check d.error explicitly
+          console.log('[IVY Hotels] S6 response ←',{city,props:(d.properties||[]).length,error:d.error||null,count:d.count});
+          if(!d.properties||d.error){const hint=d&&d.error?d.error:'No response from Apps Script';throw new Error('[IVY Hotels] Stage 6 fail: '+hint);}
           if(myToken!==_fetchToken)return;
-          live[c.k]=(d.properties||[]).filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class).slice(0,4)
+          // STAGE 7 — client-side filter (server already filtered by hotel_class; this is a safety net)
+          const _raw=d.properties||[];
+          const _filtered=_raw.filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class);
+          console.log('[IVY Hotels] S7 filter →',{city,tier,min,raw:_raw.length,passed:_filtered.length,classes:_raw.map(p=>p.extracted_hotel_class||'?')});
+          live[c.k]=_filtered.slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
               img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
               nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
