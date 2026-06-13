@@ -1417,29 +1417,37 @@ function captureEstimate_(){
       source:'IVY-estimate-viewed',   // never in NOTIFY_SOURCES — double-safe
       estimateRef:S.ref,destination:route,
       estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
-      interest:S.interest,tourStartDate:S.startDate,nights:q.nts,
+      tourStartDate:S.startDate,nights:q.nts,
       travellingAs:S.nat,vehicle:VEH[S.veh].l,
       hotelSelection:S.hotel==='none'?'No stays':HOTELS[S.hotel].l
     })}).catch(()=>{});}
 function savePartialLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'capture_only',name:S.name,email:S.email,source:'IVY-partial',estimateRef:'PARTIAL-'+Date.now().toString(36).toUpperCase()})}).catch(()=>{});}
-function sendLead(src){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
+function sendLead(src){
+  // Decoupled from DEMO/Firebase — fires whenever a real backend URL is set,
+  // so the verified lead is never silently dropped because of the OTP method.
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0){console.warn('[IVY Lead] APPS_SCRIPT_URL not set — verified lead NOT sent.');return;}
   const q=compute();
-  const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
+  const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' \u2192 '):S.route.join(' \u2192 ');
   if(!S.ref)S.ref='IAT-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000);
-  fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'verified_lead',name:S.name,email:S.email,phone:S.phone,
-      source:src||'IVY-verified',estimateRef:S.ref,destination:route,
-      estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
-      startLocation:S.startLocation+(S.startHotelName?' — '+S.startHotelName:''),
-      interest:S.interest,
-      hotelSelection:S.hotel==='none'?'No stays':HOTELS[S.hotel].l+(Object.keys(S.cityHotels||{}).length?' \u00b7 '+Object.entries(S.cityHotels).map(([k,hh])=>(DEST[k]?DEST[k].name:k)+': '+hh.name).join('; '):''),
-      startPlaceId:S.startPlaceId||'',
-      guide:S.guide==='none'?'No guide':(S.guide==='english'?'English guide':'Other-language guide'),
-      vehicle:VEH[S.veh].l,
-      tourStartDate:S.startDate,nights:q.nts,travellingAs:S.nat,
-      itineraryRequested:S.itinerary?'Yes':'No'})}).catch(()=>{});}
+  const plan=cityNightPlan();const endD=plan.length?plan[plan.length-1].dep:null;
+  const fD=d=>d?d.toISOString().slice(0,10):'';
+  const payload={action:'verified_lead',name:S.name,email:S.email,phone:S.phone,
+    source:src||'IVY-verified',estimateRef:S.ref,destination:route,
+    estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
+    startLocation:S.startLocation+(S.startHotelName?' \u2014 '+S.startHotelName:''),
+    hotelSelection:S.hotel==='none'?'No stays':HOTELS[S.hotel].l+(Object.keys(S.cityHotels||{}).length?' \u00b7 '+Object.entries(S.cityHotels).map(([k,hh])=>(DEST[k]?DEST[k].name:k)+': '+hh.name).join('; '):''),
+    startPlaceId:S.startPlaceId||'',
+    guide:S.guide==='none'?'No guide':(S.guide==='english'?'English guide':'Other-language guide'),
+    vehicle:VEH[S.veh].l,
+    tourStartDate:S.startDate,tourEndDate:fD(endD),nights:q.nts,travellingAs:S.nat,
+    itineraryRequested:S.itinerary?'Yes':'No'};
+  console.log('[IVY Lead] POST verified_lead \u2192',APPS_SCRIPT_URL.slice(-32),payload);
+  fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .then(r=>r.text())
+    .then(t=>{console.log('[IVY Lead] Backend response \u2190',t);try{const j=JSON.parse(t);if(j.notified)console.log('[IVY Lead] \u2705 Email + WhatsApp triggered');else if(j.success)console.warn('[IVY Lead] \u26a0 Saved but NOT notified — backend says notified:false (check source/NOTIFY_SOURCES, redeploy v8+)');else console.error('[IVY Lead] \u274c Backend error:',t);}catch(e){console.error('[IVY Lead] \u274c Non-JSON response (wrong URL or old deployment?):',t.slice(0,150));}})
+    .catch(e=>console.error('[IVY Lead] \u274c Network/send failed:',e.message));}
 async function doPay(){
   try{await ensureRazorpay();}catch(e){alert('Payment module failed to load — please retry.');return;}
   const q=compute();const commit=Math.round(q.total*CONFIG.PAY.ADVANCE);
@@ -1475,188 +1483,274 @@ function _genPDF(){
     const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
     const m=summaryModel();
     if(!m||m.escalate){alert('Please complete your estimate first.');return;}
-    const W=210,H=297,M=20,CW=W-2*M;
-    const INK=[32,27,23],GOLD=[176,141,87],CREAM=[251,246,234],SOFT=[110,104,98],LINE=[224,214,202];
+
+    /* ---- palette ---- */
+    const INK=[38,32,28], GOLD=[184,146,84], GOLDL=[214,186,128],
+          CREAM=[252,248,241], PAPER=[249,244,236], ROSE=[166,95,78],
+          TEAL=[52,90,86], SOFT=[122,114,106], LINE=[230,221,208], WHITE=[255,255,255];
+    const ACCENTS=[GOLD,ROSE,TEAL];
+    const W=210,H=297,M=19,CW=W-2*M;
     const SYM={INR:'Rs ',USD:'$',EUR:'EUR ',GBP:'GBP '};
     const pf=inr=>{const f=FX[S.cur];const v=Math.round(inr/f.r);return SYM[S.cur]+v.toLocaleString(S.cur==='INR'?'en-IN':'en-US');};
     const first=(S.name||'Traveller').split(' ')[0];
-    const routeTitle=S.mode==='curated'&&S.selectedRouteId&&CURATED_ROUTES.find(r=>r.id===S.selectedRouteId)
-      ?CURATED_ROUTES.find(r=>r.id===S.selectedRouteId).name
-      :S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' \u00b7 ');
-    let page=1,y=0;
-    const footer=()=>{doc.setFillColor(...INK);doc.rect(0,H-14,W,14,'F');doc.setFillColor(...GOLD);doc.rect(0,H-14,W,.6,'F');
-      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...GOLD);
-      doc.text('IVORY ARC TRAVELS',M,H-6);
-      doc.setTextColor(190,180,168);
-      doc.text('hello@ivoryarctravels.com  \u00b7  +91 74550 37397  \u00b7  ivoryarctravels.com  \u00b7  GST 09AYIPT0745R2ZH',W-M,H-6,{align:'right'});
-      doc.setTextColor(...GOLD);doc.text(String(page),W/2,H-6,{align:'center'});};
-    const newPage=()=>{footer();doc.addPage();page++;
-      doc.setFillColor(...CREAM);doc.rect(0,0,W,16,'F');doc.setFillColor(...GOLD);doc.rect(0,0,W,1.2,'F');
-      doc.setFont('times','bold');doc.setFontSize(10);doc.setTextColor(...INK);doc.text('Ivory Arc Travels',M,10.5);
-      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...SOFT);
-      doc.text('Private Journey Proposal  \u00b7  Ref '+(S.ref||'\u2014'),W-M,10.5,{align:'right'});
-      y=26;};
-    const ensure=need=>{if(y+need>H-22)newPage();};
-    const sec=label=>{ensure(16);doc.setFillColor(...GOLD);doc.rect(M,y,7,.8,'F');
-      doc.setFont('times','bold');doc.setFontSize(13);doc.setTextColor(...INK);doc.text(label,M,y+7);
-      y+=13;};
-    const para=(txt,size,color)=>{doc.setFont('helvetica','normal');doc.setFontSize(size||9.5);doc.setTextColor(...(color||SOFT));
-      const ls=doc.splitTextToSize(txt,CW);ensure(ls.length*4.6+2);doc.text(ls,M,y);y+=ls.length*4.6+2;};
-    const kv=(l,v,b)=>{ensure(6);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...SOFT);doc.text(l,M,y);
-      doc.setFont('helvetica',b?'bold':'normal');doc.setTextColor(...INK);
-      const vs=doc.splitTextToSize(String(v),CW-58);doc.text(vs,M+58,y);y+=Math.max(5.2,vs.length*4.6);};
-    const rule=()=>{ensure(5);doc.setDrawColor(...LINE);doc.setLineWidth(.25);doc.line(M,y,W-M,y);y+=5;};
-
-    /* ── COVER ── */
-    doc.setFillColor(...INK);doc.rect(0,0,W,H,'F');
-    doc.setFillColor(...GOLD);doc.rect(0,0,W,2,'F');doc.rect(0,H-2,W,2,'F');
-    doc.setDrawColor(...GOLD);doc.setLineWidth(.4);doc.rect(M-6,30,W-2*(M-6),H-72);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...GOLD);
-    doc.text('I V O R Y   A R C   T R A V E L S',W/2,46,{align:'center'});
-    doc.setFontSize(7.5);doc.setTextColor(190,180,168);
-    doc.text('CURATED HERITAGE & SPIRITUAL JOURNEYS \u00b7 DELHI NCR',W/2,53,{align:'center'});
-    doc.setFont('times','bold');doc.setFontSize(27);doc.setTextColor(255,255,255);
-    const tl=doc.splitTextToSize(routeTitle,CW-10);
-    doc.text(tl,W/2,108,{align:'center'});
-    doc.setFont('times','italic');doc.setFontSize(12);doc.setTextColor(...GOLD);
-    doc.text('A Private Journey Proposal',W/2,108+tl.length*11+6,{align:'center'});
-    doc.setDrawColor(...GOLD);doc.line(W/2-18,150,W/2+18,150);
-    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(235,228,218);
-    doc.text('Prepared exclusively for',W/2,168,{align:'center'});
-    doc.setFont('times','bold');doc.setFontSize(17);doc.setTextColor(255,255,255);
-    doc.text(S.name||'Our Guest',W/2,178,{align:'center'});
-    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...GOLD);
-    doc.text(m.dateStart+'  \u2014  '+m.dateEnd,W/2,190,{align:'center'});
-    doc.setFontSize(8.5);doc.setTextColor(170,160,148);
-    doc.text(m.nts+' nights \u00b7 '+m.guestsLabel,W/2,198,{align:'center'});
-    doc.setFontSize(8);doc.setTextColor(...GOLD);
-    doc.text('Reference  '+(S.ref||'Pending verification'),W/2,H-38,{align:'center'});
-    doc.setTextColor(150,140,128);
-    doc.text('Private transportation \u00b7 Transparent pricing \u00b7 No commission stops, ever',W/2,H-30,{align:'center'});
-    footer();doc.addPage();page++;
-    doc.setFillColor(...CREAM);doc.rect(0,0,W,16,'F');doc.setFillColor(...GOLD);doc.rect(0,0,W,1.2,'F');
-    doc.setFont('times','bold');doc.setFontSize(10);doc.setTextColor(...INK);doc.text('Ivory Arc Travels',M,10.5);
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...SOFT);
-    doc.text('Private Journey Proposal  \u00b7  Ref '+(S.ref||'\u2014'),W-M,10.5,{align:'right'});
-    y=26;
-
-    /* ── EXECUTIVE SUMMARY ── */
-    sec('Why This Journey Suits You');
-    const cs=comfortScore();
-    const intLine={Heritage:'a love of living history \u2014 forts, palaces and the stories held in stone',
-      Pilgrimage:'a journey of the spirit \u2014 sacred rivers, temple bells and moments of stillness',
-      Mountains:'the pull of the Himalayas \u2014 pine air, winding roads and wide mountain light',
-      Wildlife:'the thrill of the wild \u2014 tiger country, birdsong and dawn safaris'}[S.interest]||'discovery';
-    para((S.name?first+', this':'This')+' proposal has been shaped around '+intLine+'. Across '+m.nts+' night'+(m.nts!==1?'s':'')+' we travel as you should in India: privately, unhurried, with every detail \u2014 vehicle, stays, experiences \u2014 arranged before you arrive.',10,INK);
-    para('Pacing: '+cs.label+'. '+cs.msg+' Your journey begins and ends in Delhi NCR with door-to-door private transfers'+(S.children?', and we have planned with your '+(S.children>1?'children':'child')+' in mind \u2014 gentler days, family rooms with extra beds, and flexible meal stops.':'.'),9.5);
-    y+=2;
-
-    /* ── DESTINATION HIGHLIGHTS ── */
-    sec('Destination Highlights');
-    S.dest.forEach((k,ix)=>{const n=ix===0?Math.max(0,(S.nights[k]||1)-1):(S.nights[k]||0);
-      ensure(14);
-      doc.setFont('times','bold');doc.setFontSize(11.5);doc.setTextColor(...INK);
-      doc.text((DEST[k]?DEST[k].name:k)+(n>0?'   \u2014   '+n+' night'+(n>1?'s':''):''),M,y);y+=5;
-      doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(...SOFT);
-      const dl=doc.splitTextToSize(DEST_DESC[k]||'',CW);doc.text(dl,M,y);y+=dl.length*4.4+4;});
-    rule();
-
-    /* ── DAY-BY-DAY PREVIEW ── */
-    sec('Your Journey, Day by Day');
     const plan=cityNightPlan();
-    let dayN=1;
-    const dayRow=(d,t,sub)=>{ensure(12);
-      doc.setFillColor(...CREAM);doc.circle(M+4,y+1.2,4,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...GOLD);doc.text(String(d),M+4,y+2.4,{align:'center'});
-      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(...INK);doc.text(t,M+12,y);
-      if(sub){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...SOFT);
-        const ss=doc.splitTextToSize(sub,CW-12);doc.text(ss,M+12,y+4.4);y+=ss.length*4.2;}
-      y+=8;};
-    if(S.customNights===0){
-      const k=S.dest[0];
-      const sig=(EXPER[DEST[k]&&DEST[k].exp]||[]).slice(0,3).map(e=>e.label).join(' \u00b7 ');
-      dayRow(1,'Delhi NCR \u2192 '+(DEST[k]?DEST[k].name:k)+' \u2192 Delhi NCR','Same-day private return journey. '+(sig?'Suggested moments: '+sig+'.':''));
-    }else{
-      const firstCity=plan.length?plan[0].name:(DEST[S.dest[0]]?DEST[S.dest[0]].name:'');
-      dayRow(dayN++,'Arrival \u00b7 Delhi NCR \u2192 '+firstCity,'Your chauffeur meets you at '+m.startLabel+'. Settle in; evening at leisure.');
+    const cityNames=(S.dest||[]).map(k=>DEST[k]?DEST[k].name:k);
+    const journeyTitle = cityNames.length? (cityNames.length<=3?cityNames.join(' \u00b7 '):cityNames.slice(0,2).join(' \u00b7 ')+' & beyond') : 'A Private India Journey';
+    const totalNights = m.nts||0;
+    const svcDays = m.days||1;
+
+    let page=0;
+    const SP=()=>{}; // noop
+    /* footer on content pages */
+    const footer=()=>{
+      doc.setDrawColor(...LINE);doc.setLineWidth(.3);doc.line(M,H-13,W-M,H-13);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.setTextColor(...SOFT);
+      doc.text('IVORY ARC TRAVELS',M,H-8.5);
+      doc.text('hello@ivoryarctravels.com  \u00b7  +91 74550 37397  \u00b7  ivoryarctravels.com',W/2,H-8.5,{align:'center'});
+      doc.setTextColor(...GOLD);doc.text(String(page),W-M,H-8.5,{align:'right'});
+    };
+    const header=(eyebrow)=>{
+      doc.setFillColor(...PAPER);doc.rect(0,0,W,15,'F');
+      doc.setFillColor(...GOLD);doc.rect(0,15,W,.7,'F');
+      doc.setFont('times','bold');doc.setFontSize(11);doc.setTextColor(...INK);
+      doc.text('Ivory Arc Travels',M,10);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...SOFT);
+      doc.text((eyebrow||'')+'   \u00b7   Ref '+(S.ref||'\u2014'),W-M,10,{align:'right'});
+    };
+    let y=0;
+    const newPage=(eyebrow)=>{if(page>0)footer();doc.addPage();page++;header(eyebrow);y=26;};
+    const ensure=(need,eyebrow)=>{if(y+need>H-20)newPage(eyebrow||'The Journey Continues');};
+    /* section title with coloured accent bar */
+    const section=(label,accent)=>{const a=accent||GOLD;ensure(20);
+      doc.setFillColor(...a);doc.rect(M,y,3.2,9,'F');
+      doc.setFont('times','bold');doc.setFontSize(15.5);doc.setTextColor(...INK);
+      doc.text(label,M+7,y+7.4);
+      y+=14;};
+    const eyebrowLine=(txt,color)=>{doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...(color||GOLD));
+      doc.text(txt.toUpperCase().split('').join('\u200a'),M,y);y+=5.5;};
+    const para=(txt,size,color,lh)=>{doc.setFont('helvetica','normal');doc.setFontSize(size||10);doc.setTextColor(...(color||SOFT));
+      const ls=doc.splitTextToSize(txt,CW);ensure(ls.length*(lh||5)+2);doc.text(ls,M,y);y+=ls.length*(lh||5)+2;};
+
+    /* ============ COVER ============ */
+    page=1;
+    doc.setFillColor(...INK);doc.rect(0,0,W,H,'F');
+    /* layered gold frame */
+    doc.setDrawColor(...GOLD);doc.setLineWidth(.8);doc.rect(M-7,18,W-2*(M-7),H-36);
+    doc.setDrawColor(...GOLDL);doc.setLineWidth(.3);doc.rect(M-4.5,20.5,W-2*(M-4.5),H-41);
+    /* brand */
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(...GOLDL);
+    doc.text('I V O R Y   A R C   T R A V E L S',W/2,42,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(7.6);doc.setTextColor(190,178,160);
+    doc.text('PRIVATE JOURNEYS ACROSS NORTH INDIA',W/2,49,{align:'center'});
+    /* gold motif: three dots */
+    doc.setFillColor(...GOLD);[-6,0,6].forEach((dx,ix)=>{doc.circle(W/2+dx,72,ix===1?1.5:1,'F');});
+    /* title */
+    doc.setFont('times','bold');doc.setFontSize(30);doc.setTextColor(...WHITE);
+    const tl=doc.splitTextToSize(journeyTitle,CW-8);
+    let ty=104;doc.text(tl,W/2,ty,{align:'center'});
+    ty+=tl.length*12+4;
+    doc.setFont('times','italic');doc.setFontSize(13);doc.setTextColor(...GOLDL);
+    doc.text('A Bespoke Travel Proposal',W/2,ty,{align:'center'});
+    /* divider */
+    doc.setDrawColor(...GOLD);doc.setLineWidth(.5);doc.line(W/2-16,ty+12,W/2+16,ty+12);
+    /* prepared for */
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(220,210,196);
+    doc.text('Prepared exclusively for',W/2,ty+30,{align:'center'});
+    doc.setFont('times','bold');doc.setFontSize(18);doc.setTextColor(...WHITE);
+    doc.text(S.name||'Our Distinguished Guest',W/2,ty+40,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...GOLDL);
+    doc.text(m.dateStart+'   \u2014   '+m.dateEnd,W/2,ty+50,{align:'center'});
+    doc.setFontSize(8.6);doc.setTextColor(180,168,152);
+    doc.text(totalNights+' nights  \u00b7  '+m.guestsLabel,W/2,ty+57,{align:'center'});
+    /* footer band */
+    doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(...GOLDL);
+    doc.text('Reference  '+(S.ref||'Pending'),W/2,H-30,{align:'center'});
+    doc.setTextColor(165,153,138);
+    doc.text('Private transport  \u00b7  Transparent pricing  \u00b7  No commission stops, ever',W/2,H-23,{align:'center'});
+
+    /* ============ INVITATION ============ */
+    newPage('An Invitation');
+    eyebrowLine('Your Journey Awaits',ROSE);
+    doc.setFont('times','bold');doc.setFontSize(20);doc.setTextColor(...INK);
+    const head1=doc.splitTextToSize('Some journeys are counted in miles.',CW);
+    doc.text(head1,M,y+2);y+=head1.length*9+1;
+    doc.setFont('times','italic');doc.setFontSize(20);doc.setTextColor(...GOLD);
+    doc.text('Yours will be remembered in moments.',M,y+2);y+=14;
+    /* dynamic, evocative opening */
+    const woven = cityNames.length>=2
+      ? `From ${cityNames[0]} to ${cityNames[cityNames.length-1]}, this is ${totalNights>0?totalNights+' nights':'a day'} of India arranged entirely around you.`
+      : `${cityNames[0]||'India'} awaits — arranged entirely around you.`;
+    para(woven+' Not a tour to be joined, but a private journey to be lived: every road your own, every door already open, every hour shaped to your pace. Where others queue, you arrive. Where others rush, you linger. This is how India is meant to be seen.',11,INK,5.6);
+    y+=2;
+    /* at a glance cards */
+    eyebrowLine('At a Glance',GOLD);
+    const cardW=(CW-8)/2, cardH=21;
+    const cards=[
+      ['Your Route', cityNames.join('  \u203a  ')||'\u2014'],
+      ['When', m.dateStart+' \u2013 '+m.dateEnd],
+      ['Duration', totalNights>0?(totalNights+' nights \u00b7 '+(totalNights+1)+' days'):'Single-day journey'],
+      ['Travelling', m.guestsLabel]
+    ];
+    let cx=M, cy=y;
+    cards.forEach((c,ix)=>{
+      const col=ix%2, row=Math.floor(ix/2);
+      const x=M+col*(cardW+8), yy=cy+row*(cardH+7);
+      doc.setFillColor(...CREAM);doc.roundedRect(x,yy,cardW,cardH,2.5,2.5,'F');
+      doc.setFillColor(...ACCENTS[ix%3]);doc.rect(x,yy,2.4,cardH,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...GOLD);
+      doc.text(c[0].toUpperCase(),x+7,yy+7);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...INK);
+      const vs=doc.splitTextToSize(c[1],cardW-11);doc.text(vs.slice(0,2),x+7,yy+13.5);
+    });
+    y=cy+2*(cardH+7)+4;
+
+    /* ============ DESTINATION HIGHLIGHTS ============ */
+    newPage('Where You Will Go');
+    section('Where You Will Go',ROSE);
+    para('Each place on your journey, and what makes it unforgettable.',9.5,SOFT);
+    y+=1;
+    (S.dest||[]).forEach((k,ix)=>{
+      if(!DEST[k])return;
+      const nightsHere = S.nights[k]||0;
+      const pc=plan.find(p=>p.k===k);
+      ensure(26,'Where You Will Go');
+      const acc=ACCENTS[ix%3];
+      /* number medallion */
+      doc.setFillColor(...acc);doc.circle(M+5,y+4,5,'F');
+      doc.setFont('times','bold');doc.setFontSize(11);doc.setTextColor(...WHITE);
+      doc.text(String(ix+1),M+5,y+5.6,{align:'center'});
+      /* city name + nights */
+      doc.setFont('times','bold');doc.setFontSize(13.5);doc.setTextColor(...INK);
+      doc.text(DEST[k].name,M+15,y+3);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...acc);
+      const tag = nightsHere>0 ? (nightsHere+' night'+(nightsHere>1?'s':'')+(pc?'  \u00b7  '+pc.arr.toLocaleDateString([],{day:'numeric',month:'short'})+' \u2013 '+pc.dep.toLocaleDateString([],{day:'numeric',month:'short'}):'')) : 'Day visit';
+      doc.text(tag,M+15,y+8.4);
+      /* description */
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...SOFT);
+      const desc=(DEST_DESC[k]||'').replace(/\s+/g,' ');
+      const dl=doc.splitTextToSize(desc,CW-15);
+      doc.text(dl,M+15,y+14);
+      y+=14+dl.length*4.6+7;
+    });
+
+    /* ============ DAY BY DAY ============ */
+    if(plan.length){
+      newPage('Day by Day');
+      section('Your Journey, Day by Day',TEAL);
+      let dayN=1;
+      const dayItem=(num,title,sub,acc)=>{ensure(15,'Day by Day');
+        doc.setDrawColor(...LINE);doc.setLineWidth(.3);
+        doc.setFillColor(...(acc||GOLD));doc.circle(M+4,y+1.5,3.4,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...WHITE);
+        doc.text(String(num),M+4,y+2.7,{align:'center'});
+        doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...INK);
+        doc.text(title,M+12,y+1);
+        if(sub){doc.setFont('helvetica','normal');doc.setFontSize(8.6);doc.setTextColor(...SOFT);
+          const ss=doc.splitTextToSize(sub,CW-12);doc.text(ss,M+12,y+5.6);y+=ss.length*4.2;}
+        y+=9;};
+      const firstCity=plan[0].name;
+      dayItem(dayN++,'Arrival  \u00b7  Delhi NCR \u2192 '+firstCity,'Your private chauffeur greets you at '+m.startLabel+'. Settle in; the journey begins at your pace.',ACCENTS[0]);
       plan.forEach((c,ci)=>{
-        const sig=(EXPER[DEST[c.k]&&DEST[c.k].exp]||[]).slice(0,3).map(e=>e.label).join(' \u00b7 ');
-        for(let dn=0;dn<c.nights;dn++){
-          if(dn===0&&ci>0)dayRow(dayN++,'Drive '+plan[ci-1].name+' \u2192 '+c.name,'Scenic private transfer with curated en-route halts; afternoon introduction to '+c.name+'.');
-          else dayRow(dayN++, (c.nights>1?'Discover ':'A day in ')+c.name, sig?'Signature moments: '+sig+'.':'');
-        }});
-      dayRow(dayN,'Farewell \u00b7 Return to Delhi NCR','Unhurried drive back for your onward departure \u2014 every km still privately yours.');
+        const acc=ACCENTS[ci%3];
+        const sig=(EXPER[DEST[c.k]&&DEST[c.k].exp]||[]).slice(0,3).map(e=>e.label).join('  \u00b7  ');
+        for(let d=0; d<c.nights; d++){
+          if(d===0 && ci>0) dayItem(dayN++,'To '+c.name,'A private scenic drive from '+plan[ci-1].name+', arriving to explore '+c.name+'.',acc);
+          else dayItem(dayN++, (c.nights>1?'Discover ':'A Day in ')+c.name, sig?('Highlights: '+sig):'A day curated to your interests.',acc);
+        }
+      });
+      dayItem(dayN,'Farewell  \u00b7  Return to Delhi NCR','An unhurried return for your onward departure \u2014 every kilometre still privately yours.',GOLD);
     }
-    rule();
 
-    /* ── ACCOMMODATION ── */
+    /* ============ STAY ============ */
     if(S.hotel!=='none'){
-      sec('Accommodation');
-      kv('Category',HOTELS[S.hotel].l,true);
-      plan.forEach(c=>{const ch=(S.cityHotels||{})[c.k]||{};
-        kv(c.name+' \u00b7 '+c.nights+'n', ch.name?ch.name+(ch.stars?'  '+ch.stars+'\u2605':'')+(ch.rating?'  \u00b7  '+ch.rating+'/5':''):HOTELS[S.hotel].l+' (to be confirmed by your Journey Manager)');});
-      kv('Rooms',m.rooms+' room'+(m.rooms>1?'s':'')+(S.children?'  +  '+S.children+' extra bed'+(S.children>1?'s':''):''));
-      para('Hotel availability and rates move daily; final confirmation is completed at least 24 hours before departure and your invoice reflects live rates plus our transparent 10% coordination.',8);
-      rule();}
+      newPage('Where You Will Stay');
+      section('Where You Will Stay',GOLD);
+      eyebrowLine(HOTELS[S.hotel].l+' selection',GOLD);
+      plan.forEach((c,ix)=>{const ch=(S.cityHotels||{})[c.k]||{};
+        ensure(15,'Where You Will Stay');
+        doc.setFillColor(...CREAM);doc.roundedRect(M,y,CW,12.5,2,2,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...INK);
+        doc.text(c.name,M+5,y+5);
+        doc.setFont('helvetica','normal');doc.setFontSize(8.4);doc.setTextColor(...SOFT);
+        doc.text((ch.name?ch.name:HOTELS[S.hotel].l+' \u2014 confirmed before departure')+(ch.stars?'   '+ch.stars+'\u2605':'')+(ch.rating?'   \u00b7  '+ch.rating+'/5':''),M+5,y+10);
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...GOLD);
+        doc.text(c.nights+' night'+(c.nights>1?'s':''),W-M-5,y+5,{align:'right'});
+        y+=15;});
+      para('Hotel rates move daily; your stays are confirmed at least 24 hours before departure at live market rates plus our transparent 10% coordination.',8,SOFT,4.4);
+    }
 
-    /* ── EXPERIENCES ── */
+    /* ============ EXPERIENCES ============ */
     const ax=Object.entries(S.addons||{}).filter(([,v])=>v>0);
-    if(ax.length){sec('Signature Experiences');
-      ax.forEach(([id,pax])=>{const e=findExp(id);if(!e)return;
-        kv(e.label, e.t==='pp'?pax+' guest'+(pax>1?'s':'')+'  \u00b7  '+pf(e.price*pax):'Private group  \u00b7  '+pf(e.price));});
-      rule();}
+    if(ax.length){
+      newPage('Curated Experiences');
+      section('Curated Experiences',ROSE);
+      /* group by city */
+      const seen={};
+      (S.dest||[]).forEach(k=>{const ex=DEST[k]&&DEST[k].exp;if(!ex||seen[ex])return;seen[ex]=1;
+        const its=(EXPER[ex]||[]).filter(e=>ax.find(([id])=>id===e.id));
+        if(!its.length)return;
+        ensure(12,'Curated Experiences');
+        doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...GOLD);
+        doc.text((DEST[k]?DEST[k].name:k).toUpperCase(),M,y);y+=5.5;
+        its.forEach(e=>{const pax=(S.addons[e.id])||1;ensure(7);
+          doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...INK);
+          doc.text('\u2022  '+e.label,M+2,y);
+          doc.setTextColor(...SOFT);doc.setFontSize(8.5);
+          doc.text(e.t==='pp'?pax+' guest'+(pax>1?'s':''):'group',W-M,y,{align:'right'});
+          y+=5.6;});
+        y+=2;});
+    }
 
-    /* ── TRANSPORTATION ── */
-    sec('Transportation');
-    kv('Vehicle',VEH[S.veh].l+'  \u00b7  private & air-conditioned',true);
-    kv('Chauffeur',S.customNights>0?'Dedicated driver throughout, overnight halts included':'Dedicated day chauffeur');
-    if(S.mode==='curated')kv('Guide',S.guide==='none'?'No guide selected':S.guide==='english'?'English-speaking accompanying guide':'Accompanying guide \u2014 your language');
-    para('Includes fuel, tolls, parking, inter-city transfers, sealed mineral water on board, and your Ivory Arc Journey Manager on WhatsApp for the length of the journey.',8.5);
-    rule();
+    /* ============ INVESTMENT ============ */
+    newPage('Your Investment');
+    section('Your Investment',TEAL);
+    m.items.forEach(it=>{ensure(6.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(9.3);doc.setTextColor(...INK);
+      const lbl=it[0].length>58?it[0].slice(0,56)+'\u2026':it[0];
+      doc.text(lbl,M,y);doc.text(pf(it[1]),W-M,y,{align:'right'});y+=5.7;});
+    ensure(8);doc.setDrawColor(...LINE);doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(9.3);doc.setTextColor(...SOFT);
+    doc.text('GST (5%)',M,y);doc.text(pf(m.gst),W-M,y,{align:'right'});y+=8;
+    ensure(14);doc.setFillColor(...INK);doc.roundedRect(M,y-4.5,CW,12,2,2,'F');
+    doc.setFont('times','bold');doc.setFontSize(13);doc.setTextColor(...WHITE);
+    doc.text('Total Investment',M+5,y+3.3);doc.text(pf(m.total),W-M-5,y+3.3,{align:'right'});y+=13;
+    doc.setFont('helvetica','italic');doc.setFontSize(8.4);doc.setTextColor(...SOFT);
+    doc.text('Approximately '+pf(Math.round(m.total/Math.max(1,m.guests||1)))+' per guest'+(S.cur!=='INR'?'  \u00b7  billed in INR at today\u2019s rate':''),M,y);y+=8;
 
-    /* ── INVESTMENT ── */
-    if(y>H-110)newPage();
-    sec('Your Investment');
-    m.items.forEach(it=>{ensure(6);
-      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);
-      doc.text(it[0].length>62?it[0].slice(0,60)+'\u2026':it[0],M,y);
-      doc.text(pf(it[1]),W-M,y,{align:'right'});y+=5.4;});
-    ensure(6);doc.setTextColor(...SOFT);doc.setFontSize(9);
-    doc.text('GST (5%)',M,y);doc.text(pf(m.gst),W-M,y,{align:'right'});y+=7;
-    ensure(13);doc.setFillColor(...INK);doc.rect(M,y-4,CW,11,'F');
-    doc.setFont('times','bold');doc.setFontSize(12);doc.setTextColor(255,255,255);
-    doc.text('Grand Total',M+5,y+3);doc.text(pf(m.total),W-M-5,y+3,{align:'right'});y+=13;
-    doc.setFont('helvetica','italic');doc.setFontSize(8.5);doc.setTextColor(...GOLD[0]?GOLD:SOFT);
-    doc.setTextColor(...SOFT);
-    doc.text('\u2248 '+pf(m.ppd)+' per person per day  \u00b7  '+pf(Math.round(m.total/m.guests))+' per person',M,y);y+=5;
-    if(m.disc>0){doc.setFontSize(8.5);doc.setTextColor(...GOLD);
-      doc.text('Group privilege applied \u2014 Rs '+m.disc.toLocaleString('en-IN')+' per person per day',M,y);y+=5;}
-    if(S.cur!=='INR'){doc.setFontSize(7.5);doc.setTextColor(...SOFT);
-      doc.text('Converted at today\u2019s indicative rate; billing is processed in INR.',M,y);y+=5;}
-    y+=3;
+    /* payment schedule */
+    section('Payment Schedule',GOLD);
+    [['To confirm your dates','10%',pf(m.adv),ROSE],
+     ['At least 7 days before departure','50%',pf(m.mid),TEAL],
+     ['24 hours before departure','40%',pf(m.bal),GOLD]].forEach(r=>{ensure(11);
+      doc.setFillColor(...CREAM);doc.roundedRect(M,y,CW,9,2,2,'F');
+      doc.setFillColor(...r[3]);doc.rect(M,y,2.4,9,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(9.3);doc.setTextColor(...INK);
+      doc.text(r[1],M+7,y+5.8);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...SOFT);
+      doc.text(r[0],M+20,y+5.8);
+      doc.setFont('helvetica','bold');doc.setTextColor(...INK);
+      doc.text(r[2],W-M-5,y+5.8,{align:'right'});y+=11.5;});
+    para('Payments are processed securely via Razorpay. Complimentary cancellation up to 7 days before departure.',8,SOFT,4.4);
 
-    /* ── PAYMENT SCHEDULE ── */
-    sec('Payment Schedule');
-    [['To confirm your dates (10%)',pf(m.adv),true],['At least 7 days before departure (50%)',pf(m.mid),false],['24 hours before departure (balance)',pf(m.bal),false]]
-      .forEach(([l,v,b])=>{ensure(6);doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(9);
-        doc.setTextColor(...(b?GOLD:INK));doc.text(l,M,y);doc.text(v,W-M,y,{align:'right'});y+=5.6;});
-    para('Payments are processed securely via Razorpay. Free cancellation up to 7 days before departure.',8);
-    rule();
-
-    /* ── TERMS ── */
-    if(y>H-70)newPage();
-    sec('Terms & Conditions');
-    ['Cancellation: more than 7 days before departure \u2014 full refund; 7 days to 48 hours \u2014 100% excluding GST; 48 to 24 hours \u2014 85%; under 24 hours \u2014 no refund.',
-     'Hotel costs are live market rates plus a transparent 10% Ivory Arc coordination fee; the final invoice supersedes this estimate.',
+    /* ============ TERMS + CLOSING ============ */
+    ensure(60,'The Fine Print');
+    section('Good to Know',SOFT);
+    ['Cancellation: 7+ days before \u2014 full refund; 7 days to 48 hours \u2014 100% excl. GST; 48\u201324 hours \u2014 85%; under 24 hours \u2014 non-refundable.',
+     'Hotel costs are live market rates plus a transparent 10% coordination fee; your final invoice supersedes this estimate.',
      'Monument entry fees vary by nationality and are charged at actuals.',
-     'Ivory Arc Travels \u00b7 GST registration 09AYIPT0745R2ZH.',
-     'This proposal is valid for 7 days. Payment constitutes acceptance of these terms.']
-     .forEach((tc,ix)=>{const ls=doc.splitTextToSize((ix+1)+'.  '+tc,CW);ensure(ls.length*4+2);
-       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...SOFT);doc.text(ls,M,y);y+=ls.length*4+2;});
-    ensure(14);y+=4;
-    doc.setFont('times','italic');doc.setFontSize(10);doc.setTextColor(...INK);
-    doc.text('We would be honoured to arrange this journey for you'+(S.name?', '+first:'')+'.',M,y);
+     'This proposal is valid for 7 days. Ivory Arc Travels \u00b7 GST 09AYIPT0745R2ZH.'
+    ].forEach((t2,ix)=>{const ls=doc.splitTextToSize((ix+1)+'.  '+t2,CW);ensure(ls.length*4+2);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...SOFT);doc.text(ls,M,y);y+=ls.length*4+2.5;});
+    y+=4;ensure(30);
+    /* closing band */
+    doc.setFillColor(...INK);doc.roundedRect(M,y,CW,26,3,3,'F');
+    doc.setFillColor(...GOLD);[-6,0,6].forEach((dx,ix)=>doc.circle(W/2+dx,y+7,ix===1?1.3:0.9,'F'));
+    doc.setFont('times','bold');doc.setFontSize(13);doc.setTextColor(...WHITE);
+    doc.text('Your India is ready when you are'+(S.name?', '+first:'')+'.',W/2,y+15,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(8.6);doc.setTextColor(...GOLDL);
+    doc.text('Reply to this proposal or message us on WhatsApp to begin \u2014 your dates are held the moment you confirm.',W/2,y+21,{align:'center'});
     footer();
+
     doc.save('IvoryArc_Journey_Proposal_'+(S.ref||'draft')+'.pdf');
   }catch(e){alert('Unable to generate PDF. Please contact hello@ivoryarctravels.com');console.error(e);}}
 
