@@ -963,7 +963,7 @@ function renderInput(step){
     // Nights allocation
     case 'nights_alloc':{
       // ALL dests get steppers — journey always departs from Delhi NCR, not the first destination
-      let alloc={};S.dest.forEach(k=>{alloc[k]=1;});
+      let alloc={};S.dest.forEach(k=>{alloc[k]=0;}); // start at 0 — user must explicitly assign nights; cities at 0 are skipped for hotel search
       const render=()=>{
         const used=S.dest.reduce((a,k)=>a+(alloc[k]||0),0),ok=used===S.customNights;
         ia.innerHTML=`<div class="ia-card"><span class="cat">Night allocation</span>
@@ -1027,8 +1027,8 @@ function renderInput(step){
           console.log('[IVY Hotels] S1 request →',{city,ci,co,tier,adults:S.adults,url:u});
           const d=await fetch(u).then(r=>r.json());
           // STAGE 6 FIX: ![] === false in JS — must also check d.error explicitly
-          console.log('[IVY Hotels] S6 response ←',{city,props:(d.properties||[]).length,error:d.error||null,count:d.count});
-          if(!d.properties||d.error){const hint=d&&d.error?d.error:'No response from Apps Script';throw new Error('[IVY Hotels] Stage 6 fail: '+hint);}
+          console.log('[IVY Hotels] S6 response ←',{city,props:(d.properties||[]).length,error:d.error||null,count:d.count,rawKeys:Object.keys(d||{})});
+          if(!d.properties||d.error||d.errorCode){const hint=(d&&(d.error||d.errorCode||d.message))||'No response from Apps Script — check deployment is current and test in incognito';throw new Error('[IVY Hotels] Stage 6 fail: '+hint);}
           if(myToken!==_fetchToken)return;
           // STAGE 7 — client-side filter (server already filtered by hotel_class; this is a safety net)
           const _raw=d.properties||[];
@@ -1611,7 +1611,20 @@ function _genPDF(){
   }catch(e){alert('Unable to generate PDF. Please contact hello@ivoryarctravels.com');console.error(e);}}
 
 /* ======================== FX + INIT (unchanged) ========= */
-function fetchFX(){fetch('https://api.frankfurter.app/latest?from=USD&to=INR,EUR,GBP').then(r=>r.json()).then(d=>{const x=d&&d.rates;if(!x||!x.INR)return;FX.USD.r=x.INR;if(x.EUR)FX.EUR.r=x.INR/x.EUR;if(x.GBP)FX.GBP.r=x.INR/x.GBP;}).catch(()=>{});}fetchFX();
+function fetchFX(){
+  // Primary: route through Apps Script to avoid CORS redirect from frankfurter.app → frankfurter.dev
+  if(LIVE_READY){
+    fetch(APPS_SCRIPT_URL+'?action=fx').then(r=>r.json()).then(d=>{
+      if(!d||!d.inr)return;
+      FX.USD.r=d.inr;
+      if(d.eur)FX.EUR.r=d.inr/d.eur;
+      if(d.gbp)FX.GBP.r=d.inr/d.gbp;
+    }).catch(()=>{});
+  } else {
+    // Fallback: direct call (only works if CORS not blocked)
+    fetch('https://api.frankfurter.app/latest?from=USD&to=INR,EUR,GBP').then(r=>r.json()).then(d=>{const x=d&&d.rates;if(!x||!x.INR)return;FX.USD.r=x.INR;if(x.EUR)FX.EUR.r=x.INR/x.EUR;if(x.GBP)FX.GBP.r=x.INR/x.GBP;}).catch(()=>{});
+  }
+}fetchFX();
 $('cur').onchange=e=>{S.cur=e.target.value;};
 $('lang').onchange=e=>{S.lang=e.target.value;document.documentElement.lang=S.lang;};
 // Language overlay init — start conversation only after language+currency are chosen
