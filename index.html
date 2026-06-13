@@ -1025,14 +1025,19 @@ function renderInput(step){
           // STAGE 1 — build request; pass tier + actual adults for server-side hotel_class filter
           const u=APPS_SCRIPT_URL+'?action=hotelsjson&city='+encodeURIComponent(city)+'&ci='+ci+'&co='+co+'&tier='+tier+'&adults='+Math.min(S.adults||2,30);
           console.log('[IVY Hotels] S1 request →',{city,ci,co,tier,adults:S.adults,url:u});
-          const d=await fetch(u).then(r=>r.json());
-          // STAGE 6 FIX: ![] === false in JS — must also check d.error explicitly
-          console.log('[IVY Hotels] S6 response ←',{city,props:(d.properties||[]).length,error:d.error||null,count:d.count,rawKeys:Object.keys(d||{})});
-          if(!d.properties||d.error||d.errorCode){const hint=(d&&(d.error||d.errorCode||d.message))||'No response from Apps Script — check deployment is current and test in incognito';throw new Error('[IVY Hotels] Stage 6 fail: '+hint);}
+          // Capture raw text BEFORE parsing — this tells us exactly what Apps Script returns
+          const _raw=await fetch(u).then(r=>r.text());
+          console.log('[IVY Hotels] S5.5 raw AS response (first 500):', _raw.slice(0,500));
+          let d;
+          try { d=JSON.parse(_raw); }
+          catch(pe){ throw new Error('[IVY Hotels] S5.5 JSON parse FAIL — Apps Script returned non-JSON. First 200 chars: '+_raw.slice(0,200)); }
+          // STAGE 6: check for missing/null properties OR any error field
+          console.log('[IVY Hotels] S6 response ←',{city,props:(d.properties||[]).length,error:d.error||null,count:d.count,keys:Object.keys(d||{})});
+          if(!d.properties||d.error||d.errorCode){ const hint=(d&&(d.error||d.errorCode||d.message))||'Apps Script returned: '+_raw.slice(0,150); throw new Error('[IVY Hotels] Stage 6 fail: '+hint);}
           if(myToken!==_fetchToken)return;
           // STAGE 7 — client-side filter (server already filtered by hotel_class; this is a safety net)
-          const _raw=d.properties||[];
-          const _filtered=_raw.filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class);
+          const _hotels=d.properties||[];
+          const _filtered=_hotels.filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class);
           console.log('[IVY Hotels] S7 filter →',{city,tier,min,raw:_raw.length,passed:_filtered.length,classes:_raw.map(p=>p.extracted_hotel_class||'?')});
           live[c.k]=_filtered.slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
@@ -1373,7 +1378,7 @@ function captureEstimate_(){
     })}).catch(()=>{});}
 function savePartialLead(){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'lead',name:S.name,email:S.email,source:'IVY-partial',estimateRef:'PARTIAL-'+Date.now().toString(36).toUpperCase(),destination:'',estimateTotal:'',groupSize:''})}).catch(()=>{});}
+    body:JSON.stringify({action:'capture_only',name:S.name,email:S.email,source:'IVY-partial',estimateRef:'PARTIAL-'+Date.now().toString(36).toUpperCase()})}).catch(()=>{});}
 function sendLead(src){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE_')===0)return;
   const q=compute();
   const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
