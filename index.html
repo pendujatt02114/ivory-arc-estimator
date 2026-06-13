@@ -244,7 +244,7 @@ const FIREBASE_CONFIG = {
   projectId:   "ivory-arc-estimator-8727e",
   appId:       "1:551942404838:web:4ca6260483724506271927"
 };
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjOn0NDRvo_iNPAG0SE6SLL0wWUabbMTezACyKXw2_RSgiZxAIs8YGpThLETIx_e79/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLxKza9PJDkN7NzKVNhZUVAilaCUdxXejXp-7hJCkVsfd-0CnPwSGhRCB7WoqJPoct/exec";
 const MAPS_BROWSER_KEY = "AIzaSyCSEJzPbWNptjtznWNncMmvutkklqkIXso"; // Google Maps — referrer-restricted browser key
 const DEMO = FIREBASE_CONFIG.apiKey.indexOf("PASTE_")===0; // internal fallback flag — never shown to customers
 const LIVE_READY = APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_")!==0;
@@ -1038,7 +1038,7 @@ function renderInput(step){
           // STAGE 7 — client-side filter (server already filtered by hotel_class; this is a safety net)
           const _hotels=d.properties||[];
           const _filtered=_hotels.filter(p=>(p.extracted_hotel_class||0)>=min||!p.extracted_hotel_class);
-          console.log('[IVY Hotels] S7 filter →',{city,tier,min,raw:_raw.length,passed:_filtered.length,classes:_raw.map(p=>p.extracted_hotel_class||'?')});
+          console.log('[IVY Hotels] S7 filter →',{city,tier,min,raw:_hotels.length,passed:_filtered.length,classes:_hotels.map(p=>p.extracted_hotel_class||'?')});
           live[c.k]=_filtered.slice(0,4)
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
               img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
