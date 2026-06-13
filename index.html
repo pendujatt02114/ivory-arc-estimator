@@ -1043,7 +1043,7 @@ function renderInput(step){
             .map(p=>({name:p.name,stars:p.extracted_hotel_class||'',rating:p.overall_rating||'',area:p.area||city,
               img:(p.images&&p.images[0]&&(p.images[0].thumbnail||p.images[0].original))||p.thumbnail||'',
               nightly:(p.rate_per_night&&p.rate_per_night.extracted_lowest)||HOTELS[tier].n}));
-        }catch(e){if(myToken!==_fetchToken)return;live[c.k]=undefined;console.error('[IVY Hotels]',e.message,'|',city);}
+        }catch(e){if(myToken!==_fetchToken)return;live[c.k]={__error:e.message};console.error('[IVY Hotels]',e.message,'|',city);}
         render();};
       const render=()=>{
         const pc=Object.keys(picks).length;
@@ -1071,7 +1071,7 @@ function renderInput(step){
               (pk?'<div class="hotel-row on"><b style="font-size:13.5px">'+esc(pk.name)+'</b>'+(pk.stars?' \u00b7 '+pk.stars+'&#9733;':'')+(pk.rating?' \u00b7 '+pk.rating+' rated':'')+'<br><span style="color:var(--gold-text);font-size:12.5px">'+fmt(pk.nightly)+' per night</span></div>':'')+
               (lv===null?'<p class="muted" style="font-size:12px;margin-top:6px">Checking live availability\u2026</p>':
                Array.isArray(lv)&&lv.length?lv.map((hh,hi)=>'<button type="button" class="cardify hotel-row '+(pk&&pk.name===hh.name?'on':'')+' " data-ck="'+c.k+'" data-hi="'+hi+'" aria-pressed="'+(  !!(pk&&pk.name===hh.name))+'" style="display:flex;gap:10px;align-items:center">'+(hh.img?'<img src="'+esc(hh.img)+'" alt="" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0">':'')+'<span style="flex:1;min-width:0"><b style="font-size:13.5px">'+esc(hh.name)+'</b><br><span style="font-size:12px;color:var(--muted)">'+(hh.stars?hh.stars+'&#9733; \u00b7 ':'')+(hh.rating?hh.rating+'/5 rated \u00b7 ':'')+esc(hh.area)+'</span><br><span style="color:var(--gold-text);font-size:12.5px;font-weight:600">'+fmt(hh.nightly)+' per night</span></span></button>').join(''):
-               Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
+               (lv&&lv.__error)?'<p class="muted" style="font-size:11.5px;margin-top:6px;color:#B85C00">Live rates unavailable right now \u2014 your Journey Manager will share hand-picked options. ('+esc(lv.__error.slice(0,80))+')</p>':Array.isArray(lv)?'<p class="muted" style="font-size:12px;margin-top:6px">No live matches \u2014 your Journey Manager will share hand-picked options on WhatsApp.</p>':
                (pk?'':'<p class="muted" style="font-size:12px;margin-top:6px">Your Journey Manager will confirm live options within 2 hours.</p>'))+
               '</div>';}).join('')+
             '<div class="hotel-notice">Hotel availability and rates change frequently. Final confirmation at least 24 hours before departure.</div>':'')+
@@ -1384,8 +1384,8 @@ function sendLead(src){if(DEMO||!APPS_SCRIPT_URL||APPS_SCRIPT_URL.indexOf('PASTE
   const route=S.mode==='curated'?S.dest.map(k=>DEST[k]?DEST[k].name:k).join(' → '):S.route.join(' → ');
   if(!S.ref)S.ref='IAT-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000);
   fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'lead',name:S.name,email:S.email,phone:S.phone,
-      source:src||'IVY-estimator-v4',estimateRef:S.ref,destination:route,
+    body:JSON.stringify({action:'verified_lead',name:S.name,email:S.email,phone:S.phone,
+      source:src||'IVY-verified',estimateRef:S.ref,destination:route,
       estimateTotal:fmt(q.total),groupSize:S.adults+' adults, '+S.children+' children',
       startLocation:S.startLocation+(S.startHotelName?' — '+S.startHotelName:''),
       interest:S.interest,
