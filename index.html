@@ -483,14 +483,12 @@ function loadPlaces(cb){
 function cityNightPlan(){
   const plan=[];if(!S.dest.length)return plan;
   let cursor=S.startDate?new Date(S.startDate):null;
-  const last=S.dest.length-1;
-  S.dest.forEach((k,i)=>{
-    const days=S.nights[k]||1;
-    // first dest has +1 internal transit day; show customer the actual nights they allocated
-    const nts=i===0?Math.max(days-1,0):days;
+  // Each city gets exactly the nights the customer assigned, in the order they chose.
+  S.dest.forEach((k)=>{
+    const nts=S.nights[k]||0;
     const arr=cursor?new Date(cursor):null;
     const dep=arr?new Date(arr.getTime()+nts*86400000):null;
-    if(nts>0)plan.push({k,name:DEST[k]?DEST[k].name:k,nights:nts,arr,dep});
+    if(nts>0)plan.push({k,name:DEST[k]?DEST[k].name:k,city:DEST_CITY[k]||(DEST[k]?DEST[k].name:k),nights:nts,arr,dep});
     if(cursor&&dep)cursor=dep;});
   return plan;}
 
@@ -531,11 +529,11 @@ function compute(){
   if(ad>CONFIG.ESCALATE_ABOVE)return{escalate:true};
   let items=[],days=0,nts=0;
   if(S.mode==='curated'){
-    let runMax=0,rack=0;
-    S.dest.forEach(k=>{const d=DEST[k];const dys=S.nights[k]||1;days+=dys;
+    let runMax=0,rack=0,totalNights=0;
+    S.dest.forEach(k=>{const d=DEST[k];if(!d)return;const actual=S.nights[k]||0;const dys=actual>0?actual:1;days+=dys;totalNights+=actual;
       runMax=Math.max(runMax,d.base);const rate=runMax-bandRed(ad);
       rack+=(ad*rate+ch*CONFIG.CHILD_RATE*rate)*dys;});
-    nts=Math.max(days-1,0);
+    nts=totalNights;
     items.push(['Journey services (private transportation + sightseeing)',Math.round(rack)]);
   } else {
     nts=S.customNights;days=nts+1;
@@ -635,6 +633,30 @@ function replay(){
 function editAnswer(stepId){
   const i=ANSWERS.findIndex(a=>a.id===stepId);if(i<0)return;
   ANSWERS.length=i;persist();replay();scrollBot();}
+/* Localised strings for the redesigned destination/plan steps (kept separate
+   from the main T object to avoid touching its structure). Falls back to EN. */
+const FLOW_TXT={
+  fpick:{en:"Wonderful — here is everywhere we travel. Choose every place you'd like to visit; pick as many as you like.",
+    hi:"बहुत बढ़िया — ये रहे वे सभी स्थान जहाँ हम ले जाते हैं। जितने चाहें उतने स्थान चुनें।",
+    es:"Maravilloso: estos son todos nuestros destinos. Elija todos los lugares que desee visitar.",
+    de:"Wunderbar — das sind alle unsere Reiseziele. Wählen Sie so viele Orte, wie Sie möchten.",
+    fr:"Merveilleux — voici toutes nos destinations. Choisissez autant de lieux que vous le souhaitez."},
+  fplan:{en:"Now arrange your journey — set the order of your cities and choose how many nights in each.",
+    hi:"अब अपनी यात्रा व्यवस्थित करें — शहरों का क्रम तय करें और हर शहर में रातें चुनें।",
+    es:"Ahora organice su viaje: ordene sus ciudades y elija cuántas noches en cada una.",
+    de:"Planen Sie nun Ihre Reise — legen Sie die Reihenfolge fest und wählen Sie die Nächte pro Stadt.",
+    fr:"Organisez maintenant votre voyage — définissez l'ordre des villes et le nombre de nuits dans chacune."},
+  accom_dest:{en:"Destinations",hi:"गंतव्य",es:"Destinos",de:"Reiseziele",fr:"Destinations"},
+  plan_title:{en:"Your Journey",hi:"आपकी यात्रा",es:"Su viaje",de:"Ihre Reise",fr:"Votre voyage"},
+  plan_help:{en:"Use the arrows to set the order, and choose nights per city. Travel dates update automatically.",
+    hi:"क्रम सेट करने के लिए तीरों का उपयोग करें और प्रति शहर रातें चुनें। यात्रा तिथियाँ स्वतः अपडेट होती हैं।",
+    es:"Use las flechas para ordenar y elija las noches por ciudad. Las fechas se actualizan automáticamente.",
+    de:"Mit den Pfeilen die Reihenfolge festlegen und Nächte pro Stadt wählen. Die Daten aktualisieren sich automatisch.",
+    fr:"Utilisez les flèches pour définir l'ordre et choisissez les nuits par ville. Les dates se mettent à jour automatiquement."},
+  plan_total:{en:"Total",hi:"कुल",es:"Total",de:"Gesamt",fr:"Total"},
+  plan_exp:{en:"Experiences by destination",hi:"गंतव्य अनुसार अनुभव",es:"Experiencias por destino",de:"Erlebnisse nach Reiseziel",fr:"Expériences par destination"}
+};
+function ft(k){const o=FLOW_TXT[k];return o?(o[S.lang]||o.en):k;}
 const FLOW=[
   {type:'bot',text:()=>tf('fw1'),delay:700},
   {type:'bot',text:()=>tf('fw2'),delay:1000},
@@ -663,10 +685,6 @@ const FLOW=[
   {id:'start_date',type:'ask',botText:()=>tf('fdate'),inputType:'date',
     onAnswer:v=>{S.startDate=v;},
     display:v=>{try{return new Date(v).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'});}catch(e){return v;}}},
-  {id:'nights',type:'ask',botText:()=>tf('fnights'),inputType:'stepper',
-    min:0,max:21,initial:3,
-    onAnswer:v=>{S.customNights=v;},
-    display:v=>v===0?t('fnights_day'):tf(v===1?'n_night':'n_nights',{n:v})},
   {id:'adults',type:'ask',botText:()=>tf('fadults'),inputType:'stepper',
     min:1,max:12,initial:2,
     onAnswer:v=>{S.adults=v;autoVeh();},
@@ -688,66 +706,20 @@ const FLOW=[
     choices:[{v:'foreign',tkey:'nat_foreign'},{v:'indian',tkey:'nat_indian'}],
     onAnswer:v=>{S.nat=v;},
     display:v=>v==='foreign'?t('nat_foreign'):t('nat_indian')},
-  // Interest type (Phase 4)
-  {id:'interest',type:'ask',
-    botText:()=>tf('finterest'),inputType:'interest_type',
-    onAnswer:v=>{S.interest=v;},
-    display:v=>v},
-  // Phase 5: permission gate
-  {id:'rec_gate',type:'ask',
-    botText:()=>tf('frec',{nights:S.customNights,interest:t('i'+S.interest.toLowerCase()),adults:S.adults}),
-    inputType:'rec_gate',
-    cond:()=>S.customNights>0,
-    onAnswer:v=>{S.showRec=v;S.mode=v?'curated':'custom';},
-    display:v=>v?t('ch_yes_rec'):t('ch_choose_self')},
-  // Phase 6: curated duration+interest filtered recommendations
-  {id:'route_curated',type:'ask',
-    botText:()=>tf('frecs'),
-    inputType:'route_cards',
-    cond:()=>S.showRec&&S.customNights>0,
-    onAnswer:v=>{const r=CURATED_ROUTES.find(x=>x.id===v);S.dest=r?r.dests.slice():[];S.selectedRouteId=v;},
-    display:v=>{const r=CURATED_ROUTES.find(x=>x.id===v);return r?r.name:v;}},
-  {type:'bot',text:()=>ROUTE_MICRO[S.selectedRouteId]||null,
-    cond:()=>S.showRec&&!!ROUTE_MICRO[S.selectedRouteId],delay:800},
-  // Phase 7: interest-filtered custom picker
-  {id:'route_custom',type:'ask',
-    botText:()=>tf('fcustom',{interest:t('i'+S.interest.toLowerCase())}),
-    inputType:'dest_multi',
-    cond:()=>!S.showRec&&S.customNights>0,
-    onAnswer:v=>{S.dest=v;S.route=v.map(k=>DEST_CITY[k]||DEST[k].name);S.selectedRouteId='';},
-    display:v=>v.map(k=>DEST[k]?DEST[k].name:k).join(' → ')},
-  
-  // Day tour path (customNights===0)
-  {id:'day_tour',type:'ask',
-    botText:()=>tf('fdayintro',{interest:t('i'+S.interest.toLowerCase())}),
-    inputType:'day_tour_cards',
-    cond:()=>S.customNights===0,
-    onAnswer:v=>{S.dest=[v.dest];S.selectedRouteId=v.id;S.nights[v.dest]=1;S.mode='curated';S.showRec=true;},
-    display:v=>v.name},
-  {type:'bot',delay:700,
-    cond:()=>S.customNights===0&&S.dest.length>0,
-    text:()=>tf('fday',{dest:DEST[S.dest[0]]?DEST[S.dest[0]].name:S.dest[0]})},
-  // Phase 8: feasibility check
-  {type:'bot',
-    text:()=>{if(!S.dest.length)return null;
-      const issues=[];
-      S.dest.forEach(k=>{const m=DEST_META[k];if(!m)return;
-        if(m.min>1&&S.customNights<m.min)issues.push(`${DEST[k]?DEST[k].name:k} typically needs at least ${m.min} nights (${m.km?m.km+' km from Delhi':''})`);});
-      const multiMin=S.dest.length>1?S.dest.length-1:0;
-      if(S.customNights<multiMin)issues.push(`${S.dest.length} destinations across ${S.customNights} night${S.customNights>1?'s':''} may feel rushed`);
-      if(!issues.length)return null;
-      return `<div class="feas-warn"><b>A note on pacing:</b> ${issues.join('. ')}. I can adjust the nights or simplify the route — just let me know.</div>`;},
-    cond:()=>S.dest.length>0&&S.customNights>0,delay:700},
-  // Nights allocation
-  {id:'nights_alloc',type:'ask',
-    botText:()=>tf('falloc'),
-    inputType:'nights_alloc',cond:()=>S.dest.length>1&&S.customNights>0,
-    onAnswer:v=>{S.nights={};S.dest.forEach((k,i)=>{S.nights[k]=i===0?(v[k]||0)+1:(v[k]||0);});},
-    display:v=>Object.entries(v).map(([k,n])=>(DEST[k]?DEST[k].name:k)+': '+n+'n').join(' · ')},
-  {type:'bot',text:()=>{if(S.dest.length===1){S.nights={};S.nights[S.dest[0]]=S.customNights+1;
-    const nLabel=S.customNights===1?'1 night':S.customNights+' nights';
-    return tf('fsingle',{nights:'<b>'+nLabel+'</b>',dest:'<b>'+(DEST[S.dest[0]]?DEST[S.dest[0]].name:S.dest[0])+'</b>'});}return null;},
-    cond:()=>S.dest.length===1&&S.customNights>0,delay:600},
+  // ── Destination picker: ALL destinations, chosen freely (no recommendations) ──
+  {id:'pick_dests',type:'ask',
+    botText:()=>ft('fpick'),
+    inputType:'pick_dests',
+    onAnswer:v=>{S.dest=v.slice();S.mode='curated';S.selectedRouteId='';S.showRec=false;},
+    display:v=>v.map(k=>DEST[k]?DEST[k].name:k).join(' · ')},
+  // ── Plan journey: order cities + nights per city + 700 km day-tour rule ──
+  {id:'plan_journey',type:'ask',
+    botText:()=>ft('fplan'),
+    inputType:'plan_journey',
+    onAnswer:v=>{S.dest=v.order.slice();S.nights={};v.order.forEach(k=>{S.nights[k]=v.nights[k]||0;});
+      S.customNights=v.order.reduce((a,k)=>a+(v.nights[k]||0),0);
+      S.route=v.order.map(k=>DEST_CITY[k]||(DEST[k]?DEST[k].name:k));S.selectedRouteId='';},
+    display:v=>v.order.map(k=>(DEST[k]?DEST[k].name:k)+': '+(v.nights[k]||0)+'n').join(' · ')},
   // Blocker 7: Journey Comfort Score — shown before any pricing
   {type:'bot',text:()=>{const c=comfortScore();const st='&#9733;'.repeat(c.stars)+'&#9734;'.repeat(5-c.stars);
     return '<b>Journey Comfort Score</b><br><span class="comfort-stars">'+st+'</span> &nbsp;'+c.label+'<br><span style="font-size:12.5px;color:var(--muted)">'+c.msg+'</span>';},
@@ -944,6 +916,79 @@ function renderInput(step){
         </button>`;}).join('')+`</div></div>`;
       ia.querySelectorAll('.route-card').forEach(c=>c.onclick=()=>submitStep(step,c.dataset.rid,step.display(c.dataset.rid)));break;}
     // Phase 7: interest-filtered destination picker
+    case 'pick_dests':{
+      // ALL destinations except the golden_triangle package — customer builds their own route
+      const all=Object.keys(DEST).filter(k=>k!=='golden_triangle'&&DEST[k]);
+      let sel=[];
+      const render=()=>{
+        ia.innerHTML=`<div class="ia-card"><span class="cat">${ft('accom_dest')}</span>
+          <div class="dest-cards">`+
+          all.map(k=>{const idx=sel.indexOf(k);return`<button type="button" class="cardify dest-card ${idx>=0?'on':''}" data-dk="${k}" aria-pressed="${idx>=0}">
+            <div class="dc-nm">${DEST[k].name}</div>
+            <div class="dc-rt">${FX[S.cur].s}${Math.round(DEST[k].base/FX[S.cur].r).toLocaleString()}/day</div>
+            ${idx>=0?`<div class="dc-ord">&#10003; Chosen</div>`:''}
+          </button>`;}).join('')+`</div>
+          <button class="ia-continue" id="iaPickOk" ${sel.length<1?'disabled':''}>${t('btn_confirm')}${sel.length?' &middot; '+sel.length:''}</button></div>`;
+        ia.querySelectorAll('.dest-card').forEach(c=>c.onclick=()=>{const k=c.dataset.dk;const i=sel.indexOf(k);i<0?sel.push(k):sel.splice(i,1);render();});
+        const ok=$('iaPickOk');if(ok)ok.onclick=()=>{if(!sel.length)return;submitStep(step,sel.slice(),step.display(sel));};
+      };render();break;}
+    case 'plan_journey':{
+      let order=S.dest.slice();
+      let nights={};order.forEach(k=>{nights[k]=(S.nights[k]!==undefined?S.nights[k]:1);});
+      const oneway=k=>(DEST_META[k]&&DEST_META[k].km)||999;
+      const fmtD=d=>d?d.toLocaleDateString([],{day:'numeric',month:'short'}):'';
+      const render=()=>{
+        const total=order.reduce((a,k)=>a+(nights[k]||0),0);
+        let cursor=S.startDate?new Date(S.startDate):null;
+        const rows=order.map((k,i)=>{
+          const n=nights[k]||0;
+          const arr=cursor?new Date(cursor):null;
+          const dep=arr&&n>0?new Date(arr.getTime()+n*86400000):null;
+          const dateStr=(arr&&n>0)?fmtD(arr)+' \u2013 '+fmtD(dep):(arr?fmtD(arr):'');
+          if(cursor&&dep)cursor=dep;
+          return {k,n,dateStr};
+        });
+        const singleCity=order.length===1;
+        const dayTour=total===0;
+        const dayTourOk=dayTour&&singleCity&&oneway(order[0])*2<=700;
+        const blockReason=(dayTour&&!dayTourOk)?(
+          singleCity?`<b>${DEST[order[0]].name}</b> is ${oneway(order[0])} km from Delhi NCR \u2014 too far for a same-day return. This journey can\u2019t be done in a day; please add at least one night.`
+                    :`A journey across ${order.length} cities can\u2019t be completed in a single day. Please add at least one night.`):'';
+        ia.innerHTML=`<div class="ia-card"><span class="cat">${ft('plan_title')}</span>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${ft('plan_help')}</div>`+
+          rows.map((r,i)=>`
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <button class="pj-up" data-up="${i}" ${i===0?'disabled':''} style="width:26px;height:21px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;font-size:9px;opacity:${i===0?'.3':'1'}">&#9650;</button>
+                <button class="pj-dn" data-dn="${i}" ${i===rows.length-1?'disabled':''} style="width:26px;height:21px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;font-size:9px;opacity:${i===rows.length-1?'.3':'1'}">&#9660;</button>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:14px;color:var(--ink)">${i+1}. ${DEST[r.k].name}</div>
+                ${r.dateStr?`<div style="font-size:11.5px;color:var(--gold-text)">${r.dateStr}</div>`:''}
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <button class="pj-m" data-m="${r.k}" style="width:30px;height:30px;border:1.5px solid var(--line);border-radius:7px;background:#fff;font-size:17px;cursor:pointer;line-height:1">&#8722;</button>
+                <span style="min-width:22px;text-align:center;font-size:15px;font-weight:700">${r.n}</span>
+                <button class="pj-p" data-p="${r.k}" style="width:30px;height:30px;border:1.5px solid var(--line);border-radius:7px;background:#fff;font-size:17px;cursor:pointer;line-height:1">&#43;</button>
+                <span style="font-size:11px;color:var(--muted);min-width:30px">night${r.n!==1?'s':''}</span>
+              </div>
+            </div>`).join('')+
+          `<div style="display:flex;justify-content:space-between;padding:11px 0 4px;font-size:13.5px;font-weight:700">
+            <span>${ft('plan_total')}</span><span style="color:var(--gold-text)">${total} night${total!==1?'s':''}</span></div>`+
+          (blockReason?`<div class="feas-warn" style="margin-top:8px">${blockReason}</div>`:'')+
+          (dayTourOk?`<div style="background:#FBF6EA;border-radius:8px;padding:10px;margin-top:8px;font-size:12px;color:#8B6B2A">Same-day journey to <b>${DEST[order[0]].name}</b> \u2014 no overnight stay needed.</div>`:'')+
+          `<button class="ia-continue" id="iaPlanOk" ${(dayTour&&!dayTourOk)?'disabled':''}>${t('btn_confirm')}</button></div>`;
+        ia.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;if(i>0){const t2=order[i-1];order[i-1]=order[i];order[i]=t2;render();}});
+        ia.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dn;if(i<order.length-1){const t2=order[i+1];order[i+1]=order[i];order[i]=t2;render();}});
+        ia.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const k=b.dataset.m;nights[k]=Math.max(0,(nights[k]||0)-1);render();});
+        ia.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;nights[k]=Math.min(14,(nights[k]||0)+1);render();});
+        const ok=$('iaPlanOk');if(ok)ok.onclick=()=>{
+          const tot=order.reduce((a,k)=>a+(nights[k]||0),0);
+          const sc=order.length===1;
+          if(tot===0&&!(sc&&oneway(order[0])*2<=700))return;
+          submitStep(step,{order:order.slice(),nights:Object.assign({},nights)},step.display({order:order,nights:nights}));
+        };
+      };render();break;}
     case 'dest_multi':{
       const allowed=(INTEREST_DESTS[S.interest]||Object.keys(DEST)).filter(k=>DEST[k]);
       let sel=[];
@@ -1123,25 +1168,25 @@ function renderInput(step){
       ia.querySelectorAll('[data-vk]').forEach(b=>b.onclick=()=>submitStep(step,b.dataset.vk,step.display(b.dataset.vk)));break;}
     // Phase 11: route-specific addons with participant count
     case 'addons':{
-      const expList=[];
-      {const seen={};S.dest.forEach(k=>{const ex=DEST[k]&&DEST[k].exp;if(!ex||seen[ex])return;seen[ex]=1;(EXPER[ex]||[]).filter(e=>e.price>0).forEach(e=>expList.push(e));});}
-      if(!expList.length){ia.innerHTML=`<div class="ia-card"><p class="muted" style="font-size:13px">No specific experiences available for this selection.</p><button class="ia-continue" id="iaSkip">Continue</button></div>`;$('iaSkip').onclick=()=>submitStep(step,{},step.display({}));return;}
-      // S.addons[id] = participant count (0 = not selected)
-      let sel={};expList.forEach(e=>{sel[e.id]=0;});
+      // Experiences grouped by city/leg — each clearly labelled, never bundled together
+      const groups=[];const seen={};
+      S.dest.forEach(k=>{const ex=DEST[k]&&DEST[k].exp;if(!ex||seen[ex])return;seen[ex]=1;
+        const its=(EXPER[ex]||[]).filter(e=>e.price>0);
+        if(its.length)groups.push({city:DEST[k]?DEST[k].name:k,items:its});});
+      if(!groups.length){ia.innerHTML=`<div class="ia-card"><p class="muted" style="font-size:13px">No add-on experiences for this selection.</p><button class="ia-continue" id="iaSkip">${t('btn_confirm')}</button></div>`;$('iaSkip').onclick=()=>submitStep(step,{},step.display({}));return;}
+      let sel={};groups.forEach(g=>g.items.forEach(e=>{sel[e.id]=0;}));
       const render=()=>{
-        ia.innerHTML=`<div class="ia-card"><span class="cat">Experiences</span>`+
-          expList.map(e=>{const on=sel[e.id]>0;const pax=sel[e.id]||S.adults;return`<div class="addon-row ${on?'on':''}" data-eid="${e.id}" role="button" tabindex="0" aria-pressed="${on}">
-            <div class="ar-lbl">${e.label}</div>
-            <div class="ar-price">${e.t==='pp'?FX[S.cur].s+Math.round(e.price/FX[S.cur].r).toLocaleString()+' per person':''+FX[S.cur].s+Math.round(e.price/FX[S.cur].r).toLocaleString()+' per group'}</div>
-            ${on&&e.t==='pp'?`<div class="pax-sel">
-              <span>Participants:</span>
-              <div class="stepper" style="transform:scale(.8)"><button data-pid="${e.id}" data-d="-1">&#8722;</button><span>${pax}</span><button data-pid="${e.id}" data-d="1">&#43;</button></div>
-              <span style="font-size:11px;color:var(--gold)">${FX[S.cur].s}${Math.round(e.price*pax/FX[S.cur].r).toLocaleString()}</span>
-            </div>`:''}
-          </div>`;}).join('')+
+        ia.innerHTML=`<div class="ia-card"><span class="cat">${ft('plan_exp')}</span>`+
+          groups.map(g=>`<div style="font-size:11.5px;font-weight:700;color:var(--gold-text);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)">${g.city}</div>`+
+            g.items.map(e=>{const on=sel[e.id]>0;const pax=sel[e.id]||S.adults;return`<div class="addon-row ${on?'on':''}" data-eid="${e.id}" role="button" tabindex="0" aria-pressed="${on}">
+              <div class="ar-lbl">${e.label}</div>
+              <div class="ar-price">${FX[S.cur].s}${Math.round(e.price/FX[S.cur].r).toLocaleString()} ${e.t==='pp'?'per person':'per group'}</div>
+              ${on&&e.t==='pp'?`<div class="pax-sel"><span>Participants:</span><div class="stepper" style="transform:scale(.8)"><button data-pid="${e.id}" data-d="-1">&#8722;</button><span>${pax}</span><button data-pid="${e.id}" data-d="1">&#43;</button></div><span style="font-size:11px;color:var(--gold-text)">${FX[S.cur].s}${Math.round(e.price*pax/FX[S.cur].r).toLocaleString()}</span></div>`:''}
+            </div>`;}).join('')
+          ).join('')+
           `<button class="ia-continue" id="iaAddOk">${t('btn_add_selected')}</button>
           <button class="ia-skip" id="iaAddSkip">${t('btn_continue_without')}</button></div>`;
-        expList.forEach(e=>{const el=ia.querySelector(`[data-eid="${e.id}"]`);if(el){el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click();}};el.onclick=(ev)=>{if(ev.target.closest('[data-pid]'))return;sel[e.id]=sel[e.id]>0?0:S.adults;render();};}});
+        groups.forEach(g=>g.items.forEach(e=>{const el=ia.querySelector(`[data-eid="${e.id}"]`);if(el){el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click();}};el.onclick=(ev)=>{if(ev.target.closest('[data-pid]'))return;sel[e.id]=sel[e.id]>0?0:S.adults;render();};}}));
         ia.querySelectorAll('[data-pid]').forEach(b=>b.onclick=(ev)=>{ev.stopPropagation();const id=b.dataset.pid,d=+b.dataset.d;sel[id]=Math.max(1,Math.min(S.adults,(sel[id]||S.adults)+d));render();});
         $('iaAddOk').onclick=()=>submitStep(step,Object.fromEntries(Object.entries(sel).filter(([,v])=>v>0)),step.display(sel));
         $('iaAddSkip').onclick=()=>submitStep(step,{},step.display({}));};render();break;}
